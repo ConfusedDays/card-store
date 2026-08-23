@@ -1,0 +1,291 @@
+"use client";
+
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ArrowRight, Check, CircleHelp, Copy, KeyRound, LockKeyhole,
+  MessageCircle, PackageCheck, Search, ShieldCheck, ShoppingBag, WalletCards,
+} from "lucide-react";
+import type { OrderResult, Product, Variant } from "@/lib/types";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
+
+export function Storefront({ products, view = "catalog" }: { products: Product[]; view?: "catalog" | "orders" }) {
+  const router = useRouter();
+  const [productId, setProductId] = useState(products[0]?.id ?? "");
+  const [switchDirection, setSwitchDirection] = useState<"forward" | "backward">("forward");
+  const productSwitcherRef = useRef<HTMLDivElement>(null);
+  const productButtonRefs = useRef(new Map<string, HTMLButtonElement>());
+  const product = useMemo(() => products.find((item) => item.id === productId) ?? products[0], [products, productId]);
+  const [selectedId, setSelectedId] = useState(products[0]?.variants[0]?.id ?? "");
+  const [email, setEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay">("wechat");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [lookup, setLookup] = useState({ orderNo: "", email: "" });
+  const [lookupResult, setLookupResult] = useState<OrderResult | null>(null);
+  const [lookupError, setLookupError] = useState("");
+
+  const selected = useMemo(() => product?.variants.find((variant) => variant.id === selectedId), [product, selectedId]);
+
+  const updateProductIndicator = useCallback(() => {
+    const switcher = productSwitcherRef.current;
+    const activeButton = productButtonRefs.current.get(productId);
+    if (!switcher || !activeButton) return;
+
+    switcher.style.setProperty("--indicator-left", `${activeButton.offsetLeft}px`);
+    switcher.style.setProperty("--indicator-width", `${activeButton.offsetWidth}px`);
+    switcher.dataset.indicatorReady = "true";
+  }, [productId]);
+
+  useLayoutEffect(() => {
+    updateProductIndicator();
+    const activeButton = productButtonRefs.current.get(productId);
+    const observer = new ResizeObserver(updateProductIndicator);
+    if (productSwitcherRef.current) observer.observe(productSwitcherRef.current);
+    if (activeButton) observer.observe(activeButton);
+    return () => observer.disconnect();
+  }, [productId, updateProductIndicator]);
+
+  function selectProduct(nextProductId: string) {
+    if (nextProductId === productId) return;
+    const currentIndex = products.findIndex((item) => item.id === productId);
+    const nextIndex = products.findIndex((item) => item.id === nextProductId);
+    const nextProduct = products[nextIndex];
+    setSwitchDirection(nextIndex >= currentIndex ? "forward" : "backward");
+    setProductId(nextProductId);
+    setSelectedId(nextProduct?.variants[0]?.id ?? "");
+    setError("");
+  }
+  function navigateTo(href: string, event: React.MouseEvent<HTMLAnchorElement>) {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const currentPath = view === "catalog" ? "/" : "/orders";
+    if (href === currentPath) return;
+
+    const route = document.querySelector<HTMLElement>(".route-transition");
+    if (!route || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      router.push(href);
+      return;
+    }
+
+    route.classList.add("route-leaving");
+    window.setTimeout(() => router.push(href), 180);
+  }
+  async function createOrder(event: React.FormEvent) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ variantId: selectedId, email, paymentMethod }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "创建订单失败");
+      router.push(data.checkoutUrl);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "创建订单失败");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function findOrder(event: React.FormEvent) {
+    event.preventDefault();
+    setLookupError("");
+    setLookupResult(null);
+    try {
+      const response = await fetch(`/api/orders/${encodeURIComponent(lookup.orderNo.trim())}?email=${encodeURIComponent(lookup.email.trim())}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "查询失败");
+      setLookupResult(data);
+    } catch (reason) {
+      setLookupError(reason instanceof Error ? reason.message : "查询失败");
+    }
+  }
+
+  if (view === "catalog" && !product) return <main className="empty-state">暂无在售商品</main>;
+
+  return (
+    <div className="site-shell">
+      <header className="topbar">
+        <Link className="brand" href="/" onClick={(event) => navigateTo("/", event)} aria-label="数字授权中心首页">
+          <span className="brand-mark"><KeyRound size={19} /></span>
+          <span>数字授权中心</span>
+        </Link>
+        <nav className="nav-links" aria-label="主导航">
+          <Link className={view === "catalog" ? "active" : ""} aria-current={view === "catalog" ? "page" : undefined} href="/" onClick={(event) => navigateTo("/", event)}>购买</Link>
+          <Link className={view === "orders" ? "active" : ""} aria-current={view === "orders" ? "page" : undefined} href="/orders" onClick={(event) => navigateTo("/orders", event)}>订单查询</Link>
+          <Link href="/admin" onClick={(event) => navigateTo("/admin", event)}>库存后台</Link>
+        </nav>
+        <div className="topbar-actions">
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <main className={`storefront-main ${view === "orders" ? "order-page" : "catalog-page"}`}>
+        {view === "catalog" && product && (
+          <section className="catalog-band" id="catalog">          <div className="catalog-wrap">
+            {products.length > 1 && (
+              <div ref={productSwitcherRef} className="product-switcher" role="tablist" aria-label="选择商品">
+                <span className="product-switcher-indicator" aria-hidden="true" />
+                {products.map((item) => {
+                  const firstVariant = item.variants[0];
+                  const totalStock = item.variants.reduce((sum, variant) => sum + variant.availableCount, 0);
+                  return (
+                    <button
+                      key={item.id}
+                      ref={(node) => {
+                        if (node) productButtonRefs.current.set(item.id, node);
+                        else productButtonRefs.current.delete(item.id);
+                      }}
+                      type="button"                      role="tab"
+                      aria-selected={item.id === product.id}
+                      className={item.id === product.id ? "active" : ""}
+                      onClick={() => selectProduct(item.id)}
+                    >
+                      <span className="product-tab-icon"><KeyRound size={17} /></span>
+                      <span><strong>{item.name}</strong><small>{firstVariant ? `起价 ${money(firstVariant.priceCents)}` : "暂无规格"}</small></span>
+                      <em>{totalStock > 0 ? `${totalStock} 件` : "缺货"}</em>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div key={`summary-${product.id}`} className="product-summary" data-switch-direction={switchDirection}>
+              <div className="eyebrow"><span className="live-dot" /> 即时库存</div>
+              <div className="product-visual" aria-hidden="true">
+                <div className="visual-grid" />
+                <div className="license-tile license-tile-back"><span>LICENSE</span></div>
+                <div className="license-tile license-tile-front">
+                  <ShieldCheck size={34} />
+                  <span>AUTHORIZED</span>
+                  <strong>SOFTWARE KEY</strong>
+                  <small>SECURE DIGITAL DELIVERY</small>
+                </div>
+              </div>
+              <div className="product-copy">
+                <span className="category-label">{product.category}</span>
+                <h1>{product.name}</h1>
+                <p>{product.description}</p>
+              </div>
+              <div className="trust-row">
+                <span><PackageCheck size={17} /> 支付后自动发货</span>
+                <span><LockKeyhole size={17} /> 卡密加密存储</span>
+                <span><CircleHelp size={17} /> 订单可追溯</span>
+              </div>
+            </div>
+
+            <form key={`purchase-${product.id}`} className="purchase-panel" data-switch-direction={switchDirection} onSubmit={createOrder}>
+              <div className="panel-heading">
+                <div><span>选择规格</span><strong>{selected ? money(selected.priceCents) : "--"}</strong></div>
+                <span className="stock-pill">库存 {selected?.availableCount ?? 0}</span>
+              </div>
+              <fieldset className="variant-list">
+                <legend className="sr-only">商品规格</legend>
+                {product.variants.map((variant) => (
+                  <VariantOption key={variant.id} variant={variant} selected={variant.id === selectedId} onSelect={setSelectedId} />
+                ))}
+              </fieldset>
+              <label className="field-label" htmlFor="email">接收邮箱</label>
+              <input id="email" className="text-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" required />
+              <span className="field-label">支付方式</span>
+              <div className="payment-segments" role="radiogroup" aria-label="支付方式">
+                <button type="button" className={paymentMethod === "wechat" ? "active" : ""} onClick={() => setPaymentMethod("wechat")} role="radio" aria-checked={paymentMethod === "wechat"}>
+                  <MessageCircle size={18} /> 微信支付
+                </button>
+                <button type="button" className={paymentMethod === "alipay" ? "active" : ""} onClick={() => setPaymentMethod("alipay")} role="radio" aria-checked={paymentMethod === "alipay"}>
+                  <WalletCards size={18} /> 支付宝
+                </button>
+              </div>
+              <div className="order-total"><span>应付金额</span><strong>{selected ? money(selected.priceCents) : "--"}</strong></div>
+              {error && <p className="form-error">{error}</p>}
+              <button className="primary-button" disabled={submitting || !selected || selected.availableCount < 1}>
+                <ShoppingBag size={18} /> {submitting ? "正在创建订单..." : "提交订单"} <ArrowRight size={18} />
+              </button>
+              <p className="purchase-note">提交即表示接受数字商品售后规则。当前项目使用开发支付通道。</p>
+            </form>
+          </div>
+        </section>
+        )}
+
+        {view === "orders" && (
+          <section className="order-band" id="orders">
+            <div className="order-wrap">
+              <div className="order-intro">
+                <span className="order-intro-mark"><Search size={23} /></span>
+                <span className="section-index">ORDER LOOKUP</span>
+                <h2>查询订单与卡密</h2>
+                <p>使用订单号和下单邮箱查看支付状态及已交付卡密。</p>
+              </div>
+
+              <form className="lookup-form" onSubmit={findOrder}>
+                <div className="lookup-form-heading">
+                  <div>
+                    <span>订单验证</span>
+                    <strong>输入查询信息</strong>
+                  </div>
+                  <span className="lookup-security" title="安全查询"><ShieldCheck size={19} /></span>
+                </div>
+                <div className="lookup-fields">
+                  <label>
+                    <span>订单号</span>
+                    <input value={lookup.orderNo} onChange={(event) => setLookup({ ...lookup, orderNo: event.target.value })} placeholder="K..." autoComplete="off" required />
+                  </label>
+                  <label>
+                    <span>下单邮箱</span>
+                    <input type="email" value={lookup.email} onChange={(event) => setLookup({ ...lookup, email: event.target.value })} placeholder="name@example.com" autoComplete="email" required />
+                  </label>
+                  <button type="submit"><Search size={18} /> 查询订单</button>
+                </div>
+                <div className="lookup-feedback" aria-live="polite">
+                  {lookupError && <p className="form-error" role="alert">{lookupError}</p>}
+                  {lookupResult && <OrderResultView order={lookupResult} />}
+                </div>
+              </form>
+            </div>
+          </section>
+        )}      </main>
+      <footer><span>数字授权中心</span><span>仅销售获得正式授权的数字商品</span></footer>
+    </div>
+  );
+}
+
+function VariantOption({ variant, selected, onSelect }: { variant: Variant; selected: boolean; onSelect: (id: string) => void }) {
+  return (
+    <label className={`variant-option ${selected ? "selected" : ""} ${variant.availableCount < 1 ? "disabled" : ""}`}>
+      <input type="radio" name="variant" checked={selected} disabled={variant.availableCount < 1} onChange={() => onSelect(variant.id)} />
+      <span className="radio-check">{selected && <Check size={14} />}</span>
+      <span className="variant-name"><strong>{variant.label}</strong><small>{variant.durationLabel}</small></span>
+      <span className="variant-stock">{variant.availableCount > 0 ? `${variant.availableCount} 件` : "缺货"}</span>
+      <strong className="variant-price">{money(variant.priceCents)}</strong>
+    </label>
+  );
+}
+
+function OrderResultView({ order }: { order: OrderResult }) {
+  const [copied, setCopied] = useState(false);
+  async function copyKey() {
+    if (!order.licenseKey) return;
+    await navigator.clipboard.writeText(order.licenseKey);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  }
+  return (
+    <div className="lookup-result">
+      <div><span>订单号</span><strong>{order.orderNo}</strong></div>
+      <div><span>状态</span><strong>{statusText(order.status)}</strong></div>
+      {order.licenseKey && (
+        <div className="delivered-key"><span>已交付卡密</span><code>{order.licenseKey}</code><button type="button" onClick={copyKey}><Copy size={16} /> {copied ? "已复制" : "复制"}</button></div>
+      )}
+    </div>
+  );
+}
+
+export function statusText(status: OrderResult["status"]) {
+  return ({ pending: "待支付", paid: "已支付", delivered: "已发货", paid_no_stock: "已支付，等待补货", cancelled: "已取消" })[status];
+}
