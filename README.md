@@ -1,6 +1,6 @@
 # 数字授权中心
 
-一个面向已授权数字商品的卡密商城 MVP，包含商品规格、订单创建、开发支付、事务发卡、订单查询、加密库存和管理后台。
+一个面向已授权数字商品的卡密商城 MVP，包含商品规格、订单创建、支付宝支付、事务发卡、订单查询、加密库存和管理后台。
 
 ## 本地运行
 
@@ -17,9 +17,9 @@ npm run dev
 - `LICENSE_KEY_SECRET`：卡密 AES-256-GCM 加密密钥，生产环境必须更换。
 - `ADMIN_TOKEN`：管理后台 API 访问令牌，生产环境必须使用高强度随机值。
 - `PAYMENT_MODE`：本地开发设为 `mock`；生产环境不得启用模拟支付。
-- NEXT_PUBLIC_STORE_NAME：预留的店铺名称配置。
-- DATABASE_PATH：SQLite 文件路径；Railway 建议设为 /app/data/card-store.sqlite。
-- SEED_DEMO_CATALOG：仅本地开发设为 true；生产环境不要设置。
+- `NEXT_PUBLIC_STORE_NAME`：预留的店铺名称配置。
+- `DATABASE_PATH`：SQLite 文件路径；Railway 建议设为 `/app/data/card-store.sqlite`。
+- `SEED_DEMO_CATALOG`：仅本地开发设为 `true`；生产环境不要设置。
 
 ## Railway 部署
 
@@ -32,9 +32,29 @@ npm run dev
 
 SQLite 数据库、WAL 文件、环境变量和卡密库存均不能提交到 Git。生产 Volume 需要定期备份。
 
-## 正式支付接入
+## 支付宝接入
 
-当前支付适配层只实现开发模式。接入微信支付或支付宝时，需要实现订单创建和异步回调验签，并由服务端在确认商户号、订单号、金额及签名后调用发货服务。不要根据浏览器跳转结果发货。
+项目已实现电脑网站支付 `alipay.trade.page.pay`、RSA2 异步通知验签、商户/应用/金额核对、幂等支付入账和事务发卡。异步通知地址为：
+
+```text
+https://你的域名/api/payments/alipay/notify
+```
+
+在支付宝开放平台取得沙箱或正式应用参数后配置：
+
+```text
+APP_URL=https://你的域名
+ALIPAY_MODE=sandbox
+ALIPAY_APP_ID=应用ID
+ALIPAY_SELLER_ID=商户PID
+ALIPAY_PRIVATE_KEY=应用RSA2私钥
+ALIPAY_PUBLIC_KEY=支付宝公钥
+ALIPAY_KEY_TYPE=PKCS8
+```
+
+`ALIPAY_PRIVATE_KEY` 是应用私钥，不是应用公钥或支付宝公钥。Railway 变量支持多行 PEM；也可以把换行保存为 `\n`。沙箱联调时使用沙箱参数并保持 `ALIPAY_MODE=sandbox`；正式上线改为 `ALIPAY_MODE=production`。启用支付宝时必须删除 `PAYMENT_MODE=mock`，不要把任何密钥提交到 Git。
+
+浏览器支付完成返回页只负责查询状态，绝不直接发卡。只有支付宝服务器对通知完成 RSA2 验签，且应用 ID、商户 PID、订单号和金额全部匹配后，服务端才会扣减库存并交付卡密。
 
 ## 上线前
 

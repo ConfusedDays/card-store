@@ -1,19 +1,25 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createPendingOrder } from "@/lib/order-service";
-import { createPaymentCheckout } from "@/lib/payment-provider";
+import { assertPaymentConfigured, createPaymentCheckout } from "@/lib/payment-provider";
 
 const orderSchema = z.object({
   variantId: z.string().min(1),
   email: z.email("请输入有效邮箱"),
-  paymentMethod: z.enum(["wechat", "alipay", "mock"]),
+  paymentMethod: z.enum(["wechat", "alipay"]),
 });
 
 export async function POST(request: Request) {
   try {
     const input = orderSchema.parse(await request.json());
+    assertPaymentConfigured(input.paymentMethod);
     const order = createPendingOrder(input);
-    const checkout = createPaymentCheckout({ orderNo: order.orderNo, paymentMethod: input.paymentMethod });
+    const checkout = createPaymentCheckout({
+      orderNo: order.orderNo,
+      paymentMethod: input.paymentMethod,
+      amountCents: order.amountCents,
+      subject: `${order.productName} - ${order.variantLabel}`,
+    });
     return NextResponse.json({ ...order, ...checkout }, { status: 201 });
   } catch (error) {
     const message = error instanceof z.ZodError ? error.issues[0]?.message : error instanceof Error ? error.message : "创建订单失败";

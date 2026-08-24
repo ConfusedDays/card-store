@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Copy, KeyRound, LoaderCircle, QrCode, ShieldCheck } from "lucide-react";
 import type { OrderResult } from "@/lib/types";
@@ -14,11 +14,57 @@ type CheckoutOrder = {
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
-export function CheckoutClient({ order }: { order: CheckoutOrder }) {
+export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mockMode: boolean }) {
   const [result, setResult] = useState<OrderResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [polling, setPolling] = useState(!mockMode);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (mockMode) return;
+    const email = sessionStorage.getItem(`order-email:${order.orderNo}`);
+    if (!email) {
+      const missingEmailTimer = window.setTimeout(() => {
+        setPolling(false);
+        setError("当前浏览器没有本订单的验证信息，请使用订单查询查看支付结果。");
+      }, 0);
+      return () => window.clearTimeout(missingEmailTimer);
+    }
+
+    let cancelled = false;
+    let timer: number | undefined;
+    let attempts = 0;
+    async function refreshOrder() {
+      attempts += 1;
+      try {
+        const response = await fetch(`/api/orders/${encodeURIComponent(order.orderNo)}?email=${encodeURIComponent(email ?? "")}`, {
+          cache: "no-store",
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error ?? "查询支付结果失败");
+        if (cancelled) return;
+        setResult(data);
+        setError("");
+        if (data.status !== "pending" && data.status !== "paid") {
+          setPolling(false);
+          return;
+        }
+      } catch (reason) {
+        if (!cancelled) setError(reason instanceof Error ? reason.message : "查询支付结果失败");
+      }
+      if (!cancelled && attempts < 60) timer = window.setTimeout(refreshOrder, 2000);
+      else if (!cancelled) {
+        setPolling(false);
+        setError("支付结果确认超时，请稍后前往订单查询页面查看。");
+      }
+    }
+    void refreshOrder();
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [mockMode, order.orderNo]);
 
   async function confirmPayment() {
     setLoading(true);
@@ -42,6 +88,7 @@ export function CheckoutClient({ order }: { order: CheckoutOrder }) {
     window.setTimeout(() => setCopied(false), 1500);
   }
 
+  const currentStatus = result?.status ?? order.status;
   return (
     <main className="checkout-page">
       <header className="checkout-header">
@@ -54,18 +101,30 @@ export function CheckoutClient({ order }: { order: CheckoutOrder }) {
       </header>
       <div className="checkout-layout">
         <section className="payment-area">
-          <span className="section-index">DEVELOPMENT CHECKOUT</span>
-          <h1>{result?.status === "delivered" ? "卡密已交付" : "完成支付"}</h1>
+          <span className="section-index">{mockMode ? "DEVELOPMENT CHECKOUT" : "ALIPAY CHECKOUT"}</span>
+          <h1>{result?.status === "delivered" ? "卡密已交付" : "确认支付结果"}</h1>
           {!result?.licenseKey ? (
-            <>
-              <div className="qr-frame"><QrCode size={150} strokeWidth={1.25} /><span>开发环境二维码</span></div>
-              <p className="payment-hint">正式商户接口开通后，这里将显示{order.paymentMethod === "wechat" ? "微信支付" : "支付宝"}付款码。</p>
-              {error && <p className="form-error">{error}</p>}
-              <button className="primary-button mock-pay" onClick={confirmPayment} disabled={loading || order.status === "delivered"}>
-                {loading ? <LoaderCircle className="spin" size={18} /> : <CheckCircle2 size={18} />}
-                {loading ? "正在确认..." : order.status === "delivered" ? "订单已发货" : "模拟支付成功"}
-              </button>
-            </>
+            mockMode ? (
+              <>
+                <div className="qr-frame"><QrCode size={150} strokeWidth={1.25} /><span>开发环境二维码</span></div>
+                <p className="payment-hint">开发环境使用模拟支付，不会产生真实扣款。</p>
+                {error && <p className="form-error">{error}</p>}
+                <button className="primary-button mock-pay" onClick={confirmPayment} disabled={loading || order.status === "delivered"}>
+                  {loading ? <LoaderCircle className="spin" size={18} /> : <CheckCircle2 size={18} />}
+                  {loading ? "正在确认..." : order.status === "delivered" ? "订单已发货" : "模拟支付成功"}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="qr-frame">
+                  {polling ? <LoaderCircle className="spin" size={76} strokeWidth={1.4} /> : <ShieldCheck size={76} strokeWidth={1.4} />}
+                  <span>{currentStatus === "paid_no_stock" ? "已支付，等待补货" : polling ? "正在确认支付宝支付结果" : statusText(currentStatus)}</span>
+                </div>
+                <p className="payment-hint">只有支付宝服务器验签通知成功后才会自动发卡，请勿重复付款。</p>
+                {error && <p className="form-error">{error}</p>}
+                {!polling && !result?.licenseKey && <Link className="primary-button mock-pay" href="/orders">前往订单查询</Link>}
+              </>
+            )
           ) : (
             <div className="delivery-success">
               <CheckCircle2 size={40} />
@@ -82,7 +141,7 @@ export function CheckoutClient({ order }: { order: CheckoutOrder }) {
           <dl>
             <div><dt>订单号</dt><dd>{order.orderNo}</dd></div>
             <div><dt>接收邮箱</dt><dd>{order.maskedEmail}</dd></div>
-            <div><dt>订单状态</dt><dd>{result ? statusText(result.status) : statusText(order.status)}</dd></div>
+            <div><dt>订单状态</dt><dd>{statusText(currentStatus)}</dd></div>
             <div><dt>支付方式</dt><dd>{order.paymentMethod === "wechat" ? "微信支付" : "支付宝"}</dd></div>
           </dl>
           <div className="summary-total"><span>应付</span><strong>{money(order.amountCents)}</strong></div>

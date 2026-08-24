@@ -21,7 +21,7 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
   const product = useMemo(() => products.find((item) => item.id === productId) ?? products[0], [products, productId]);
   const [selectedId, setSelectedId] = useState(products[0]?.variants[0]?.id ?? "");
   const [email, setEmail] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay">("wechat");
+  const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay">("alipay");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [lookup, setLookup] = useState({ orderNo: "", email: "" });
@@ -86,7 +86,10 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "创建订单失败");
-      router.push(data.checkoutUrl);
+      sessionStorage.setItem(`order-email:${data.orderNo}`, email.trim());
+      const checkoutUrl = new URL(data.checkoutUrl, window.location.origin);
+      if (checkoutUrl.origin === window.location.origin) router.push(checkoutUrl.pathname + checkoutUrl.search);
+      else window.location.assign(checkoutUrl.href);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "创建订单失败");
     } finally {
@@ -195,7 +198,7 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
               <input id="email" className="text-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" required />
               <span className="field-label">支付方式</span>
               <div className="payment-segments" role="radiogroup" aria-label="支付方式">
-                <button type="button" className={paymentMethod === "wechat" ? "active" : ""} onClick={() => setPaymentMethod("wechat")} role="radio" aria-checked={paymentMethod === "wechat"}>
+                <button type="button" disabled title="暂未开放" role="radio" aria-checked="false">
                   <MessageCircle size={18} /> 微信支付
                 </button>
                 <button type="button" className={paymentMethod === "alipay" ? "active" : ""} onClick={() => setPaymentMethod("alipay")} role="radio" aria-checked={paymentMethod === "alipay"}>
@@ -207,7 +210,7 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
               <button className="primary-button" disabled={submitting || !selected || selected.availableCount < 1}>
                 <ShoppingBag size={18} /> {submitting ? "正在创建订单..." : "提交订单"} <ArrowRight size={18} />
               </button>
-              <p className="purchase-note">提交即表示接受数字商品售后规则。当前项目使用开发支付通道。</p>
+              <p className="purchase-note">提交即表示接受数字商品售后规则。支付成功并通过平台确认后自动发卡。</p>
             </form>
           </div>
         </section>

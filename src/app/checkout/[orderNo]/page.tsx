@@ -8,5 +8,6 @@ export default async function CheckoutPage({ params }: { params: Promise<{ order
   const { orderNo } = await params;
   const order = getCheckoutOrder(orderNo);
   if (!order) notFound();
-  return <CheckoutClient order={order} />;
+  const mockMode = process.env.NODE_ENV !== "production";
+  return <CheckoutClient order={order} mockMode={mockMode} />;
 }
