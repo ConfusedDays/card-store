@@ -1,14 +1,13 @@
 "use client";
 
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, Check, CircleHelp, Copy, KeyRound, LockKeyhole,
   MessageCircle, PackageCheck, Search, ShieldCheck, ShoppingBag, WalletCards,
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { SiteHeader } from "@/components/site-header";
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
@@ -115,20 +114,7 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
 
   return (
     <div className="site-shell">
-      <header className="topbar">
-        <Link className="brand" href="/" onClick={(event) => navigateTo("/", event)} aria-label="数字授权中心首页">
-          <span className="brand-mark"><KeyRound size={19} /></span>
-          <span>数字授权中心</span>
-        </Link>
-        <nav className="nav-links" aria-label="主导航">
-          <Link className={view === "catalog" ? "active" : ""} aria-current={view === "catalog" ? "page" : undefined} href="/" onClick={(event) => navigateTo("/", event)}>购买</Link>
-          <Link className={view === "orders" ? "active" : ""} aria-current={view === "orders" ? "page" : undefined} href="/orders" onClick={(event) => navigateTo("/orders", event)}>订单查询</Link>
-          <Link href="/admin" onClick={(event) => navigateTo("/admin", event)}>库存后台</Link>
-        </nav>
-        <div className="topbar-actions">
-          <ThemeToggle />
-        </div>
-      </header>
+      <SiteHeader active={view} onNavigate={navigateTo} />
 
       <main className={`storefront-main ${view === "orders" ? "order-page" : "catalog-page"}`}>
         {view === "catalog" && product && (

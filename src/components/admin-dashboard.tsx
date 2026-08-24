@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Boxes, CircleDollarSign, KeyRound, LoaderCircle, LogIn, PackagePlus, ReceiptText, RefreshCw, Tags, TriangleAlert, X, Menu as MenuIcon } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { SiteHeader } from "@/components/site-header";
 import { MenuContainer, MenuItem } from "@/components/ui/fluid-menu";
 import { ProductManager } from "@/components/product-manager";
 import type { AdminProduct } from "@/lib/product-admin";
@@ -176,9 +176,10 @@ export function AdminDashboard() {
 
   if (!overview) {
     return (
-      <main className="admin-login">
+      <div className="admin-shell">
+        <SiteHeader active="admin" />
+        <main className="admin-login">
         <Link href="/"><ArrowLeft size={18} /> 返回商店</Link>
-        <ThemeToggle className="admin-login-theme" />
         <form onSubmit={(event) => { event.preventDefault(); void loadOverview(); }}>
           <span className="admin-icon"><KeyRound size={25} /></span>
           <h1>库存后台</h1>
@@ -188,12 +189,15 @@ export function AdminDashboard() {
           <button className="primary-button" disabled={loading}>{loading ? <LoaderCircle className="spin" size={18} /> : <LogIn size={18} />}进入后台</button>
           <small>开发环境默认令牌：dev-admin-token</small>
         </form>
-      </main>
+        </main>
+      </div>
     );
   }
 
   return (
-    <main className="admin-page">
+    <div className="admin-shell">
+      <SiteHeader active="admin" />
+      <main className="admin-page">
       <aside className="admin-sidebar">
         <Link className="brand" href="/"><span className="brand-mark"><KeyRound size={18} /></span><span>数字授权中心</span></Link>
         <div className="admin-mobile-fluid-menu">
@@ -233,7 +237,7 @@ export function AdminDashboard() {
         <Link className="back-store" href="/"><ArrowLeft size={17} />返回商店</Link>
       </aside>
       <div className="admin-content">
-        <header><div><span className="section-index">OPERATIONS</span><h1>销售与库存</h1></div><div className="admin-header-actions"><button className="icon-action" onClick={() => loadOverview()} title="刷新数据"><RefreshCw size={18} /></button><ThemeToggle /></div></header>
+        <header><div><span className="section-index">OPERATIONS</span><h1>销售与库存</h1></div><div className="admin-header-actions"><button className="icon-action" onClick={() => loadOverview()} title="刷新数据"><RefreshCw size={18} /></button></div></header>
         {error && <p className="form-error">{error}</p>}
         <section className="metric-grid" id="overview">
           <Metric icon={<ReceiptText />} label="累计订单" value={String(overview.totals.orders)} />
@@ -268,7 +272,8 @@ export function AdminDashboard() {
           </tbody></table></div>
         </section>
       </div>
-    </main>
+      </main>
+    </div>
   );
 }
 
