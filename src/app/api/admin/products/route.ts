@@ -18,6 +18,7 @@ const productSchema = z.object({
   description: z.string().trim().min(1, "请输入商品介绍").max(1000),
   category: z.string().trim().min(1, "请输入商品分类").max(80),
   accent: z.string().trim().min(1).max(30),
+  imageUrl: z.string().trim().regex(/^\/api\/product-images\/[0-9a-f-]{36}\.(?:jpg|png|webp)$/).nullable(),
   active: z.boolean(),
   sortOrder: z.number().int().min(0).max(9999),
   variants: z.array(variantSchema).min(1, "至少添加一个商品规格").max(30),

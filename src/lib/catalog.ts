@@ -3,7 +3,7 @@ import type { Product, Variant } from "@/lib/types";
 
 export function getStorefrontProducts(): Product[] {
   const products = db.prepare(`
-    SELECT id, slug, name, description, category, accent
+    SELECT id, slug, name, description, category, accent, image_url as imageUrl
     FROM products WHERE active = 1 ORDER BY sort_order, name
   `).all() as Omit<Product, "variants">[];
   const variants = db.prepare(`

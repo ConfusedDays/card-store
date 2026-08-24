@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, GripVertical, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { Check, GripVertical, ImagePlus, LoaderCircle, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import type { AdminProduct } from "@/lib/product-admin";
 
 type DraftVariant = {
@@ -22,6 +23,7 @@ type DraftProduct = {
   description: string;
   category: string;
   accent: string;
+  imageUrl: string | null;
   active: boolean;
   sortOrder: string;
   variants: DraftVariant[];
@@ -34,6 +36,7 @@ const emptyProduct = (): DraftProduct => ({
   description: "",
   category: "数字授权",
   accent: "teal",
+  imageUrl: null,
   active: true,
   sortOrder: "0",
   variants: [emptyVariant()],
@@ -47,6 +50,7 @@ function toDraft(product: AdminProduct): DraftProduct {
     description: product.description,
     category: product.category,
     accent: product.accent,
+    imageUrl: product.imageUrl,
     active: product.active,
     sortOrder: String(product.sortOrder),
     variants: product.variants.map((variant) => ({
@@ -68,6 +72,8 @@ export function ProductManager({ products, token, onSaved }: {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [orderedProductIds, setOrderedProductIds] = useState(() => products.map((product) => product.id));
   const [reordering, setReordering] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 220, tolerance: 7 } }));
@@ -125,6 +131,36 @@ export function ProductManager({ products, token, onSaved }: {
     setDraft({ ...draft, variants: draft.variants.filter((_, itemIndex) => itemIndex !== index) });
   }
 
+  async function uploadProductImage(event: React.ChangeEvent<HTMLInputElement>) {
+    const image = event.target.files?.[0];
+    event.target.value = "";
+    if (!image) return;
+    if (image.size > 5 * 1024 * 1024) {
+      setError("宣传图不能超过 5MB");
+      return;
+    }
+
+    setUploadingImage(true);
+    setError("");
+    setMessage("");
+    try {
+      const formData = new FormData();
+      formData.append("image", image);
+      const response = await fetch("/api/admin/product-images", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "上传宣传图失败");
+      setDraft((current) => current ? { ...current, imageUrl: data.imageUrl } : current);
+      setMessage("宣传图已上传，保存商品后生效");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "上传宣传图失败");
+    } finally {
+      setUploadingImage(false);
+    }
+  }
   async function saveProduct(event: React.FormEvent) {
     event.preventDefault();
     if (!draft) return;
@@ -150,6 +186,7 @@ export function ProductManager({ products, token, onSaved }: {
           description: draft.description.trim(),
           category: draft.category.trim(),
           accent: draft.accent,
+          imageUrl: draft.imageUrl,
           active: draft.active,
           sortOrder: Number(draft.sortOrder) || 0,
           variants,
@@ -216,6 +253,30 @@ export function ProductManager({ products, token, onSaved }: {
               <label>商品分类<input value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })} required /></label>
               <label>展示顺序<input type="number" min="0" max="9999" value={draft.sortOrder} onChange={(event) => setDraft({ ...draft, sortOrder: event.target.value })} required /></label>
               <label className="editor-wide">商品介绍<textarea value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} required /></label>
+              <div className="editor-wide product-image-field">
+                <span>商品宣传图</span>
+                <div className="product-image-control">
+                  <div className={`product-image-preview ${draft.imageUrl ? "has-image" : ""}`}>
+                    {draft.imageUrl ? (
+                      <Image src={draft.imageUrl} alt={`${draft.name || "商品"}宣传图预览`} fill sizes="320px" unoptimized />
+                    ) : (
+                      <ImagePlus size={25} />
+                    )}
+                  </div>
+                  <div className="product-image-actions">
+                    <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadProductImage} />
+                    <button type="button" onClick={() => imageInputRef.current?.click()} disabled={uploadingImage}>
+                      {uploadingImage ? <LoaderCircle className="spinning" size={16} /> : <Upload size={16} />}
+                      {uploadingImage ? "正在上传" : draft.imageUrl ? "更换图片" : "上传图片"}
+                    </button>
+                    {draft.imageUrl && (
+                      <button className="remove-image" type="button" onClick={() => setDraft({ ...draft, imageUrl: null })} disabled={uploadingImage}>
+                        <Trash2 size={16} /> 移除
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
               <label>主题色<select value={draft.accent} onChange={(event) => setDraft({ ...draft, accent: event.target.value })}><option value="teal">青绿</option><option value="amber">琥珀</option><option value="blue">蓝色</option><option value="green">绿色</option></select></label>
               <label className="toggle-field"><input type="checkbox" checked={draft.active} onChange={(event) => setDraft({ ...draft, active: event.target.checked })} /><span><Check size={14} /></span>上架销售</label>
             </div>
@@ -234,7 +295,7 @@ export function ProductManager({ products, token, onSaved }: {
             </div>
             {error && <p className="form-error">{error}</p>}
             {message && <p className="success-message">{message}</p>}
-            <button className="primary-button" disabled={saving}><Save size={18} /> {saving ? "正在保存..." : "保存商品"}</button>
+            <button className="primary-button" disabled={saving || uploadingImage}><Save size={18} /> {saving ? "正在保存..." : "保存商品"}</button>
           </form>
         ) : (
           <button
@@ -255,7 +316,12 @@ function SortableProductRow({ product, selected, onEdit }: { product: AdminProdu
   return (
     <tr ref={setNodeRef} className={isDragging ? "dragging" : ""} style={{ transform: CSS.Transform.toString(transform), transition }}>
       <td><button className="drag-handle" type="button" aria-label={`长按拖动 ${product.name}`} title="长按拖动排序" {...attributes} {...listeners}><GripVertical size={17} /></button></td>
-      <td><strong>{product.name}</strong><small>{product.category}</small></td>
+      <td><div className="product-table-name">
+        <span className={`product-table-thumb ${product.imageUrl ? "has-image" : ""}`}>
+          {product.imageUrl ? <Image src={product.imageUrl} alt="" fill sizes="38px" unoptimized /> : <ImagePlus size={15} />}
+        </span>
+        <span><strong>{product.name}</strong><small>{product.category}</small></span>
+      </div></td>
       <td><code>{product.slug}</code></td>
       <td>{product.variants.filter((variant) => variant.active).length}</td>
       <td><span className={`status-badge ${product.active ? "status-delivered" : ""}`}>{product.active ? "上架" : "下架"}</span></td>

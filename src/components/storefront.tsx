@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, Check, CircleHelp, Copy, KeyRound, LockKeyhole,
@@ -132,15 +133,21 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
             )}
             <div key={`summary-${product.id}`} className="product-summary" data-switch-direction={switchDirection}>
               <div className="eyebrow"><span className="live-dot" /> 即时库存</div>
-              <div className="product-visual" aria-hidden="true">
-                <div className="visual-grid" />
-                <div className="license-tile license-tile-back"><span>LICENSE</span></div>
-                <div className="license-tile license-tile-front">
-                  <ShieldCheck size={34} />
-                  <span>AUTHORIZED</span>
-                  <strong>SOFTWARE KEY</strong>
-                  <small>SECURE DIGITAL DELIVERY</small>
-                </div>
+              <div className={`product-visual ${product.imageUrl ? "has-promo-image" : ""}`}>
+                {product.imageUrl ? (
+                  <Image src={product.imageUrl} alt={`${product.name} 宣传图`} fill sizes="(max-width: 920px) calc(100vw - 48px), 650px" unoptimized priority />
+                ) : (
+                  <div aria-hidden="true">
+                    <div className="visual-grid" />
+                    <div className="license-tile license-tile-back"><span>LICENSE</span></div>
+                    <div className="license-tile license-tile-front">
+                      <ShieldCheck size={34} />
+                      <span>AUTHORIZED</span>
+                      <strong>SOFTWARE KEY</strong>
+                      <small>SECURE DIGITAL DELIVERY</small>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="product-copy">
                 <span className="category-label">{product.category}</span>

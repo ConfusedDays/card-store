@@ -91,6 +91,11 @@ if (!licenseKeyColumns.some((column) => column.name === "key_fingerprint")) {
 }
 db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_license_keys_fingerprint ON license_keys(variant_id, key_fingerprint)");
 
+const productColumns = db.prepare("PRAGMA table_info(products)").all() as { name: string }[];
+if (!productColumns.some((column) => column.name === "image_url")) {
+  db.exec("ALTER TABLE products ADD COLUMN image_url TEXT");
+}
+
 
 export function seedCatalog() {
   const product = db.prepare("SELECT id FROM products WHERE slug = ?").get("authorized-software-license") as { id: string } | undefined;
