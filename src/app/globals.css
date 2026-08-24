@@ -98,7 +98,7 @@ code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
   min-width: max-content;
   padding: 26px 0 25px;
   position: relative;
-  transition: color .24s ease;
+  transition: color .24s ease, transform .16s ease;
 }
 .nav-links a::after {
   content: "";
@@ -114,6 +114,7 @@ code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
   transition: transform .34s cubic-bezier(.22,1,.36,1);
 }
 .nav-links a:hover, .nav-links a.active { color: var(--ink); }
+.nav-links a:active { transform: scale(.94); }
 .nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); transform-origin: left center; }
 .catalog-band { background: rgba(244, 246, 243, .74); border-bottom: 1px solid var(--line); }
 .catalog-wrap {

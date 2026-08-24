@@ -24,6 +24,7 @@ export function SiteHeader({
       <Link
         className="brand"
         href="/"
+        prefetch={true}
         aria-label="数字授权中心首页"
         onClick={onNavigate ? (event) => onNavigate("/", event) : undefined}
       >
@@ -31,9 +32,9 @@ export function SiteHeader({
         <span>数字授权中心</span>
       </Link>
       <nav className="nav-links" aria-label="主导航">
-        <Link href="/" {...linkProps("catalog", "/")}>购买</Link>
-        <Link href="/orders" {...linkProps("orders", "/orders")}>订单查询</Link>
-        <Link href="/admin" {...linkProps("admin", "/admin")}>库存后台</Link>
+        <Link href="/" prefetch={true} {...linkProps("catalog", "/")}>购买</Link>
+        <Link href="/orders" prefetch={true} {...linkProps("orders", "/orders")}>订单查询</Link>
+        <Link href="/admin" prefetch={true} {...linkProps("admin", "/admin")}>库存后台</Link>
       </nav>
       <div className="topbar-actions">
         <ThemeToggle />
