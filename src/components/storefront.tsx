@@ -58,21 +58,6 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
     setSelectedId(nextProduct?.variants[0]?.id ?? "");
     setError("");
   }
-  function navigateTo(href: string, event: React.MouseEvent<HTMLAnchorElement>) {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    const currentPath = view === "catalog" ? "/" : "/orders";
-    if (href === currentPath) return;
-
-    const route = document.querySelector<HTMLElement>(".route-transition");
-    if (!route || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      router.push(href);
-      return;
-    }
-
-    route.classList.add("route-leaving");
-    window.setTimeout(() => router.push(href), 180);
-  }
   async function createOrder(event: React.FormEvent) {
     event.preventDefault();
     setSubmitting(true);
@@ -114,7 +99,7 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
 
   return (
     <div className="site-shell">
-      <SiteHeader active={view} onNavigate={navigateTo} />
+      <SiteHeader active={view} />
 
       <main className={`storefront-main ${view === "orders" ? "order-page" : "catalog-page"}`}>
         {view === "catalog" && product && (

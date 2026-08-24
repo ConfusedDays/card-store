@@ -66,8 +66,8 @@ code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
   from { opacity: 1; transform: translateY(0); }
   to { opacity: 0; transform: translateY(-7px); }
 }
-.route-transition { min-height: 100vh; position: relative; z-index: 1; animation: route-enter .4s cubic-bezier(.22,1,.36,1); }
-.route-transition.route-leaving { animation: route-exit .18s ease forwards; pointer-events: none; }
+.route-transition { min-height: 100vh; position: relative; z-index: 1; animation: route-enter .48s cubic-bezier(.22,1,.36,1); }
+.route-transition.route-leaving { animation: route-exit .3s cubic-bezier(.4,0,.2,1) forwards; pointer-events: none; }
 .order-page { min-height: calc(100vh - 72px); background: transparent; }
 .order-page .order-band { min-height: calc(100vh - 119px); }
 .order-page .order-wrap { min-height: calc(100vh - 119px); align-items: center; }
@@ -98,7 +98,7 @@ code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
   min-width: max-content;
   padding: 26px 0 25px;
   position: relative;
-  transition: color .24s ease, transform .16s ease;
+  transition: color .24s ease, transform .22s ease;
 }
 .nav-links a::after {
   content: "";
@@ -114,7 +114,7 @@ code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
   transition: transform .34s cubic-bezier(.22,1,.36,1);
 }
 .nav-links a:hover, .nav-links a.active { color: var(--ink); }
-.nav-links a:active { transform: scale(.94); }
+.nav-links a:active { transform: scale(.97); }
 .nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); transform-origin: left center; }
 .catalog-band { background: rgba(244, 246, 243, .74); border-bottom: 1px solid var(--line); }
 .catalog-wrap {
