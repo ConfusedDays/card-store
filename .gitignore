@@ -3,6 +3,7 @@ node_modules
 data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal
+data/*.pem
 .env*
 !.env.local.example
 *.log
