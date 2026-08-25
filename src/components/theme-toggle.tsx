@@ -12,13 +12,6 @@ const STORAGE_KEY = "card-store-theme";
 
 type Theme = ThemeSwitcherValue;
 
-type ViewTransitionDocument = Document & {
-  startViewTransition?: (update: () => void) => {
-    ready: Promise<void>;
-    finished: Promise<void>;
-  };
-};
-
 function getPreferredTheme(): Theme {
   if (typeof window === "undefined") return "light";
   const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -48,14 +41,32 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     window.dispatchEvent(new Event("card-store-theme-change"));
   }
 
+  function createBackdrop(theme: Theme, origin: ThemeTransitionOrigin, radius: number) {
+    const backdrop = document.createElement("div");
+    backdrop.className = `telegram-theme-backdrop telegram-theme-backdrop-${theme}`;
+    backdrop.style.setProperty("--theme-transition-x", `${origin.x}px`);
+    backdrop.style.setProperty("--theme-transition-y", `${origin.y}px`);
+    backdrop.style.setProperty("--theme-transition-radius", `${radius}px`);
+
+    const sourceCanvas = document.querySelector<HTMLCanvasElement>(".site-background canvas");
+    if (sourceCanvas && getPreferredTheme() === theme) {
+      const snapshot = document.createElement("canvas");
+      snapshot.width = sourceCanvas.width;
+      snapshot.height = sourceCanvas.height;
+      snapshot.className = "telegram-theme-backdrop-canvas";
+      snapshot.getContext("2d")?.drawImage(sourceCanvas, 0, 0);
+      backdrop.append(snapshot);
+    }
+
+    document.body.append(backdrop);
+    return backdrop;
+  }
+
   async function setTheme(nextTheme: Theme, origin: ThemeTransitionOrigin) {
     if (nextTheme === theme || transitioning.current) return;
 
-    const viewTransitionDocument = document as ViewTransitionDocument;
-    const startViewTransition = viewTransitionDocument.startViewTransition;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (!startViewTransition || reduceMotion) {
+    if (reduceMotion) {
       commitTheme(nextTheme);
       return;
     }
@@ -64,33 +75,37 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       Math.max(origin.x, window.innerWidth - origin.x),
       Math.max(origin.y, window.innerHeight - origin.y),
     );
-    const rootStyle = document.documentElement.style;
-    rootStyle.setProperty("--theme-transition-x", `${origin.x}px`);
-    rootStyle.setProperty("--theme-transition-y", `${origin.y}px`);
-    rootStyle.setProperty("--theme-transition-radius", `${radius}px`);
 
     transitioning.current = true;
     document.documentElement.classList.add("telegram-theme-transition");
-    document.documentElement.classList.add("telegram-theme-snapshot");
-    document.documentElement.classList.toggle("telegram-theme-contract", nextTheme === "light");
+    const backdropTheme = nextTheme === "light" ? theme : nextTheme;
+    const backdrop = createBackdrop(backdropTheme, origin, radius);
+    const fullCircle = `circle(${radius}px at ${origin.x}px ${origin.y}px)`;
+    const pointCircle = `circle(0px at ${origin.x}px ${origin.y}px)`;
 
     try {
-      const transition = startViewTransition.call(document, () => {
+      if (nextTheme === "light") {
+        backdrop.style.clipPath = fullCircle;
         flushSync(() => commitTheme(nextTheme));
-      });
+      }
 
-      await transition.ready;
-      document.documentElement.classList.remove("telegram-theme-snapshot");
-      await transition.finished;
+      const animation = backdrop.animate(
+        nextTheme === "light"
+          ? [{ clipPath: fullCircle }, { clipPath: pointCircle }]
+          : [{ clipPath: pointCircle }, { clipPath: fullCircle }],
+        { duration: 560, easing: "cubic-bezier(.22, 1, .36, 1)", fill: "both" },
+      );
+      await animation.finished;
+
+      if (nextTheme === "dark") {
+        flushSync(() => commitTheme(nextTheme));
+        await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      }
     } catch {
       commitTheme(nextTheme);
     } finally {
-      document.documentElement.classList.remove("telegram-theme-snapshot");
+      backdrop.remove();
       document.documentElement.classList.remove("telegram-theme-transition");
-      document.documentElement.classList.remove("telegram-theme-contract");
-      rootStyle.removeProperty("--theme-transition-x");
-      rootStyle.removeProperty("--theme-transition-y");
-      rootStyle.removeProperty("--theme-transition-radius");
       transitioning.current = false;
     }
   }
