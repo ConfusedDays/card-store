@@ -1239,6 +1239,7 @@ html:not(.dark-mode) .admin-sidebar .back-store:hover { color: var(--teal); }
 ::view-transition-new(root) { z-index: 2; }
 html.telegram-theme-contract::view-transition-old(root) { z-index: 2; }
 html.telegram-theme-contract::view-transition-new(root) { z-index: 1; }
+html.telegram-theme-snapshot .site-background canvas { visibility: hidden !important; }
 html.telegram-theme-transition *,
 html.telegram-theme-transition *::before,
 html.telegram-theme-transition *::after {

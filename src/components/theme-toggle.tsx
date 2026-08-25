@@ -66,6 +66,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 
     transitioning.current = true;
     document.documentElement.classList.add("telegram-theme-transition");
+    document.documentElement.classList.add("telegram-theme-snapshot");
     document.documentElement.classList.toggle("telegram-theme-contract", nextTheme === "light");
 
     try {
@@ -74,6 +75,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       });
 
       await transition.ready;
+      document.documentElement.classList.remove("telegram-theme-snapshot");
       const radius = Math.hypot(
         Math.max(origin.x, window.innerWidth - origin.x),
         Math.max(origin.y, window.innerHeight - origin.y),
@@ -105,6 +107,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     } catch {
       commitTheme(nextTheme);
     } finally {
+      document.documentElement.classList.remove("telegram-theme-snapshot");
       document.documentElement.classList.remove("telegram-theme-transition");
       document.documentElement.classList.remove("telegram-theme-contract");
       transitioning.current = false;

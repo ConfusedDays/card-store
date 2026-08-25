@@ -104,7 +104,7 @@ export default function Velaris({
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
-    const gl = canvas.getContext("webgl", { alpha: false, antialias: false });
+    const gl = canvas.getContext("webgl", { alpha: false, antialias: false, preserveDrawingBuffer: true });
     if (!gl) return;
 
     const compile = (type: number, source: string) => {
