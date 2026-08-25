@@ -58,7 +58,9 @@ export function SiteHeader({ active }: { active: SiteSection }) {
       <nav className="nav-links" aria-label="主导航">
         <Link href="/" prefetch={true} {...linkProps("catalog", "/")}>购买</Link>
         <Link href="/orders" prefetch={true} {...linkProps("orders", "/orders")}>订单查询</Link>
-        <Link href="/admin" prefetch={true} {...linkProps("admin", "/admin")}>库存后台</Link>
+        {active === "admin" && (
+          <Link href="/admin" prefetch={true} {...linkProps("admin", "/admin")}>库存后台</Link>
+        )}
       </nav>
       <div className="topbar-actions">
         <ThemeToggle />
