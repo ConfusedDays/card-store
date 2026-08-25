@@ -93,7 +93,12 @@ db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_license_keys_fingerprint ON licen
 
 const productColumns = db.prepare("PRAGMA table_info(products)").all() as { name: string }[];
 if (!productColumns.some((column) => column.name === "image_url")) {
-  db.exec("ALTER TABLE products ADD COLUMN image_url TEXT");
+  try {
+    db.exec("ALTER TABLE products ADD COLUMN image_url TEXT");
+  } catch (error) {
+    const concurrentlyAdded = error instanceof Error && error.message.includes("duplicate column name: image_url");
+    if (!concurrentlyAdded) throw error;
+  }
 }
 
 
