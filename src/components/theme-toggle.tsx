@@ -19,10 +19,6 @@ type ViewTransitionDocument = Document & {
   };
 };
 
-type ViewTransitionAnimationOptions = KeyframeAnimationOptions & {
-  pseudoElement: string;
-};
-
 function getPreferredTheme(): Theme {
   if (typeof window === "undefined") return "light";
   const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -64,6 +60,15 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       return;
     }
 
+    const radius = Math.hypot(
+      Math.max(origin.x, window.innerWidth - origin.x),
+      Math.max(origin.y, window.innerHeight - origin.y),
+    );
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty("--theme-transition-x", `${origin.x}px`);
+    rootStyle.setProperty("--theme-transition-y", `${origin.y}px`);
+    rootStyle.setProperty("--theme-transition-radius", `${radius}px`);
+
     transitioning.current = true;
     document.documentElement.classList.add("telegram-theme-transition");
     document.documentElement.classList.add("telegram-theme-snapshot");
@@ -76,40 +81,16 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 
       await transition.ready;
       document.documentElement.classList.remove("telegram-theme-snapshot");
-      const radius = Math.hypot(
-        Math.max(origin.x, window.innerWidth - origin.x),
-        Math.max(origin.y, window.innerHeight - origin.y),
-      );
-      const contracting = nextTheme === "light";
-
-      const circularAnimation = document.documentElement.animate(
-        {
-          clipPath: contracting
-            ? [
-                `circle(${radius}px at ${origin.x}px ${origin.y}px)`,
-                `circle(0px at ${origin.x}px ${origin.y}px)`,
-              ]
-            : [
-                `circle(0px at ${origin.x}px ${origin.y}px)`,
-                `circle(${radius}px at ${origin.x}px ${origin.y}px)`,
-              ],
-        },
-        {
-          duration: 560,
-          easing: "cubic-bezier(.22, 1, .36, 1)",
-          pseudoElement: contracting
-            ? "::view-transition-old(root)"
-            : "::view-transition-new(root)",
-        } as ViewTransitionAnimationOptions,
-      );
-
-      await Promise.all([circularAnimation.finished, transition.finished]);
+      await transition.finished;
     } catch {
       commitTheme(nextTheme);
     } finally {
       document.documentElement.classList.remove("telegram-theme-snapshot");
       document.documentElement.classList.remove("telegram-theme-transition");
       document.documentElement.classList.remove("telegram-theme-contract");
+      rootStyle.removeProperty("--theme-transition-x");
+      rootStyle.removeProperty("--theme-transition-y");
+      rootStyle.removeProperty("--theme-transition-radius");
       transitioning.current = false;
     }
   }
