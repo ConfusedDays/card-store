@@ -80,7 +80,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       );
       const contracting = nextTheme === "light";
 
-      document.documentElement.animate(
+      const circularAnimation = document.documentElement.animate(
         {
           clipPath: contracting
             ? [
@@ -101,7 +101,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
         } as ViewTransitionAnimationOptions,
       );
 
-      await transition.finished;
+      await Promise.all([circularAnimation.finished, transition.finished]);
     } catch {
       commitTheme(nextTheme);
     } finally {

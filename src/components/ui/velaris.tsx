@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 const vertexShader = `
@@ -100,7 +100,7 @@ export default function Velaris({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
@@ -174,7 +174,7 @@ export default function Velaris({
     const observer = new ResizeObserver(resize);
     observer.observe(container);
     document.addEventListener("visibilitychange", onVisibilityChange);
-    frame = requestAnimationFrame(render);
+    render(performance.now());
 
     return () => {
       cancelAnimationFrame(frame);

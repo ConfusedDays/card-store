@@ -21,7 +21,6 @@ export function SiteBackground() {
 
   return (
     <Velaris
-      key={theme}
       className="site-background"
       height="100dvh"
       bg={dark ? "#0d1412" : "#f4f6f3"}
