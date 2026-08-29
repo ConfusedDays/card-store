@@ -37,7 +37,9 @@ export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mock
     async function refreshOrder() {
       attempts += 1;
       try {
-        const response = await fetch(`/api/orders/${encodeURIComponent(order.orderNo)}?email=${encodeURIComponent(email ?? "")}`, {
+        const returnedFromPayment = new URLSearchParams(window.location.search).get("payment") === "returned";
+        const reconcile = returnedFromPayment && attempts === 1 ? "&reconcile=alipay" : "";
+        const response = await fetch(`/api/orders/${encodeURIComponent(order.orderNo)}?email=${encodeURIComponent(email ?? "")}${reconcile}`, {
           cache: "no-store",
         });
         const data = await response.json();

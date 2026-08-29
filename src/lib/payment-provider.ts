@@ -1,11 +1,16 @@
 import { AlipaySdk } from "alipay-sdk";
-import { centsToCny } from "@/lib/payment-money";
+import { centsToCny, cnyToCents } from "@/lib/payment-money";
 
 export type PaymentMethod = "wechat" | "alipay" | "mock";
 
 export type PaymentCheckout = {
   checkoutUrl: string;
   provider: "mock" | "wechat" | "alipay";
+};
+
+export type VerifiedAlipayTrade = {
+  providerRef: string;
+  amountCents: number;
 };
 
 function required(name: string) {
@@ -45,6 +50,33 @@ export function getAlipayClient() {
         : "https://openapi.alipay.com/gateway.do"),
   });
   return { client, appId, sellerId };
+}
+
+export function parseAlipayTradeQuery(result: Record<string, unknown>, expectedOrderNo: string): VerifiedAlipayTrade | null {
+  const subCode = String(result.subCode ?? result.sub_code ?? "");
+  if (result.code !== "10000") {
+    if (subCode === "ACQ.TRADE_NOT_EXIST") return null;
+    throw new Error(`支付宝交易查询失败：${subCode || String(result.msg ?? "未知错误")}`);
+  }
+
+  const orderNo = String(result.outTradeNo ?? result.out_trade_no ?? "");
+  if (orderNo !== expectedOrderNo) throw new Error("支付宝交易订单号不匹配");
+
+  const tradeStatus = String(result.tradeStatus ?? result.trade_status ?? "");
+  if (tradeStatus !== "TRADE_SUCCESS" && tradeStatus !== "TRADE_FINISHED") return null;
+
+  const providerRef = String(result.tradeNo ?? result.trade_no ?? "");
+  const totalAmount = String(result.totalAmount ?? result.total_amount ?? "");
+  if (!providerRef || !totalAmount) throw new Error("支付宝交易查询结果缺少必要字段");
+  return { providerRef, amountCents: cnyToCents(totalAmount) };
+}
+
+export async function queryAlipayTrade(orderNo: string): Promise<VerifiedAlipayTrade | null> {
+  const { client } = getAlipayClient();
+  const result = await client.exec("alipay.trade.query", {
+    bizContent: { out_trade_no: orderNo },
+  });
+  return parseAlipayTradeQuery(result, orderNo);
 }
 
 export function assertPaymentConfigured(paymentMethod: PaymentMethod) {

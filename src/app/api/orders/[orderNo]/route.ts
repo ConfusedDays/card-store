@@ -1,11 +1,26 @@
 import { NextResponse } from "next/server";
-import { getOrderForCustomer } from "@/lib/order-service";
+import { queryAlipayTrade } from "@/lib/payment-provider";
+import { completePaidOrder, getOrderForCustomer } from "@/lib/order-service";
 
 export async function GET(request: Request, context: { params: Promise<{ orderNo: string }> }) {
   const { orderNo } = await context.params;
-  const email = new URL(request.url).searchParams.get("email") ?? "";
+  const url = new URL(request.url);
+  const email = url.searchParams.get("email") ?? "";
   if (!email) return NextResponse.json({ error: "请输入下单邮箱" }, { status: 400 });
-  const order = getOrderForCustomer(orderNo, email);
+  let order = getOrderForCustomer(orderNo, email);
   if (!order) return NextResponse.json({ error: "未找到匹配的订单" }, { status: 404 });
+
+  if (url.searchParams.get("reconcile") === "alipay" && order.status === "pending" && order.paymentMethod === "alipay") {
+    const trade = await queryAlipayTrade(orderNo);
+    if (trade) {
+      order = completePaidOrder({
+        orderNo,
+        provider: "alipay",
+        providerRef: trade.providerRef,
+        amountCents: trade.amountCents,
+      });
+    }
+  }
+
   return NextResponse.json(order);
 }
