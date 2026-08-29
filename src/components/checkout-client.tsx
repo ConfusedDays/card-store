@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Copy, KeyRound, LoaderCircle, QrCode, ShieldCheck } from "lucide-react";
 import type { OrderResult } from "@/lib/types";
 import { statusText } from "@/components/storefront";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 type CheckoutOrder = {
   orderNo: string; amountCents: number; currency: "CNY"; paymentMethod: string;
@@ -96,7 +95,6 @@ export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mock
         <span className="brand"><span className="brand-mark"><KeyRound size={18} /></span>数字授权中心</span>
         <div className="checkout-header-actions">
           <span><ShieldCheck size={17} /> 安全结账</span>
-          <ThemeToggle />
         </div>
       </header>
       <div className="checkout-layout">

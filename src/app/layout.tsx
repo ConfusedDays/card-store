@@ -8,20 +8,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const themeScript = `(() => {
-    try {
-      const saved = localStorage.getItem("card-store-theme");
-      const theme = saved === "dark" || saved === "light"
-        ? saved
-        : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-      document.documentElement.classList.toggle("dark-mode", theme === "dark");
-      document.documentElement.style.colorScheme = theme;
-    } catch {}
-  })();`;
-
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
-      <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
+    <html lang="zh-CN" className="dark-mode" style={{ colorScheme: "dark" }}>
       <body>
         <SiteBackground />
         {children}

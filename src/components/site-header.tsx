@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { KeyRound } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 type SiteSection = "catalog" | "orders" | "admin";
 const ROUTE_EXIT_DURATION = 300;
@@ -62,9 +61,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
           <Link href="/admin" prefetch={true} {...linkProps("admin", "/admin")}>库存后台</Link>
         )}
       </nav>
-      <div className="topbar-actions">
-        <ThemeToggle />
-      </div>
+      <div className="topbar-actions" aria-hidden="true" />
     </header>
   );
 }

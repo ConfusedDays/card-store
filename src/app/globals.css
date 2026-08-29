@@ -631,42 +631,8 @@ tbody tr:last-child td { border-bottom: 0; }
   }
   .route-transition.route-leaving { opacity: 0; }
 }
-/* Theme controls and dark palette. Keep the same layout and motion, changing only contrast and surfaces. */
+/* Dark palette. */
 .topbar-actions, .checkout-header-actions, .admin-header-actions { display: flex; align-items: center; gap: 9px; }
-.theme-toggle {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  margin: 0;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  color: var(--muted);
-  background: var(--canvas);
-  position: relative;
-  display: grid;
-  place-items: center;
-  isolation: isolate;
-  overflow: hidden;
-  transition: transform .2s ease, color .2s ease, background-color .25s ease, border-color .2s ease, box-shadow .2s ease;
-}
-.theme-toggle:hover {
-  color: var(--teal);
-  border-color: color-mix(in srgb, var(--teal) 55%, var(--line));
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(29,47,42,.1);
-}
-.theme-toggle:active { transform: translateY(0) scale(.92); box-shadow: none; }
-.theme-toggle:focus-visible { outline: 2px solid color-mix(in srgb, var(--teal) 45%, transparent); outline-offset: 2px; }
-.telegram-theme-icon {
-  display: grid;
-  place-items: center;
-  animation: telegram-theme-icon-in .32s cubic-bezier(.22,1,.36,1);
-}
-@keyframes telegram-theme-icon-in {
-  from { opacity: 0; transform: rotate(-35deg) scale(.62); }
-  to { opacity: 1; transform: rotate(0) scale(1); }
-}
 .checkout-header-actions > span { justify-self: end; }
 
 html.dark-mode {
@@ -779,8 +745,6 @@ html.dark-mode .checkout-header-actions > span { color: var(--muted); }
 }
 .admin-login-theme { position: absolute; top: 25px; right: 28px; }
 .topbar-actions { justify-self: end; }
-html.dark-mode .theme-toggle { background: var(--canvas); border-color: var(--line); }
-html.dark-mode .theme-toggle:hover { border-color: color-mix(in srgb, var(--teal) 55%, var(--line)); }
 
 /* Multi-product catalog */
 .catalog-wrap { column-gap: 76px; row-gap: 28px; }
@@ -1190,26 +1154,6 @@ html.dark-mode .product-table tbody tr.dragging { background: #263630; box-shado
 .admin-sidebar nav[data-dragging="true"][data-active-section="products"]::before { transform: translateY(47px) scale(1.015); }
 .admin-sidebar nav[data-dragging="true"][data-active-section="inventory"]::before { transform: translateY(94px) scale(1.015); }
 .admin-sidebar nav[data-dragging="true"][data-active-section="orders"]::before { transform: translateY(141px) scale(1.015); }
-/* Light admin navigation; dark mode keeps the existing operational sidebar. */
-html:not(.dark-mode) .admin-sidebar {
-  color: var(--ink);
-  background: #eef2f0;
-  border-right: 1px solid var(--line);
-}
-html:not(.dark-mode) .admin-sidebar nav a { color: #596762; }
-html:not(.dark-mode) .admin-sidebar nav a.active { color: var(--ink); background: transparent; }
-html:not(.dark-mode) .admin-sidebar nav a:hover:not(.active) { color: var(--ink); background: #e1e9e6; }
-html:not(.dark-mode) .admin-sidebar nav::before {
-  background: #fff;
-  box-shadow: inset 3px 0 0 var(--teal), 0 5px 14px rgba(29,47,42,.09);
-}
-html:not(.dark-mode) .admin-sidebar nav[data-dragging="true"]::before {
-  box-shadow: inset 3px 0 0 var(--teal), 0 10px 24px rgba(29,47,42,.15);
-}
-html:not(.dark-mode) .admin-sidebar nav[data-dragging="true"] a.active { color: var(--ink); }
-html:not(.dark-mode) .admin-sidebar .back-store { color: #65736e; }
-html:not(.dark-mode) .admin-sidebar .back-store:hover { color: var(--teal); }
-
 .admin-sidebar,
 .admin-sidebar nav::before,
 .admin-sidebar nav a,
@@ -1219,36 +1163,3 @@ html:not(.dark-mode) .admin-sidebar .back-store:hover { color: var(--teal); }
   transition-timing-function: ease;
 }
 .admin-sidebar nav::before { transition-duration: .36s, .25s, .25s, .25s; transition-timing-function: cubic-bezier(.22,1,.36,1), ease, ease, ease; }
-
-@media (max-width: 640px) {
-  html:not(.dark-mode) .admin-mobile-fluid-menu [data-expanded] > div > div { background: #fff; }
-  html:not(.dark-mode) .admin-mobile-fluid-menu [role="menuitem"] { color: #596762; background: transparent; }
-  html:not(.dark-mode) .admin-mobile-fluid-menu [role="menuitem"]:hover { color: var(--ink); background: #e1e9e6; }
-  html:not(.dark-mode) .admin-mobile-fluid-menu [role="menuitem"][data-active="true"] { color: var(--teal-dark); background: #e2f3ed; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .telegram-theme-icon { animation-duration: .001ms !important; }
-}
-html.telegram-theme-transition *,
-html.telegram-theme-transition *::before,
-html.telegram-theme-transition *::after {
-  transition: none !important;
-}
-/* DOM backdrop keeps WebGL out of theme-transition snapshots. */
-.telegram-theme-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-  background: #f4f6f3;
-  contain: strict;
-  will-change: clip-path;
-}
-.telegram-theme-backdrop-dark { background: #18332d; }
-.telegram-theme-backdrop-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
