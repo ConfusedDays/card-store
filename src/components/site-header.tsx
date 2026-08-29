@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { KeyRound } from "lucide-react";
+import { SlideTabs, type SlideTabItem } from "@/components/ui/slide-tabs";
 
 type SiteSection = "catalog" | "orders" | "admin";
 const ROUTE_EXIT_DURATION = 300;
@@ -36,11 +37,11 @@ export function SiteHeader({ active }: { active: SiteSection }) {
     window.setTimeout(() => router.push(href), ROUTE_EXIT_DURATION);
   }
 
-  const linkProps = (section: SiteSection, href: string) => ({
-    className: active === section ? "active" : "",
-    "aria-current": active === section ? ("page" as const) : undefined,
-    onClick: (event: React.MouseEvent<HTMLAnchorElement>) => navigateTo(href, event),
-  });
+  const tabs: SlideTabItem[] = [
+    { id: "catalog", label: "购买", href: "/" },
+    { id: "orders", label: "订单查询", href: "/orders" },
+    ...(active === "admin" ? [{ id: "admin", label: "库存后台", href: "/admin" }] : []),
+  ];
 
   return (
     <header className="topbar">
@@ -55,11 +56,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         <span>数字授权中心</span>
       </Link>
       <nav className="nav-links" aria-label="主导航">
-        <Link href="/" prefetch={true} {...linkProps("catalog", "/")}>购买</Link>
-        <Link href="/orders" prefetch={true} {...linkProps("orders", "/orders")}>订单查询</Link>
-        {active === "admin" && (
-          <Link href="/admin" prefetch={true} {...linkProps("admin", "/admin")}>库存后台</Link>
-        )}
+        <SlideTabs items={tabs} activeId={active} onNavigate={navigateTo} />
       </nav>
       <div className="topbar-actions" aria-hidden="true" />
     </header>
