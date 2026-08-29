@@ -427,7 +427,7 @@ footer { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 23px 0;
 .metric strong { font-size: 22px; }
 .metric.warning > span { color: #a76613; background: #fae9cc; }
 .admin-section { margin-top: 48px; }
-#overview, #products, #inventory, #orders { scroll-margin-top: 92px; }
+#overview, #products, #inventory, #backups, #orders { scroll-margin-top: 92px; }
 .section-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 16px; }
 .section-heading h2 { margin-bottom: 0; }
 .inventory-layout { display: grid; grid-template-columns: 1.1fr .9fr; gap: 16px; align-items: start; }
@@ -458,6 +458,19 @@ tbody tr:last-child td { border-bottom: 0; }
 .resend-email-button:active:not(:disabled) { transform: scale(.92); box-shadow: none; }
 .resend-email-button:disabled { cursor: wait; opacity: .58; }
 .resend-email-button:focus-visible { outline: 2px solid color-mix(in srgb, var(--teal) 45%, transparent); outline-offset: 2px; }
+.backup-message { display: flex; align-items: center; gap: 7px; margin: -5px 0 12px; }
+.backup-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.backup-panel { padding: 22px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); display: grid; gap: 14px; }
+.backup-panel-icon { width: 42px; height: 42px; border-radius: 6px; color: var(--teal); background: var(--mint); display: grid; place-items: center; }
+.backup-panel h3 { margin: 0 0 6px; font-size: 16px; }
+.backup-panel p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.backup-panel label { color: #626c68; font-size: 11px; font-weight: 720; }
+.backup-panel input { width: 100%; min-height: 42px; margin-top: 7px; padding: 0 10px; border: 1px solid #cfd6d3; border-radius: 6px; color: var(--ink); background: var(--surface); outline: none; }
+.backup-panel .backup-file-input { padding: 8px 9px; font-size: 11px; }
+.backup-file-input::file-selector-button { margin-right: 10px; padding: 5px 9px; border: 0; border-radius: 4px; color: var(--ink); background: var(--mint); cursor: pointer; }
+.danger-button { width: 100%; min-height: 47px; padding: 0 16px; border: 1px solid color-mix(in srgb, var(--danger) 50%, transparent); border-radius: 6px; color: #fff; background: var(--danger); display: flex; align-items: center; justify-content: center; gap: 9px; font-size: 14px; font-weight: 760; }
+.danger-button:hover:not(:disabled) { filter: brightness(.92); }
+.danger-button:disabled { cursor: not-allowed; opacity: .5; }
 .empty-cell { padding: 30px; text-align: center; color: #8a9390; }
 .spin { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -494,9 +507,10 @@ tbody tr:last-child td { border-bottom: 0; }
   .back-store { font-size: 0; justify-content: center; }
   .metric-grid { grid-template-columns: 1fr; }
   .inventory-layout { grid-template-columns: 1fr; }
+  .backup-layout { grid-template-columns: 1fr; }
   .admin-login, .admin-page { min-height: calc(100vh - 112px); }
   .admin-sidebar { height: calc(100vh - 112px); top: 112px; }
-  #overview, #products, #inventory, #orders { scroll-margin-top: 132px; }
+  #overview, #products, #inventory, #backups, #orders { scroll-margin-top: 132px; }
 }
 
 @media (max-width: 640px) {
@@ -527,7 +541,7 @@ tbody tr:last-child td { border-bottom: 0; }
   .admin-page { display: block; }
   .admin-login, .admin-page { min-height: calc(100vh - 106px); }
   .admin-sidebar { height: 62px; width: 100%; top: 106px; position: sticky; z-index: 10; flex-direction: row; justify-content: space-between; }
-  #overview, #products, #inventory, #orders { scroll-margin-top: 180px; }
+  #overview, #products, #inventory, #backups, #orders { scroll-margin-top: 180px; }
   .admin-sidebar nav { margin: 0; display: flex; }
   .admin-sidebar .back-store { margin: 0; }
   .admin-content { padding: 26px 14px 60px; }
@@ -728,6 +742,7 @@ html.dark-mode .qr-frame,
 html.dark-mode .metric,
 html.dark-mode .table-shell,
 html.dark-mode .import-panel,
+html.dark-mode .backup-panel,
 html.dark-mode .admin-login form { background: var(--surface); border-color: var(--line); }
 html.dark-mode .purchase-panel { box-shadow: 0 18px 45px rgba(0,0,0,.28); }
 html.dark-mode .variant-option { border-color: var(--line); }
@@ -741,7 +756,10 @@ html.dark-mode .text-input,
 html.dark-mode .lookup-fields input,
 html.dark-mode .admin-login input,
 html.dark-mode .import-panel select,
-html.dark-mode .import-panel textarea { color: var(--ink); background: #16211e; border-color: #40524c; }
+html.dark-mode .import-panel textarea,
+html.dark-mode .backup-panel input { color: var(--ink); background: #16211e; border-color: #40524c; }
+html.dark-mode .backup-panel label { color: var(--muted); }
+html.dark-mode .backup-file-input::file-selector-button { color: #9be5d5; background: #254a43; }
 html.dark-mode .payment-segments { background: #15221f; }
 html.dark-mode .payment-segments button { color: #93a39d; }
 html.dark-mode .payment-segments button.active { color: var(--ink); background: #2a3a35; box-shadow: 0 1px 4px rgba(0,0,0,.28); }
@@ -1114,7 +1132,8 @@ html.dark-mode .remove-variant:hover { color: var(--danger); border-color: var(-
 }
 .admin-sidebar nav[data-active-section="products"]::before { transform: translateY(47px); }
 .admin-sidebar nav[data-active-section="inventory"]::before { transform: translateY(94px); }
-.admin-sidebar nav[data-active-section="orders"]::before { transform: translateY(141px); }
+.admin-sidebar nav[data-active-section="backups"]::before { transform: translateY(141px); }
+.admin-sidebar nav[data-active-section="orders"]::before { transform: translateY(188px); }
 .admin-sidebar nav a {
   position: relative;
   z-index: 1;
@@ -1201,7 +1220,8 @@ html.dark-mode .product-table tbody tr.dragging { background: #263630; box-shado
 .admin-sidebar nav[data-dragging="true"][data-active-section="overview"]::before { transform: translateY(0) scale(1.015); }
 .admin-sidebar nav[data-dragging="true"][data-active-section="products"]::before { transform: translateY(47px) scale(1.015); }
 .admin-sidebar nav[data-dragging="true"][data-active-section="inventory"]::before { transform: translateY(94px) scale(1.015); }
-.admin-sidebar nav[data-dragging="true"][data-active-section="orders"]::before { transform: translateY(141px) scale(1.015); }
+.admin-sidebar nav[data-dragging="true"][data-active-section="backups"]::before { transform: translateY(141px) scale(1.015); }
+.admin-sidebar nav[data-dragging="true"][data-active-section="orders"]::before { transform: translateY(188px) scale(1.015); }
 .admin-sidebar,
 .admin-sidebar nav::before,
 .admin-sidebar nav a,

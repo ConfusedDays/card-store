@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Boxes, CircleDollarSign, KeyRound, LoaderCircle, LogIn, MailCheck, PackagePlus, ReceiptText, RefreshCw, Send, Tags, TriangleAlert, X, Menu as MenuIcon } from "lucide-react";
+import { ArchiveRestore, ArrowLeft, Boxes, CircleDollarSign, Download, KeyRound, LoaderCircle, LogIn, MailCheck, PackagePlus, ReceiptText, RefreshCw, Send, ShieldCheck, Tags, TriangleAlert, Upload, X, Menu as MenuIcon } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { MenuContainer, MenuItem } from "@/components/ui/fluid-menu";
 import { ProductManager } from "@/components/product-manager";
@@ -38,6 +38,13 @@ export function AdminDashboard() {
   const [message, setMessage] = useState("");
   const [orderMessage, setOrderMessage] = useState("");
   const [resendingOrderNo, setResendingOrderNo] = useState("");
+  const [backupPassphrase, setBackupPassphrase] = useState("");
+  const [restorePassphrase, setRestorePassphrase] = useState("");
+  const [restoreConfirmation, setRestoreConfirmation] = useState("");
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [restoreBusy, setRestoreBusy] = useState(false);
+  const [backupMessage, setBackupMessage] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
   const [navDragging, setNavDragging] = useState(false);
   const navPressTimer = useRef<number | null>(null);
@@ -47,7 +54,7 @@ export function AdminDashboard() {
 
   useEffect(() => {
     if (!overview) return;
-    const sectionIds = ["overview", "products", "inventory", "orders"];
+    const sectionIds = ["overview", "products", "inventory", "backups", "orders"];
     const updateActiveSection = () => {
       if (navDraggingRef.current) return;
       const atPageBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 24;
@@ -208,6 +215,74 @@ export function AdminDashboard() {
     }
   }
 
+  async function downloadBackup(event: React.FormEvent) {
+    event.preventDefault();
+    setBackupBusy(true);
+    setBackupMessage("");
+    setError("");
+    try {
+      const response = await fetch("/api/admin/backup", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ passphrase: backupPassphrase }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error ?? "创建备份失败");
+      }
+      const blob = await response.blob();
+      const disposition = response.headers.get("content-disposition") ?? "";
+      const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? `reii-backup-${new Date().toISOString().slice(0, 10)}.reiibak`;
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      setBackupMessage("加密备份已下载，请妥善保存文件和密码");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "创建备份失败");
+    } finally {
+      setBackupBusy(false);
+    }
+  }
+
+  async function restoreBackup(event: React.FormEvent) {
+    event.preventDefault();
+    if (!restoreFile) {
+      setError("请选择 .reiibak 备份文件");
+      return;
+    }
+    if (!window.confirm("恢复会用备份内容替换当前商品、库存和订单数据。确认继续吗？")) return;
+    setRestoreBusy(true);
+    setBackupMessage("");
+    setError("");
+    try {
+      const form = new FormData();
+      form.set("backup", restoreFile);
+      form.set("passphrase", restorePassphrase);
+      form.set("confirmation", restoreConfirmation);
+      const response = await fetch("/api/admin/backup/restore", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "恢复备份失败");
+      setBackupMessage(`数据恢复完成；服务器已保留恢复前副本 ${data.emergencyBackup}`);
+      setRestoreFile(null);
+      setRestorePassphrase("");
+      setRestoreConfirmation("");
+      await loadOverview();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "恢复备份失败");
+    } finally {
+      setRestoreBusy(false);
+    }
+  }
+
   if (!overview) {
     return (
       <div className="admin-shell">
@@ -249,6 +324,7 @@ export function AdminDashboard() {
             <MenuItem label="总览" isActive={activeSection === "overview"} onClick={() => goToAdminSection("overview")} icon={<Boxes size={24} strokeWidth={1.5} />} />
             <MenuItem label="商品管理" isActive={activeSection === "products"} onClick={() => goToAdminSection("products")} icon={<Tags size={24} strokeWidth={1.5} />} />
             <MenuItem label="导入库存" isActive={activeSection === "inventory"} onClick={() => goToAdminSection("inventory")} icon={<PackagePlus size={24} strokeWidth={1.5} />} />
+            <MenuItem label="备份恢复" isActive={activeSection === "backups"} onClick={() => goToAdminSection("backups")} icon={<ArchiveRestore size={24} strokeWidth={1.5} />} />
             <MenuItem label="最近订单" isActive={activeSection === "orders"} onClick={() => goToAdminSection("orders")} icon={<ReceiptText size={24} strokeWidth={1.5} />} />
           </MenuContainer>
         </div>
@@ -266,6 +342,7 @@ export function AdminDashboard() {
           <a className={activeSection === "overview" ? "active" : ""} href="#overview" data-admin-section="overview" onClick={(event) => { event.preventDefault(); goToAdminSection("overview"); }}><Boxes size={18} />总览</a>
           <a className={activeSection === "products" ? "active" : ""} href="#products" data-admin-section="products" onClick={(event) => { event.preventDefault(); goToAdminSection("products"); }}><PackagePlus size={18} />商品管理</a>
           <a className={activeSection === "inventory" ? "active" : ""} href="#inventory" data-admin-section="inventory" onClick={(event) => { event.preventDefault(); goToAdminSection("inventory"); }}><PackagePlus size={18} />导入库存</a>
+          <a className={activeSection === "backups" ? "active" : ""} href="#backups" data-admin-section="backups" onClick={(event) => { event.preventDefault(); goToAdminSection("backups"); }}><ArchiveRestore size={18} />备份恢复</a>
           <a className={activeSection === "orders" ? "active" : ""} href="#orders" data-admin-section="orders" onClick={(event) => { event.preventDefault(); goToAdminSection("orders"); }}><ReceiptText size={18} />最近订单</a>
         </nav>
         <Link className="back-store" href="/"><ArrowLeft size={17} />返回商店</Link>
@@ -295,6 +372,27 @@ export function AdminDashboard() {
               <label>卡密列表<textarea value={keys} onChange={(event) => setKeys(event.target.value)} placeholder={"每行一条卡密\nAAAA-BBBB-CCCC"} required /></label>
               {message && <p className="success-message">{message}</p>}
               <button className="primary-button"><PackagePlus size={18} />导入卡密</button>
+            </form>
+          </div>
+        </section>
+
+        <section className="admin-section" id="backups">
+          <div className="section-heading"><div><span className="section-index">DATA SAFETY</span><h2>备份与恢复</h2></div></div>
+          {backupMessage && <p className="success-message backup-message"><ShieldCheck size={16} />{backupMessage}</p>}
+          <div className="backup-layout">
+            <form className="backup-panel" onSubmit={downloadBackup}>
+              <span className="backup-panel-icon"><Download size={20} /></span>
+              <div><h3>下载加密备份</h3><p>包含商品、卡密库存、订单、发卡记录和商品图片。</p></div>
+              <label>设置备份密码<input type="password" minLength={10} maxLength={200} value={backupPassphrase} onChange={(event) => setBackupPassphrase(event.target.value)} placeholder="至少 10 个字符" autoComplete="new-password" required /></label>
+              <button className="primary-button" disabled={backupBusy}>{backupBusy ? <LoaderCircle className="spin" size={18} /> : <Download size={18} />}{backupBusy ? "正在加密..." : "创建并下载"}</button>
+            </form>
+            <form className="backup-panel restore-panel" onSubmit={restoreBackup}>
+              <span className="backup-panel-icon"><Upload size={20} /></span>
+              <div><h3>恢复加密备份</h3><p>恢复前服务器会自动保留当前数据副本，最多保留 5 份。</p></div>
+              <label>备份文件<input className="backup-file-input" type="file" accept=".reiibak,application/octet-stream" onChange={(event) => setRestoreFile(event.target.files?.[0] ?? null)} required /></label>
+              <label>备份密码<input type="password" minLength={10} maxLength={200} value={restorePassphrase} onChange={(event) => setRestorePassphrase(event.target.value)} placeholder="创建备份时设置的密码" autoComplete="off" required /></label>
+              <label>输入“恢复数据”确认<input type="text" value={restoreConfirmation} onChange={(event) => setRestoreConfirmation(event.target.value)} placeholder="恢复数据" autoComplete="off" required /></label>
+              <button className="danger-button" disabled={restoreBusy || restoreConfirmation !== "恢复数据"}>{restoreBusy ? <LoaderCircle className="spin" size={18} /> : <ArchiveRestore size={18} />}{restoreBusy ? "正在恢复..." : "恢复此备份"}</button>
             </form>
           </div>
         </section>
