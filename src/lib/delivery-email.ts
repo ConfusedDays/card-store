@@ -40,7 +40,10 @@ function getDeliveryEmail(orderNo: string) {
   `).get(orderNo) as DeliveryEmail | undefined;
 }
 
-export async function trySendDeliveryEmail(orderNo: string): Promise<DeliveryEmailResult> {
+export async function trySendDeliveryEmail(
+  orderNo: string,
+  options: { force?: boolean } = {},
+): Promise<DeliveryEmailResult> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.MAIL_FROM?.trim();
   if (!apiKey || !from) return { status: "disabled" };
@@ -55,12 +58,16 @@ export async function trySendDeliveryEmail(orderNo: string): Promise<DeliveryEma
     WHERE order_no = ? AND (
       status IN ('pending', 'failed')
       OR (status = 'sending' AND updated_at <= datetime('now', '-10 minutes'))
+      OR (? = 1 AND status = 'sent')
     )
-  `).run(orderNo);
+  `).run(orderNo, options.force ? 1 : 0);
   if (claimed.changes !== 1) {
     const current = db.prepare("SELECT status FROM delivery_emails WHERE order_no = ?").get(orderNo) as { status: string };
     return { status: current.status === "sent" ? "sent" : "busy" };
   }
+
+  const emailAttempt = db.prepare("SELECT attempts FROM delivery_emails WHERE order_no = ?")
+    .get(orderNo) as { attempts: number };
 
   const licenseKey = decryptLicenseKey(delivery.keyCiphertext);
   const safeOrderNo = escapeHtml(delivery.orderNo);
@@ -85,7 +92,9 @@ export async function trySendDeliveryEmail(orderNo: string): Promise<DeliveryEma
       headers: {
         authorization: `Bearer ${apiKey}`,
         "content-type": "application/json",
-        "idempotency-key": `delivery_${orderNo}`,
+        "idempotency-key": options.force
+          ? `delivery_resend_${orderNo}_${emailAttempt.attempts}`
+          : `delivery_${orderNo}`,
       },
       body: JSON.stringify({ from, to: [delivery.email], subject, html, text }),
       signal: AbortSignal.timeout(12_000),
@@ -97,7 +106,7 @@ export async function trySendDeliveryEmail(orderNo: string): Promise<DeliveryEma
         updated_at = CURRENT_TIMESTAMP, last_error = NULL WHERE order_no = ?
     `).run(payload.id, orderNo);
     db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
-      .run("delivery.email_sent", "order", orderNo, JSON.stringify({ messageId: payload.id }));
+      .run(options.force ? "delivery.email_resent" : "delivery.email_sent", "order", orderNo, JSON.stringify({ messageId: payload.id }));
     return { status: "sent" };
   } catch (error) {
     const message = error instanceof Error ? error.message.slice(0, 500) : "Unknown email error";

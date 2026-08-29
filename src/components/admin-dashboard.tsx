@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Boxes, CircleDollarSign, KeyRound, LoaderCircle, LogIn, PackagePlus, ReceiptText, RefreshCw, Tags, TriangleAlert, X, Menu as MenuIcon } from "lucide-react";
+import { ArrowLeft, Boxes, CircleDollarSign, KeyRound, LoaderCircle, LogIn, MailCheck, PackagePlus, ReceiptText, RefreshCw, Send, Tags, TriangleAlert, X, Menu as MenuIcon } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { MenuContainer, MenuItem } from "@/components/ui/fluid-menu";
 import { ProductManager } from "@/components/product-manager";
@@ -12,7 +12,18 @@ type Overview = {
   totals: { orders: number; revenueCents: number; stockIssues: number };
   products: AdminProduct[];
   inventory: { variantId: string; productName: string; label: string; available: number; sold: number }[];
-  recentOrders: { orderNo: string; email: string; amountCents: number; status: string; createdAt: string; variantLabel: string }[];
+  recentOrders: {
+    orderNo: string;
+    email: string;
+    amountCents: number;
+    status: string;
+    createdAt: string;
+    variantLabel: string;
+    emailStatus: "pending" | "sending" | "sent" | "failed" | null;
+    emailAttempts: number | null;
+    emailSentAt: string | null;
+    emailLastError: string | null;
+  }[];
 };
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
@@ -25,6 +36,8 @@ export function AdminDashboard() {
   const [variantId, setVariantId] = useState("");
   const [keys, setKeys] = useState("");
   const [message, setMessage] = useState("");
+  const [orderMessage, setOrderMessage] = useState("");
+  const [resendingOrderNo, setResendingOrderNo] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
   const [navDragging, setNavDragging] = useState(false);
   const navPressTimer = useRef<number | null>(null);
@@ -174,6 +187,27 @@ export function AdminDashboard() {
     }
   }
 
+  async function resendDeliveryEmail(orderNo: string, email: string) {
+    if (!window.confirm(`确认重新向 ${email} 发送订单 ${orderNo} 的卡密邮件？`)) return;
+    setResendingOrderNo(orderNo);
+    setOrderMessage("");
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/orders/${encodeURIComponent(orderNo)}/resend-email`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "邮件重新发送失败");
+      setOrderMessage(`订单 ${orderNo} 的卡密邮件已重新发送`);
+      await loadOverview();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "邮件重新发送失败");
+    } finally {
+      setResendingOrderNo("");
+    }
+  }
+
   if (!overview) {
     return (
       <div className="admin-shell">
@@ -267,8 +301,22 @@ export function AdminDashboard() {
 
         <section className="admin-section" id="orders">
           <div className="section-heading"><div><span className="section-index">ORDERS</span><h2>最近订单</h2></div></div>
-          <div className="table-shell"><table><thead><tr><th>订单号</th><th>客户</th><th>规格</th><th>金额</th><th>状态</th><th>时间</th></tr></thead><tbody>
-            {overview.recentOrders.length ? overview.recentOrders.map((order) => <tr key={order.orderNo}><td><code>{order.orderNo}</code></td><td>{order.email}</td><td>{order.variantLabel}</td><td>{money(order.amountCents)}</td><td><span className={`status-badge status-${order.status}`}>{order.status}</span></td><td>{new Date(order.createdAt.replace(" ", "T") + "Z").toLocaleString("zh-CN")}</td></tr>) : <tr><td colSpan={6} className="empty-cell">暂无订单</td></tr>}
+          {orderMessage && <p className="success-message order-message"><MailCheck size={16} />{orderMessage}</p>}
+          <div className="table-shell orders-table"><table><thead><tr><th>订单号</th><th>客户</th><th>规格</th><th>金额</th><th>订单状态</th><th>邮件状态</th><th>时间</th><th>操作</th></tr></thead><tbody>
+            {overview.recentOrders.length ? overview.recentOrders.map((order) => {
+              const emailStatus = order.emailStatus ?? (order.status === "delivered" ? "pending" : "inactive");
+              const emailLabel = { pending: "待发送", sending: "发送中", sent: "已送达", failed: "发送失败", inactive: "未触发" }[emailStatus];
+              return <tr key={order.orderNo}>
+                <td><code>{order.orderNo}</code></td>
+                <td>{order.email}</td>
+                <td>{order.variantLabel}</td>
+                <td>{money(order.amountCents)}</td>
+                <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
+                <td><span className={`email-status email-status-${emailStatus}`} title={order.emailLastError ?? undefined}>{emailLabel}{order.emailAttempts ? ` · ${order.emailAttempts}次` : ""}</span></td>
+                <td>{new Date(order.createdAt.replace(" ", "T") + "Z").toLocaleString("zh-CN")}</td>
+                <td className="order-action-cell">{order.status === "delivered" && <button className="resend-email-button" type="button" disabled={resendingOrderNo === order.orderNo} onClick={() => void resendDeliveryEmail(order.orderNo, order.email)} title="重新发送卡密邮件">{resendingOrderNo === order.orderNo ? <LoaderCircle className="spin" size={15} /> : <Send size={15} />}<span>{resendingOrderNo === order.orderNo ? "发送中" : "重新发送"}</span></button>}</td>
+              </tr>;
+            }) : <tr><td colSpan={8} className="empty-cell">暂无订单</td></tr>}
           </tbody></table></div>
         </section>
       </div>

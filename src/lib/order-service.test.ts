@@ -110,10 +110,15 @@ describe("paid order fulfillment", () => {
   it("emails a delivered key exactly once", async () => {
     vi.stubEnv("RESEND_API_KEY", "re_test_delivery_key");
     vi.stubEnv("MAIL_FROM", "Reii Shop <delivery@mail.reiishop.cn>");
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: "email_delivery_1" }), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    }));
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "email_delivery_1" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "email_delivery_2" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }));
     vi.stubGlobal("fetch", fetchMock);
 
     const order = createPendingOrder({
@@ -137,6 +142,13 @@ describe("paid order fulfillment", () => {
     expect(String(request.body)).toContain(delivered.licenseKey);
     expect(database.prepare("SELECT status, message_id as messageId FROM delivery_emails WHERE order_no = ?").get(order.orderNo))
       .toEqual({ status: "sent", messageId: "email_delivery_1" });
+
+    expect(await trySendDeliveryEmail(order.orderNo, { force: true })).toEqual({ status: "sent" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const resendHeaders = new Headers((fetchMock.mock.calls[1][1] as RequestInit).headers);
+    expect(resendHeaders.get("idempotency-key")).toBe(`delivery_resend_${order.orderNo}_2`);
+    expect(database.prepare("SELECT status, attempts, message_id as messageId FROM delivery_emails WHERE order_no = ?").get(order.orderNo))
+      .toEqual({ status: "sent", attempts: 2, messageId: "email_delivery_2" });
     vi.unstubAllGlobals();
   });
 });

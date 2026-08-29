@@ -419,6 +419,18 @@ tbody tr:last-child td { border-bottom: 0; }
 .status-badge { padding: 4px 7px; border-radius: 4px; color: #5f6966; background: #edf0ef; font-size: 10px; font-weight: 720; }
 .status-delivered { color: #176847; background: #e1f2e8; }
 .status-paid_no_stock { color: #975b12; background: #f9e8cc; }
+.orders-table table { min-width: 980px; }
+.email-status { display: inline-flex; align-items: center; padding: 4px 7px; border-radius: 4px; color: #68726f; background: #edf0ef; font-size: 10px; font-weight: 720; }
+.email-status-sent { color: #176847; background: #e1f2e8; }
+.email-status-failed { color: #a13737; background: #f9e1e1; }
+.email-status-sending, .email-status-pending { color: #87601c; background: #f8ecd5; }
+.order-message { display: flex; align-items: center; gap: 7px; margin: -5px 0 12px; }
+.order-action-cell { width: 112px; }
+.resend-email-button { height: 32px; padding: 0 10px; border: 1px solid #cbd5d1; border-radius: 5px; color: #52605b; background: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 720; cursor: pointer; transition: color .22s ease, border-color .22s ease, background-color .22s ease, transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s ease; }
+.resend-email-button:hover:not(:disabled) { color: var(--teal); border-color: var(--teal); background: #f1faf7; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(29,47,42,.1); }
+.resend-email-button:active:not(:disabled) { transform: scale(.92); box-shadow: none; }
+.resend-email-button:disabled { cursor: wait; opacity: .58; }
+.resend-email-button:focus-visible { outline: 2px solid color-mix(in srgb, var(--teal) 45%, transparent); outline-offset: 2px; }
 .empty-cell { padding: 30px; text-align: center; color: #8a9390; }
 .spin { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -719,6 +731,12 @@ html.dark-mode th, html.dark-mode td { border-color: #2d3c38; }
 html.dark-mode .status-badge { color: #c7d3ce; background: #2a3632; }
 html.dark-mode .status-delivered { color: #8be2b3; background: #214a37; }
 html.dark-mode .status-paid_no_stock { color: #f1c478; background: #4b391f; }
+html.dark-mode .email-status { color: #c7d3ce; background: #2a3632; }
+html.dark-mode .email-status-sent { color: #8be2b3; background: #214a37; }
+html.dark-mode .email-status-failed { color: #f3a6a6; background: #4a2929; }
+html.dark-mode .email-status-sending, html.dark-mode .email-status-pending { color: #f1c478; background: #4b391f; }
+html.dark-mode .resend-email-button { color: #b8c7c1; border-color: #40524c; background: #18231f; }
+html.dark-mode .resend-email-button:hover:not(:disabled) { color: var(--teal); border-color: var(--teal); background: #1d3934; box-shadow: 0 8px 18px rgba(0,0,0,.24); }
 html.dark-mode .admin-login { background: var(--charcoal); }
 html.dark-mode .admin-login > a { color: #b4c5be; }
 html.dark-mode .admin-sidebar { background: var(--charcoal); }

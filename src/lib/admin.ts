@@ -25,8 +25,11 @@ export function getAdminOverview() {
   `).all();
   const recentOrders = db.prepare(`
     SELECT o.order_no as orderNo, o.email, o.amount_cents as amountCents, o.status,
-      o.created_at as createdAt, v.label as variantLabel
+      o.created_at as createdAt, v.label as variantLabel,
+      de.status as emailStatus, de.attempts as emailAttempts, de.sent_at as emailSentAt,
+      de.last_error as emailLastError
     FROM orders o JOIN variants v ON v.id = o.variant_id
+    LEFT JOIN delivery_emails de ON de.order_no = o.order_no
     ORDER BY o.created_at DESC LIMIT 20
   `).all();
   return { totals, inventory, recentOrders };
