@@ -140,14 +140,23 @@ code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #26a66f; box-shadow: 0 0 0 4px #d6eddf; }
 .product-visual {
   position: relative;
-  height: 270px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 270px;
+  max-height: 420px;
   margin: 22px 0 32px;
   overflow: hidden;
   border-radius: 8px;
   background: var(--charcoal);
 }
-.product-visual.has-promo-image { background: #dfe6e2; }
-.product-visual.has-promo-image img { object-fit: cover; }
+.product-visual.has-promo-image {
+  background: #0b1110;
+  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+}
+.product-visual.has-promo-image img {
+  object-fit: contain;
+  object-position: center;
+}
 .visual-grid {
   position: absolute;
   inset: 0;
@@ -478,7 +487,7 @@ tbody tr:last-child td { border-bottom: 0; }
   .brand { font-size: 14px; }
   .catalog-wrap, .order-wrap, footer { width: min(100% - 28px, 1180px); }
   .catalog-wrap { padding: 28px 0 40px; }
-  .product-visual { height: 220px; }
+  .product-visual { min-height: 0; max-height: none; aspect-ratio: 4 / 3; }
   .license-tile { width: 230px; height: 132px; }
   .license-tile-back { right: 19px; top: 31px; }
   .license-tile-front { right: 39px; top: 49px; padding: 19px; }
