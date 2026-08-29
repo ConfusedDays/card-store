@@ -294,6 +294,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--teal); box-shado
 .digital-terms-confirmation input { width: 16px; height: 16px; margin: 2px 0 0; flex: 0 0 auto; accent-color: var(--teal); }
 .digital-terms-confirmation a, .purchase-note a, .checkout-policy-note a, .footer-links a { color: var(--teal); text-decoration: underline; text-underline-offset: 3px; }
 .digital-terms-confirmation a { margin-left: 5px; font-weight: 750; white-space: nowrap; }
+.turnstile-field { margin-top: 14px; display: grid; gap: 7px; }
+.turnstile-container { width: 100%; min-height: 65px; overflow: hidden; }
+.turnstile-status { color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 10px; }
+.turnstile-status svg { color: var(--teal); }
 .purchase-note { margin: 12px 0 0; color: #87908d; text-align: center; font-size: 10px; line-height: 1.55; }
 .form-error { color: var(--danger); font-size: 12px; line-height: 1.5; }
 

@@ -10,10 +10,11 @@ import {
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
-export function Storefront({ products, view = "catalog" }: { products: Product[]; view?: "catalog" | "orders" }) {
+export function Storefront({ products, view = "catalog", turnstileSiteKey }: { products: Product[]; view?: "catalog" | "orders"; turnstileSiteKey?: string }) {
   const router = useRouter();
   const [productId, setProductId] = useState(products[0]?.id ?? "");
   const [switchDirection, setSwitchDirection] = useState<"forward" | "backward">("forward");
@@ -24,6 +25,8 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
   const [email, setEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay">("alipay");
   const [acceptedDigitalTerms, setAcceptedDigitalTerms] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileAttempt, setTurnstileAttempt] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [lookup, setLookup] = useState({ orderNo: "", email: "" });
@@ -60,6 +63,8 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
     setProductId(nextProductId);
     setSelectedId(nextProduct?.variants[0]?.id ?? "");
     setAcceptedDigitalTerms(false);
+    setTurnstileToken("");
+    setTurnstileAttempt((attempt) => attempt + 1);
     setError("");
   }
   async function createOrder(event: React.FormEvent) {
@@ -74,7 +79,13 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ variantId: selectedId, email, paymentMethod, digitalTermsAccepted: true }),
+        body: JSON.stringify({
+          variantId: selectedId,
+          email,
+          paymentMethod,
+          digitalTermsAccepted: true,
+          turnstileToken: turnstileToken || undefined,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "创建订单失败");
@@ -84,6 +95,10 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
       else window.location.assign(checkoutUrl.href);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "创建订单失败");
+      if (turnstileSiteKey) {
+        setTurnstileToken("");
+        setTurnstileAttempt((attempt) => attempt + 1);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -203,8 +218,15 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
                   <Link href="/policies#refund" target="_blank">查看完整规则</Link>
                 </span>
               </label>
+              {turnstileSiteKey && (
+                <TurnstileWidget
+                  key={`${product.id}-${turnstileAttempt}`}
+                  siteKey={turnstileSiteKey}
+                  onVerify={setTurnstileToken}
+                />
+              )}
               {error && <p className="form-error">{error}</p>}
-              <button className="primary-button" disabled={submitting || !selected || selected.availableCount < 1 || !acceptedDigitalTerms}>
+              <button className="primary-button" disabled={submitting || !selected || selected.availableCount < 1 || !acceptedDigitalTerms || Boolean(turnstileSiteKey && !turnstileToken)}>
                 <ShoppingBag size={18} /> {submitting ? "正在创建订单..." : "提交订单"} <ArrowRight size={18} />
               </button>
               <p className="purchase-note">支付成功并通过平台确认后自动发卡，请确认接收邮箱填写正确。</p>

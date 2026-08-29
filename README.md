@@ -19,6 +19,9 @@ npm run dev
 - `PAYMENT_MODE`：本地开发设为 `mock`；生产环境不得启用模拟支付。
 - `NEXT_PUBLIC_STORE_NAME`：预留的店铺名称配置。
 - `DATABASE_PATH`：SQLite 文件路径；Railway 建议设为 `/app/data/card-store.sqlite`。
+- `TURNSTILE_SITE_KEY`：Cloudflare Turnstile 公开站点密钥，用于购买页人机验证。
+- `TURNSTILE_SECRET_KEY`：Turnstile 私密服务器密钥；配置后订单接口会强制验签。
+- `TURNSTILE_ALLOWED_HOSTNAMES`：允许的验证域名，生产环境建议设为 `reiishop.cn,www.reiishop.cn`。
 - `SEED_DEMO_CATALOG`：仅本地开发设为 `true`；生产环境不要设置。
 
 ## Railway 部署
