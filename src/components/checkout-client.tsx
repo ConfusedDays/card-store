@@ -145,6 +145,10 @@ export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mock
             <div><dt>支付方式</dt><dd>{order.paymentMethod === "wechat" ? "微信支付" : "支付宝"}</dd></div>
           </dl>
           <div className="summary-total"><span>应付</span><strong>{money(order.amountCents)}</strong></div>
+          <p className="checkout-policy-note">
+            本订单为数字商品。卡密一经交付，原则上不支持七日无理由退款；法定例外情形除外。
+            <Link href="/policies#refund" target="_blank">查看退款规则</Link>
+          </p>
         </aside>
       </div>
     </main>

@@ -25,11 +25,14 @@ export function createPendingOrder(input: { variantId: string; email: string; pa
   if (!variant) throw new Error("商品规格不存在或已下架");
   const orderNo = makeOrderNo();
   db.prepare(`
-    INSERT INTO orders (order_no, variant_id, email, amount_cents, currency, payment_method)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(orderNo, input.variantId, input.email.toLowerCase(), variant.priceCents, variant.currency, input.paymentMethod);
+    INSERT INTO orders (
+      order_no, variant_id, email, amount_cents, currency, payment_method,
+      terms_accepted_at, terms_version
+    )
+    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+  `).run(orderNo, input.variantId, input.email.toLowerCase(), variant.priceCents, variant.currency, input.paymentMethod, "2026-08-29");
   db.prepare(`INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)`)
-    .run("order.created", "order", orderNo, JSON.stringify({ paymentMethod: input.paymentMethod }));
+    .run("order.created", "order", orderNo, JSON.stringify({ paymentMethod: input.paymentMethod, termsVersion: "2026-08-29" }));
   return {
     orderNo,
     amountCents: variant.priceCents,

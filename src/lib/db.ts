@@ -56,7 +56,9 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','paid','delivered','paid_no_stock','cancelled')),
     payment_ref TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    paid_at TEXT
+    paid_at TEXT,
+    terms_accepted_at TEXT,
+    terms_version TEXT
   );
   CREATE INDEX IF NOT EXISTS idx_orders_email ON orders(email);
   CREATE TABLE IF NOT EXISTS payments (
@@ -106,6 +108,20 @@ if (!productColumns.some((column) => column.name === "image_url")) {
     db.exec("ALTER TABLE products ADD COLUMN image_url TEXT");
   } catch (error) {
     const concurrentlyAdded = error instanceof Error && error.message.includes("duplicate column name: image_url");
+    if (!concurrentlyAdded) throw error;
+  }
+}
+
+const orderColumns = db.prepare("PRAGMA table_info(orders)").all() as { name: string }[];
+for (const [column, definition] of [
+  ["terms_accepted_at", "TEXT"],
+  ["terms_version", "TEXT"],
+] as const) {
+  if (orderColumns.some((item) => item.name === column)) continue;
+  try {
+    db.exec(`ALTER TABLE orders ADD COLUMN ${column} ${definition}`);
+  } catch (error) {
+    const concurrentlyAdded = error instanceof Error && error.message.includes(`duplicate column name: ${column}`);
     if (!concurrentlyAdded) throw error;
   }
 }

@@ -290,6 +290,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--teal); box-shado
 .primary-button svg:last-child { margin-left: auto; }
 .primary-button:hover { background: var(--teal-dark); }
 .primary-button:disabled { cursor: not-allowed; opacity: .55; }
+.digital-terms-confirmation { margin-top: 16px; padding: 12px; border: 1px solid var(--line); border-radius: 6px; display: flex; align-items: flex-start; gap: 9px; color: var(--muted); background: color-mix(in srgb, var(--surface) 78%, var(--canvas)); font-size: 11px; line-height: 1.65; cursor: pointer; }
+.digital-terms-confirmation input { width: 16px; height: 16px; margin: 2px 0 0; flex: 0 0 auto; accent-color: var(--teal); }
+.digital-terms-confirmation a, .purchase-note a, .checkout-policy-note a, .footer-links a { color: var(--teal); text-decoration: underline; text-underline-offset: 3px; }
+.digital-terms-confirmation a { margin-left: 5px; font-weight: 750; white-space: nowrap; }
 .purchase-note { margin: 12px 0 0; color: #87908d; text-align: center; font-size: 10px; line-height: 1.55; }
 .form-error { color: var(--danger); font-size: 12px; line-height: 1.5; }
 
@@ -365,7 +369,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--teal); box-shado
 .delivered-key { align-items: center; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--line); }
 .delivered-key code { flex: 1 1 220px; padding: 10px 11px; border-radius: 4px; background: var(--canvas); font-size: 13px; overflow-wrap: anywhere; }
 .delivered-key button { border: 1px solid var(--line); border-radius: 5px; padding: 8px 10px; color: var(--ink); background: var(--surface); display: flex; gap: 6px; align-items: center; }
-footer { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 23px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; color: #737d79; font-size: 11px; }
+footer { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 23px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 20px; color: #737d79; font-size: 11px; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
 
 /* Checkout */
 .checkout-page { min-height: 100vh; background: #f3f5f2; }
@@ -398,6 +403,27 @@ footer { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 23px 0;
 .summary-total { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
 .summary-total span { color: #6f7975; font-size: 12px; }
 .summary-total strong { font-size: 24px; }
+.checkout-policy-note { margin: 22px 0 0; padding: 13px 14px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); background: color-mix(in srgb, var(--surface) 76%, var(--canvas)); font-size: 11px; line-height: 1.65; }
+.checkout-policy-note a { display: inline-block; margin-left: 5px; font-weight: 750; }
+
+/* Policies */
+.policy-page { width: min(920px, calc(100% - 48px)); margin: 0 auto; padding: 54px 0 80px; }
+.policy-back { width: max-content; display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.policy-back:hover { color: var(--teal); }
+.policy-hero { max-width: 680px; padding: 55px 0 38px; }
+.policy-hero h1 { margin: 10px 0 14px; font-size: clamp(32px, 5vw, 48px); letter-spacing: -.035em; }
+.policy-hero p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.8; }
+.policy-hero small { display: block; margin-top: 18px; color: var(--muted); font-size: 10px; }
+.policy-grid { display: grid; gap: 14px; }
+.policy-card { scroll-margin-top: 92px; padding: 28px 30px; border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--surface) 92%, transparent); display: grid; grid-template-columns: 44px 1fr; gap: 18px; box-shadow: 0 14px 36px rgba(0,0,0,.08); }
+.policy-card-emphasis { border-color: color-mix(in srgb, var(--teal) 45%, var(--line)); }
+.policy-icon { width: 44px; height: 44px; border-radius: 7px; color: var(--teal); background: var(--mint); display: grid; place-items: center; }
+.policy-card h2 { margin: 2px 0 13px; font-size: 19px; }
+.policy-card p { margin: 0 0 11px; color: var(--muted); font-size: 13px; line-height: 1.85; }
+.policy-card p:last-child { margin-bottom: 0; }
+.policy-card strong { color: var(--ink); }
+.policy-action { display: inline-flex; margin-top: 4px; padding: 9px 13px; border: 1px solid var(--teal); border-radius: 5px; color: var(--teal); font-size: 12px; font-weight: 750; }
+.policy-action:hover { color: #072b26; background: var(--teal); }
 
 /* Admin */
 .admin-login { min-height: calc(100vh - 72px); padding: 30px; background: var(--charcoal); display: grid; place-items: center; position: relative; }
@@ -533,6 +559,10 @@ tbody tr:last-child td { border-bottom: 0; }
   .order-wrap { width: min(100% - 28px, 760px); padding: 46px 0 54px; }
   .lookup-fields button { justify-content: center; }
   footer { flex-direction: column; gap: 7px; }
+  .policy-page { width: min(100% - 28px, 920px); padding-top: 36px; }
+  .policy-hero { padding: 42px 0 28px; }
+  .policy-card { padding: 22px 20px; grid-template-columns: 38px 1fr; gap: 13px; }
+  .policy-icon { width: 38px; height: 38px; }
   .checkout-header { height: 62px; padding: 0 14px; grid-template-columns: 1fr auto; }
   .checkout-header .brand { display: none; }
   .checkout-layout { width: 100%; border: 0; }

@@ -7,6 +7,7 @@ const orderSchema = z.object({
   variantId: z.string().min(1),
   email: z.email("请输入有效邮箱"),
   paymentMethod: z.enum(["wechat", "alipay"]),
+  digitalTermsAccepted: z.literal(true, "请先确认数字商品交付与退款规则"),
 });
 
 export async function POST(request: Request) {

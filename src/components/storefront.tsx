@@ -2,6 +2,7 @@
 
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, Check, CircleHelp, Copy, KeyRound, LockKeyhole,
@@ -22,6 +23,7 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
   const [selectedId, setSelectedId] = useState(products[0]?.variants[0]?.id ?? "");
   const [email, setEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay">("alipay");
+  const [acceptedDigitalTerms, setAcceptedDigitalTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [lookup, setLookup] = useState({ orderNo: "", email: "" });
@@ -57,17 +59,22 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
     setSwitchDirection(nextIndex >= currentIndex ? "forward" : "backward");
     setProductId(nextProductId);
     setSelectedId(nextProduct?.variants[0]?.id ?? "");
+    setAcceptedDigitalTerms(false);
     setError("");
   }
   async function createOrder(event: React.FormEvent) {
     event.preventDefault();
+    if (!acceptedDigitalTerms) {
+      setError("请先阅读并确认数字商品交付与退款规则");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ variantId: selectedId, email, paymentMethod }),
+        body: JSON.stringify({ variantId: selectedId, email, paymentMethod, digitalTermsAccepted: true }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "创建订单失败");
@@ -184,11 +191,23 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
                 </button>
               </div>
               <div className="order-total"><span>应付金额</span><strong>{selected ? money(selected.priceCents) : "--"}</strong></div>
+              <label className="digital-terms-confirmation">
+                <input
+                  type="checkbox"
+                  checked={acceptedDigitalTerms}
+                  onChange={(event) => setAcceptedDigitalTerms(event.target.checked)}
+                  required
+                />
+                <span>
+                  我已阅读并确认：卡密等数字商品交付后，原则上不支持七日无理由退款。
+                  <Link href="/policies#refund" target="_blank">查看完整规则</Link>
+                </span>
+              </label>
               {error && <p className="form-error">{error}</p>}
-              <button className="primary-button" disabled={submitting || !selected || selected.availableCount < 1}>
+              <button className="primary-button" disabled={submitting || !selected || selected.availableCount < 1 || !acceptedDigitalTerms}>
                 <ShoppingBag size={18} /> {submitting ? "正在创建订单..." : "提交订单"} <ArrowRight size={18} />
               </button>
-              <p className="purchase-note">提交即表示接受数字商品售后规则。支付成功并通过平台确认后自动发卡。</p>
+              <p className="purchase-note">支付成功并通过平台确认后自动发卡，请确认接收邮箱填写正确。</p>
             </form>
           </div>
         </section>
@@ -231,7 +250,14 @@ export function Storefront({ products, view = "catalog" }: { products: Product[]
             </div>
           </section>
         )}      </main>
-      <footer><span>数字授权中心</span><span>仅销售获得正式授权的数字商品</span></footer>
+      <footer>
+        <span>数字授权中心 · 仅销售获得正式授权的数字商品</span>
+        <span className="footer-links">
+          <Link href="/policies#refund">退款规则</Link>
+          <Link href="/policies#privacy">隐私政策</Link>
+          <Link href="/policies#contact">售后说明</Link>
+        </span>
+      </footer>
     </div>
   );
 }
