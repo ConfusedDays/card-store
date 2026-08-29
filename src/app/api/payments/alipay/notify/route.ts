@@ -1,6 +1,7 @@
 import { cnyToCents } from "@/lib/payment-money";
 import { getAlipayClient } from "@/lib/payment-provider";
 import { completePaidOrder } from "@/lib/order-service";
+import { trySendDeliveryEmail } from "@/lib/delivery-email";
 
 export const runtime = "nodejs";
 
@@ -29,12 +30,13 @@ export async function POST(request: Request) {
       return reply("failure", 400);
     }
 
-    completePaidOrder({
+    const order = completePaidOrder({
       orderNo: notification.out_trade_no,
       provider: "alipay",
       providerRef: notification.trade_no,
       amountCents: cnyToCents(notification.total_amount),
     });
+    if (order.status === "delivered") await trySendDeliveryEmail(order.orderNo);
     return reply("success");
   } catch (error) {
     console.error("Alipay notification rejected", error);

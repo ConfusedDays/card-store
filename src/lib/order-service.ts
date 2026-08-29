@@ -126,6 +126,7 @@ export function completePaidOrder(input: {
     db.prepare(`INSERT INTO deliveries (order_no, license_key_id, key_ciphertext) VALUES (?, ?, ?)`)
       .run(input.orderNo, key.id, key.key_ciphertext);
     db.prepare(`UPDATE orders SET status = 'delivered' WHERE order_no = ?`).run(input.orderNo);
+    db.prepare("INSERT OR IGNORE INTO delivery_emails (order_no) VALUES (?)").run(input.orderNo);
     db.prepare(`INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)`)
       .run("order.delivered", "order", input.orderNo, JSON.stringify({ keyId: key.id }));
     return toOrderResult({ ...order, status: "delivered" }, decryptLicenseKey(key.key_ciphertext));

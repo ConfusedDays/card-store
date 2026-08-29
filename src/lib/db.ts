@@ -75,6 +75,15 @@ db.exec(`
     key_ciphertext TEXT NOT NULL,
     delivered_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS delivery_emails (
+    order_no TEXT PRIMARY KEY REFERENCES orders(order_no),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','sending','sent','failed')),
+    attempts INTEGER NOT NULL DEFAULT 0,
+    message_id TEXT,
+    last_error TEXT,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sent_at TEXT
+  );
   CREATE TABLE IF NOT EXISTS audit_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     action TEXT NOT NULL,

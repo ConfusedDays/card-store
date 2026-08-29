@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { queryAlipayTrade } from "@/lib/payment-provider";
 import { completePaidOrder, getOrderForCustomer } from "@/lib/order-service";
+import { trySendDeliveryEmail } from "@/lib/delivery-email";
 
 export async function GET(request: Request, context: { params: Promise<{ orderNo: string }> }) {
   const { orderNo } = await context.params;
@@ -21,6 +22,8 @@ export async function GET(request: Request, context: { params: Promise<{ orderNo
       });
     }
   }
+
+  if (order.status === "delivered") await trySendDeliveryEmail(order.orderNo);
 
   return NextResponse.json(order);
 }

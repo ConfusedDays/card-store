@@ -8,6 +8,7 @@ const testDirectory = mkdtempSync(join(tmpdir(), "card-store-payment-"));
 let database: typeof import("./db").db;
 let createPendingOrder: typeof import("./order-service").createPendingOrder;
 let completePaidOrder: typeof import("./order-service").completePaidOrder;
+let trySendDeliveryEmail: typeof import("./delivery-email").trySendDeliveryEmail;
 let alipaySigningKey = "";
 
 beforeAll(async () => {
@@ -22,6 +23,7 @@ beforeAll(async () => {
   vi.stubEnv("ALIPAY_KEY_TYPE", "PKCS8");
   ({ db: database } = await import("./db"));
   ({ createPendingOrder, completePaidOrder } = await import("./order-service"));
+  ({ trySendDeliveryEmail } = await import("./delivery-email"));
 });
 
 afterAll(() => {
@@ -103,5 +105,38 @@ describe("paid order fulfillment", () => {
     expect(await response.text()).toBe("success");
     expect(database.prepare("SELECT status FROM orders WHERE order_no = ?").get(order.orderNo))
       .toEqual({ status: "delivered" });
+  });
+
+  it("emails a delivered key exactly once", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_test_delivery_key");
+    vi.stubEnv("MAIL_FROM", "Reii Shop <delivery@mail.reiishop.cn>");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: "email_delivery_1" }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const order = createPendingOrder({
+      variantId: "variant-license-7d",
+      email: "mail-buyer@example.com",
+      paymentMethod: "alipay",
+    });
+    const delivered = completePaidOrder({
+      orderNo: order.orderNo,
+      provider: "alipay",
+      providerRef: "2026082400000004",
+      amountCents: order.amountCents,
+    });
+
+    expect(await trySendDeliveryEmail(order.orderNo)).toEqual({ status: "sent" });
+    expect(await trySendDeliveryEmail(order.orderNo)).toEqual({ status: "sent" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://api.resend.com/emails");
+    expect(new Headers(request.headers).get("idempotency-key")).toBe(`delivery_${order.orderNo}`);
+    expect(String(request.body)).toContain(delivered.licenseKey);
+    expect(database.prepare("SELECT status, message_id as messageId FROM delivery_emails WHERE order_no = ?").get(order.orderNo))
+      .toEqual({ status: "sent", messageId: "email_delivery_1" });
+    vi.unstubAllGlobals();
   });
 });
