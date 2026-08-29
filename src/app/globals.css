@@ -1229,32 +1229,6 @@ html:not(.dark-mode) .admin-sidebar .back-store:hover { color: var(--teal); }
 @media (prefers-reduced-motion: reduce) {
   .telegram-theme-icon { animation-duration: .001ms !important; }
 }
-/* Telegram-style circular theme reveal from the pressed theme control. */
-@keyframes telegram-theme-expand {
-  from { clip-path: circle(0 at var(--theme-transition-x) var(--theme-transition-y)); }
-  to { clip-path: circle(var(--theme-transition-radius) at var(--theme-transition-x) var(--theme-transition-y)); }
-}
-@keyframes telegram-theme-contract {
-  from { clip-path: circle(var(--theme-transition-radius) at var(--theme-transition-x) var(--theme-transition-y)); }
-  to { clip-path: circle(0 at var(--theme-transition-x) var(--theme-transition-y)); }
-}
-::view-transition-group(root) { animation: none; }
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-::view-transition-old(root) { z-index: 1; }
-::view-transition-new(root) { z-index: 2; }
-html.telegram-theme-transition:not(.telegram-theme-contract)::view-transition-new(root) {
-  animation: telegram-theme-expand .56s cubic-bezier(.22,1,.36,1) both;
-}
-html.telegram-theme-contract::view-transition-old(root) {
-  z-index: 2;
-  animation: telegram-theme-contract .56s cubic-bezier(.22,1,.36,1) both;
-}
-html.telegram-theme-contract::view-transition-new(root) { z-index: 1; }
-html.telegram-theme-snapshot .site-background canvas { visibility: hidden !important; }
 html.telegram-theme-transition *,
 html.telegram-theme-transition *::before,
 html.telegram-theme-transition *::after {

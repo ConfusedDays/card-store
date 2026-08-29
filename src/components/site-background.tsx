@@ -7,8 +7,8 @@ const lightColors = ["#eff8f5", "#cce9df", "#91cabc", "#f4f6f3"];
 const darkColors = ["#213c36", "#17665a", "#2d8c7d", "#0d1412"];
 
 function subscribe(onChange: () => void) {
-  window.addEventListener("card-store-theme-change", onChange);
-  return () => window.removeEventListener("card-store-theme-change", onChange);
+  window.addEventListener("card-store-background-theme-change", onChange);
+  return () => window.removeEventListener("card-store-background-theme-change", onChange);
 }
 
 function getTheme() {

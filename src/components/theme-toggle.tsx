@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/apple-liquid-glass-switcher";
 
 const STORAGE_KEY = "card-store-theme";
+const THEME_CHANGE_EVENT = "card-store-theme-change";
+const BACKGROUND_THEME_CHANGE_EVENT = "card-store-background-theme-change";
 
 type Theme = ThemeSwitcherValue;
 
@@ -25,8 +27,8 @@ function applyTheme(theme: Theme) {
 }
 
 const subscribe = (onChange: () => void) => {
-  window.addEventListener("card-store-theme-change", onChange);
-  return () => window.removeEventListener("card-store-theme-change", onChange);
+  window.addEventListener(THEME_CHANGE_EVENT, onChange);
+  return () => window.removeEventListener(THEME_CHANGE_EVENT, onChange);
 };
 
 const getServerTheme = (): Theme => "light";
@@ -35,10 +37,11 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   const theme = useSyncExternalStore(subscribe, getPreferredTheme, getServerTheme);
   const transitioning = useRef(false);
 
-  function commitTheme(nextTheme: Theme) {
+  function commitTheme(nextTheme: Theme, syncBackground = true) {
     window.localStorage.setItem(STORAGE_KEY, nextTheme);
     applyTheme(nextTheme);
-    window.dispatchEvent(new Event("card-store-theme-change"));
+    window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
+    if (syncBackground) window.dispatchEvent(new Event(BACKGROUND_THEME_CHANGE_EVENT));
   }
 
   function createBackdrop(theme: Theme, origin: ThemeTransitionOrigin, radius: number) {
@@ -84,9 +87,14 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     const pointCircle = `circle(0px at ${origin.x}px ${origin.y}px)`;
 
     try {
+      backdrop.style.clipPath = nextTheme === "light" ? fullCircle : pointCircle;
+
+      // Update every UI surface immediately. The WebGL background is synchronized
+      // separately so the circular reveal remains visible behind the content.
+      flushSync(() => commitTheme(nextTheme, nextTheme === "light"));
+
       if (nextTheme === "light") {
-        backdrop.style.clipPath = fullCircle;
-        flushSync(() => commitTheme(nextTheme));
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       }
 
       const animation = backdrop.animate(
@@ -98,7 +106,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       await animation.finished;
 
       if (nextTheme === "dark") {
-        flushSync(() => commitTheme(nextTheme));
+        window.dispatchEvent(new Event(BACKGROUND_THEME_CHANGE_EVENT));
         await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
       }
     } catch {
