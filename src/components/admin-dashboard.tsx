@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArchiveRestore, ArrowLeft, Boxes, CircleDollarSign, Download, KeyRound, LoaderCircle, LogIn, MailCheck, PackagePlus, ReceiptText, RefreshCw, Send, ShieldCheck, Tags, TriangleAlert, Upload, X, Menu as MenuIcon } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
@@ -308,7 +309,7 @@ export function AdminDashboard() {
       <SiteHeader active="admin" />
       <main className="admin-page">
       <aside className="admin-sidebar">
-        <Link className="brand" href="/"><span className="brand-mark"><KeyRound size={18} /></span><span>数字授权中心</span></Link>
+        <Link className="brand" href="/"><span className="brand-mark brand-photo"><Image src="/reii-bear.jpg" alt="" width={34} height={34} /></span><span>Reii小店</span></Link>
         <div className="admin-mobile-fluid-menu">
           <MenuContainer label="后台快捷导航">
             <MenuItem

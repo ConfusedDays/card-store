@@ -63,6 +63,8 @@ body.purchase-notice-open { overflow: hidden; }
 .purchase-notice-overlay { position: fixed; inset: 0; z-index: 1000; padding: 24px; background: rgba(3, 10, 8, .74); -webkit-backdrop-filter: blur(13px); backdrop-filter: blur(13px); display: grid; place-items: center; animation: notice-overlay-in .32s ease-out both; }
 .purchase-notice-dialog { width: min(570px, 100%); max-height: min(760px, calc(100vh - 48px)); overflow-y: auto; padding: clamp(26px, 5vw, 42px); border: 1px solid rgba(112, 157, 143, .3); border-radius: 16px; color: #eaf4f0; background: linear-gradient(145deg, rgba(25, 37, 33, .99), rgba(13, 22, 19, .99)); box-shadow: 0 28px 85px rgba(0, 0, 0, .52), inset 0 1px 0 rgba(255,255,255,.05); text-align: center; animation: notice-dialog-in .42s cubic-bezier(.22,1,.36,1) both; }
 .notice-emblem { width: 54px; height: 54px; margin: 0 auto 15px; border: 1px solid rgba(88, 211, 183, .36); border-radius: 17px; color: #72dcc8; background: linear-gradient(145deg, #173b34, #10251f); display: grid; place-items: center; box-shadow: 0 9px 23px rgba(0,0,0,.24); }
+.notice-logo { overflow: hidden; background: #f8e4b6; }
+.notice-logo img { width: 100%; height: 100%; object-fit: cover; }
 .notice-kicker { color: #7bbdaf; font-size: 10px; font-weight: 850; letter-spacing: .12em; }
 .purchase-notice-dialog h1 { margin: 7px 0 4px; color: #f2f7f5; font-size: clamp(29px, 6vw, 40px); letter-spacing: -.04em; }
 .notice-intro { margin: 0 0 24px; color: #a9bbb5; font-size: 14px; }
@@ -123,6 +125,8 @@ body.purchase-notice-open { overflow: hidden; }
   color: #fff;
   background: var(--teal);
 }
+.brand-photo { overflow: hidden; background: #f8e4b6; }
+.brand-photo img { width: 100%; height: 100%; object-fit: cover; }
 .nav-links { display: flex; color: #4f5956; font-size: 14px; font-weight: 680; }
 .contact-menu { position: relative; }
 .contact-trigger { min-height: 36px; padding: 0 11px; border: 1px solid color-mix(in srgb, var(--line) 92%, transparent); border-radius: 7px; color: #53615c; background: color-mix(in srgb, var(--surface) 70%, transparent); display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 750; transition: border-color .18s ease, color .18s ease, background-color .18s ease, transform .18s ease; }

@@ -4,7 +4,7 @@ import { PurchaseNoticeGate } from "@/components/purchase-notice-gate";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "数字授权中心",
+  title: "Reii小店",
   description: "授权数字商品自动交付平台",
 };
 

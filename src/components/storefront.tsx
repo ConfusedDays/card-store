@@ -273,7 +273,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
           </section>
         )}      </main>
       <footer>
-        <span>数字授权中心 · 仅销售获得正式授权的数字商品</span>
+        <span>Reii小店 · 仅销售获得正式授权的数字商品</span>
         <span className="footer-links">
           <Link href="/policies#refund">退款规则</Link>
           <Link href="/policies#privacy">隐私政策</Link>

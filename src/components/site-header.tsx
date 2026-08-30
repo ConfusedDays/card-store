@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, ChevronDown, Copy, ExternalLink, KeyRound, MessageCircle, Users } from "lucide-react";
+import { Check, ChevronDown, Copy, ExternalLink, MessageCircle, Users } from "lucide-react";
 import { SlideTabs, type SlideTabItem } from "@/components/ui/slide-tabs";
 
 type SiteSection = "catalog" | "orders" | "admin";
@@ -61,11 +62,11 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         className="brand"
         href="/"
         prefetch={true}
-        aria-label="数字授权中心首页"
+        aria-label="Reii小店首页"
         onClick={(event) => navigateTo("/", event)}
       >
-        <span className="brand-mark"><KeyRound size={19} /></span>
-        <span>数字授权中心</span>
+        <span className="brand-mark brand-photo"><Image src="/reii-bear.jpg" alt="" width={34} height={34} priority /></span>
+        <span>Reii小店</span>
       </Link>
       <nav className="nav-links" aria-label="主导航">
         <SlideTabs items={tabs} activeId={active} onNavigate={navigateTo} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Copy, KeyRound, LoaderCircle, QrCode, ShieldCheck } from "lucide-react";
 import type { OrderResult } from "@/lib/types";
@@ -94,7 +95,7 @@ export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mock
     <main className="checkout-page">
       <header className="checkout-header">
         <Link href="/"><ArrowLeft size={18} /> 返回商店</Link>
-        <span className="brand"><span className="brand-mark"><KeyRound size={18} /></span>数字授权中心</span>
+        <span className="brand"><span className="brand-mark brand-photo"><Image src="/reii-bear.jpg" alt="" width={34} height={34} priority /></span>Reii小店</span>
         <div className="checkout-header-actions">
           <span><ShieldCheck size={17} /> 安全结账</span>
         </div>

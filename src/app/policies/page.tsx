@@ -3,7 +3,7 @@ import { ArrowLeft, CircleHelp, FileCheck2, LockKeyhole, PackageCheck } from "lu
 import { SiteHeader } from "@/components/site-header";
 
 export const metadata = {
-  title: "数字商品购买与售后规则 · 数字授权中心",
+  title: "数字商品购买与售后规则 · Reii小店",
   description: "数字商品交付、退款、隐私及售后说明",
 };
 
