@@ -43,6 +43,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; text-decoration: none; }
 button { cursor: pointer; }
 code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+body.purchase-notice-open { overflow: hidden; }
 
 .sr-only {
   position: absolute;
@@ -57,6 +58,33 @@ code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
 }
 
 .site-shell { min-height: 100vh; }
+
+/* First-visit purchase notice */
+.purchase-notice-overlay { position: fixed; inset: 0; z-index: 1000; padding: 24px; background: rgba(3, 10, 8, .74); -webkit-backdrop-filter: blur(13px); backdrop-filter: blur(13px); display: grid; place-items: center; animation: notice-overlay-in .32s ease-out both; }
+.purchase-notice-dialog { width: min(570px, 100%); max-height: min(760px, calc(100vh - 48px)); overflow-y: auto; padding: clamp(26px, 5vw, 42px); border: 1px solid rgba(112, 157, 143, .3); border-radius: 16px; color: #eaf4f0; background: linear-gradient(145deg, rgba(25, 37, 33, .99), rgba(13, 22, 19, .99)); box-shadow: 0 28px 85px rgba(0, 0, 0, .52), inset 0 1px 0 rgba(255,255,255,.05); text-align: center; animation: notice-dialog-in .42s cubic-bezier(.22,1,.36,1) both; }
+.notice-emblem { width: 54px; height: 54px; margin: 0 auto 15px; border: 1px solid rgba(88, 211, 183, .36); border-radius: 17px; color: #72dcc8; background: linear-gradient(145deg, #173b34, #10251f); display: grid; place-items: center; box-shadow: 0 9px 23px rgba(0,0,0,.24); }
+.notice-kicker { color: #7bbdaf; font-size: 10px; font-weight: 850; letter-spacing: .12em; }
+.purchase-notice-dialog h1 { margin: 7px 0 4px; color: #f2f7f5; font-size: clamp(29px, 6vw, 40px); letter-spacing: -.04em; }
+.notice-intro { margin: 0 0 24px; color: #a9bbb5; font-size: 14px; }
+.notice-rules { margin: 0; padding: 19px 20px; border: 1px solid rgba(104, 144, 133, .23); border-radius: 10px; background: rgba(2, 11, 8, .22); display: grid; gap: 14px; text-align: left; list-style: none; }
+.notice-rules li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start; color: #c5d4cf; font-size: 12px; line-height: 1.7; }
+.notice-rules svg { margin-top: 2px; color: #52c8b1; }
+.notice-agreement, .notice-remember { cursor: pointer; user-select: none; }
+.notice-agreement { margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #e7f0ed; font-size: 12px; font-weight: 650; }
+.notice-agreement input, .notice-remember input { position: absolute; opacity: 0; pointer-events: none; }
+.notice-checkmark { width: 17px; height: 17px; border: 1px solid #61766f; border-radius: 5px; color: #062720; background: transparent; display: grid; place-items: center; transition: background-color .18s ease, border-color .18s ease, transform .18s ease; }
+.notice-agreement input:focus-visible + .notice-checkmark { outline: 2px solid #75decb; outline-offset: 3px; }
+.notice-agreement input:checked + .notice-checkmark { border-color: #69d7c1; background: #69d7c1; transform: scale(1.04); }
+.notice-agreement a { color: #74d7c4; text-decoration: underline; text-underline-offset: 3px; }
+.notice-remember { margin: 13px auto 0; color: #98aaa4; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 11px; }
+.notice-remember::before { width: 13px; height: 13px; border: 1px solid #5c716a; border-radius: 4px; content: ""; display: inline-block; }
+.notice-remember:has(input:checked)::before { border-color: #69d7c1; background: #69d7c1; box-shadow: inset 0 0 0 3px #16332c; }
+.notice-enter-button { width: 100%; min-height: 48px; margin-top: 22px; border: 0; border-radius: 8px; color: #062a23; background: #6cdbc4; font-size: 14px; font-weight: 800; transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease; }
+.notice-enter-button:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(90, 211, 187, .22); }
+.notice-enter-button:disabled { cursor: not-allowed; color: #9eb1aa; background: #2a3834; }
+.notice-footnote { margin: 15px 0 0; color: #84958f; font-size: 10px; line-height: 1.6; }
+@keyframes notice-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes notice-dialog-in { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 @keyframes route-enter {
   from { opacity: .2; transform: translateY(10px); }

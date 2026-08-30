@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteBackground } from "@/components/site-background";
+import { PurchaseNoticeGate } from "@/components/purchase-notice-gate";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <SiteBackground />
         {children}
+        <PurchaseNoticeGate />
       </body>
     </html>
   );
