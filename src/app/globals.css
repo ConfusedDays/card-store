@@ -124,6 +124,19 @@ body.purchase-notice-open { overflow: hidden; }
   background: var(--teal);
 }
 .nav-links { display: flex; color: #4f5956; font-size: 14px; font-weight: 680; }
+.contact-menu { position: relative; }
+.contact-trigger { min-height: 36px; padding: 0 11px; border: 1px solid color-mix(in srgb, var(--line) 92%, transparent); border-radius: 7px; color: #53615c; background: color-mix(in srgb, var(--surface) 70%, transparent); display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 750; transition: border-color .18s ease, color .18s ease, background-color .18s ease, transform .18s ease; }
+.contact-trigger:hover, .contact-trigger[aria-expanded="true"] { border-color: color-mix(in srgb, var(--teal) 48%, var(--line)); color: var(--teal); background: color-mix(in srgb, var(--mint) 58%, var(--surface)); }
+.contact-trigger:active { transform: scale(.97); }
+.contact-trigger svg:last-child { transition: transform .18s ease; }
+.contact-trigger[aria-expanded="true"] svg:last-child { transform: rotate(180deg); }
+.contact-popover { position: absolute; top: calc(100% + 10px); right: 0; z-index: 50; width: 235px; padding: 7px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: var(--surface); box-shadow: 0 18px 42px rgba(13,31,25,.16); animation: contact-popover-in .18s cubic-bezier(.22,1,.36,1) both; }
+.contact-popover a, .contact-popover button { width: 100%; min-height: 39px; padding: 0 9px; border: 0; border-radius: 6px; color: inherit; background: transparent; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; font-weight: 700; text-align: left; }
+.contact-popover a:hover, .contact-popover button:hover { color: var(--teal); background: color-mix(in srgb, var(--mint) 58%, var(--surface)); }
+.contact-popover span { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.contact-popover strong { color: var(--teal); font-size: 11px; letter-spacing: .025em; }
+.contact-popover small { padding: 6px 9px 3px; color: var(--muted); display: block; font-size: 10px; }
+@keyframes contact-popover-in { from { opacity: 0; transform: translateY(-5px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .slide-tabs {
   position: relative;
   display: flex;
@@ -768,6 +781,10 @@ html.dark-mode body { color: var(--ink); background: var(--canvas); }
 html.dark-mode .site-background::after { background: rgba(8, 15, 13, .03); }
 html.dark-mode .topbar,
 html.dark-mode .checkout-header { background: rgba(25, 35, 32, .74); border-color: color-mix(in srgb, var(--line) 72%, transparent); }
+html.dark-mode .contact-trigger { border-color: rgba(94, 130, 121, .4); color: #b0c1bb; background: rgba(13, 20, 18, .42); }
+html.dark-mode .contact-trigger:hover, html.dark-mode .contact-trigger[aria-expanded="true"] { border-color: #4c8a7d; color: #7ee0cd; background: #193a33; }
+html.dark-mode .contact-popover { border-color: #3a4f48; background: #192622; box-shadow: 0 18px 42px rgba(0,0,0,.34); }
+html.dark-mode .contact-popover a:hover, html.dark-mode .contact-popover button:hover { color: #91e5d4; background: #213c35; }
 html.dark-mode .nav-links,
 html.dark-mode .product-copy p,
 html.dark-mode .trust-row,
@@ -861,6 +878,9 @@ html.dark-mode .visual-grid { opacity: .3; }
 
 @media (max-width: 640px) {
   .topbar-actions { gap: 6px; }
+  .contact-trigger { width: 36px; padding: 0; justify-content: center; }
+  .contact-trigger span, .contact-trigger svg:last-child { display: none; }
+  .contact-popover { right: -3px; }
   .checkout-header-actions { gap: 7px; }
   .checkout-header-actions > span { font-size: 0; }
   .checkout-header-actions > span svg { margin: 0; }
