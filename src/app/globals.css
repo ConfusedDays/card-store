@@ -524,6 +524,14 @@ tbody tr:last-child td { border-bottom: 0; }
 .inventory-bulk-actions button { min-height: 34px; padding: 0 12px; }
 .inventory-key-table { overflow-x: auto; }
 .inventory-key-table small { display: block; margin-top: 3px; color: var(--muted); }
+.inventory-key-row { animation: inventory-row-in .42s cubic-bezier(.22,1,.36,1) both; transition: background-color .2s ease, transform .2s ease; }
+.inventory-key-row:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.key-value { display: flex; align-items: center; gap: 7px; min-width: 220px; }
+.key-value code { color: var(--text); white-space: nowrap; }
+.copy-key-button { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--muted); transition: transform .18s ease, color .18s ease, border-color .18s ease; }
+.copy-key-button:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-2px); }
+@keyframes inventory-row-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .inventory-key-row { animation: none; } }
 .import-panel { padding: 22px; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
 .import-panel h3 { margin: 0 0 18px; display: flex; align-items: center; gap: 8px; font-size: 16px; }
 .import-panel label { display: block; margin-top: 13px; color: #626c68; font-size: 11px; font-weight: 720; }

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { encryptLicenseKey, keyFingerprint, keyLast4 } from "@/lib/crypto";
+import { decryptLicenseKey, encryptLicenseKey, keyFingerprint, keyLast4 } from "@/lib/crypto";
 
 export function isAdminRequest(request: Request) {
   const expected = process.env.ADMIN_TOKEN ?? (process.env.NODE_ENV === "production" ? "" : "dev-admin-token");
@@ -64,6 +64,7 @@ export type AdminInventoryKey = {
   productName: string;
   variantLabel: string;
   last4: string;
+  key: string;
   status: "available" | "reserved" | "sold" | "disabled";
   orderNo: string | null;
   createdAt: string;
@@ -80,10 +81,14 @@ export function getAdminInventoryKeys(options: { variantId?: string; status?: st
   values.push(Math.min(Math.max(options.limit ?? 200, 1), 500));
   return db.prepare(`
     SELECT k.id, k.variant_id as variantId, p.name as productName, v.label as variantLabel,
-      k.key_last4 as last4, k.status, k.order_no as orderNo, k.created_at as createdAt, k.sold_at as soldAt
+      k.key_ciphertext as ciphertext, k.key_last4 as last4, k.status, k.order_no as orderNo, k.created_at as createdAt, k.sold_at as soldAt
     FROM license_keys k JOIN variants v ON v.id = k.variant_id JOIN products p ON p.id = v.product_id
     ${where} ORDER BY k.id DESC LIMIT ?
-  `).all(...values) as AdminInventoryKey[];
+  `).all(...values).map((row) => {
+    const item = row as Omit<AdminInventoryKey, "key"> & { ciphertext: string };
+    const { ciphertext, ...key } = item;
+    return { ...key, key: decryptLicenseKey(ciphertext) };
+  });
 }
 
 export function updateInventoryKeys(ids: number[], status: "available" | "disabled") {
