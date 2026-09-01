@@ -217,7 +217,7 @@ export function ProductManager({ products, token, onSaved }: {
   return (
     <section className="admin-section" id="products">
       <div className="section-heading">
-        <div><span className="section-index">PRODUCTS</span><h2>商品管理</h2></div>
+        <div><h2>商品管理</h2></div>
         <button
           className={`secondary-command ${draft && !draft.id ? "selected" : ""}`}
           type="button"
@@ -244,7 +244,7 @@ export function ProductManager({ products, token, onSaved }: {
         {draft ? (
           <form key={draft.id ?? "new-product"} className="product-editor" onSubmit={saveProduct}>
             <div className="editor-heading">
-              <div><span className="section-index">{draft.id ? "EDIT PRODUCT" : "NEW PRODUCT"}</span><h3>{draft.id ? "编辑商品" : "新增商品"}</h3></div>
+              <div><h3>{draft.id ? "编辑商品" : "新增商品"}</h3></div>
               <button className="icon-action" type="button" onClick={() => setDraft(null)} title="关闭编辑"><X size={17} /></button>
             </div>
             <div className="editor-grid">

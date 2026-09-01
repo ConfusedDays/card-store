@@ -340,7 +340,7 @@ export function AdminDashboard() {
           <input type="password" value={token} onChange={(event) => setToken(event.target.value)} placeholder="Admin token" autoFocus required />
           {error && <p className="form-error">{error}</p>}
           <button className="primary-button" disabled={loading}>{loading ? <LoaderCircle className="spin" size={18} /> : <LogIn size={18} />}进入后台</button>
-          <small>开发环境默认令牌：dev-admin-token</small>
+          {process.env.NODE_ENV !== "production" && <small>开发环境默认令牌：dev-admin-token</small>}
         </form>
         </main>
       </div>
@@ -392,7 +392,7 @@ export function AdminDashboard() {
         <Link className="back-store" href="/"><ArrowLeft size={17} />返回商店</Link>
       </aside>
       <div className="admin-content">
-        <header><div><span className="section-index">OPERATIONS</span><h1>销售与库存</h1></div><div className="admin-header-actions"><button className="icon-action" onClick={() => loadOverview()} title="刷新数据"><RefreshCw size={18} /></button></div></header>
+        <header><div><h1>销售与库存</h1></div><div className="admin-header-actions"><button className="icon-action" onClick={() => loadOverview()} title="刷新数据"><RefreshCw size={18} /></button></div></header>
         {error && <p className="form-error">{error}</p>}
         <section className="metric-grid" id="overview">
           <Metric icon={<ReceiptText />} label="累计订单" value={String(overview.totals.orders)} />
@@ -403,7 +403,7 @@ export function AdminDashboard() {
         <ProductManager products={overview.products} token={token} onSaved={() => loadOverview()} />
 
         <section className="admin-section" id="inventory">
-          <div className="section-heading"><div><span className="section-index">INVENTORY</span><h2>卡密库存</h2></div></div>
+          <div className="section-heading"><div><h2>卡密库存</h2></div></div>
           <div className="inventory-layout">
             <div className="inventory-table table-shell">
               <table><thead><tr><th>商品</th><th>规格</th><th>可售</th><th>已售</th></tr></thead><tbody>
@@ -429,7 +429,7 @@ export function AdminDashboard() {
         </section>
 
         <section className="admin-section" id="backups">
-          <div className="section-heading"><div><span className="section-index">DATA SAFETY</span><h2>备份与恢复</h2></div></div>
+          <div className="section-heading"><div><h2>备份与恢复</h2></div></div>
           {backupMessage && <p className="success-message backup-message"><ShieldCheck size={16} />{backupMessage}</p>}
           <div className="backup-layout">
             <form className="backup-panel" onSubmit={downloadBackup}>
@@ -450,7 +450,7 @@ export function AdminDashboard() {
         </section>
 
         <section className="admin-section" id="orders">
-          <div className="section-heading"><div><span className="section-index">ORDERS</span><h2>最近订单</h2></div></div>
+          <div className="section-heading"><div><h2>最近订单</h2></div></div>
           {orderMessage && <p className="success-message order-message"><MailCheck size={16} />{orderMessage}</p>}
           <div className="table-shell orders-table"><table><thead><tr><th>订单号</th><th>客户</th><th>规格</th><th>金额</th><th>订单状态</th><th>邮件状态</th><th>时间</th><th>操作</th></tr></thead><tbody>
             {overview.recentOrders.length ? overview.recentOrders.map((order) => {

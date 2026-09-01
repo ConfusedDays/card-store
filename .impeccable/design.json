@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-01T19:38:00+08:00",
+  "title": "Design System: Reii 小店",
+  "extensions": {
+    "colorMeta": {
+      "ink-canvas": { "role": "neutral", "displayName": "Ink Canvas", "canonical": "#060a08", "tonalRamp": ["#060a08", "#101714", "#1c2923", "#32443c", "#52675e", "#7d9087", "#b6c1bb", "#eef2ef"] },
+      "pine-surface": { "role": "neutral", "displayName": "Pine Surface", "canonical": "#101714", "tonalRamp": ["#07100c", "#101714", "#173128", "#294a3d", "#47705f", "#709786", "#a7c1b5", "#edf5f1"] },
+      "delivery-mint": { "role": "primary", "displayName": "Delivery Mint", "canonical": "#68ddb5", "tonalRamp": ["#07251c", "#0d4634", "#17694f", "#268d6b", "#3ab58c", "#68ddb5", "#a5eed5", "#e6fbf3"] },
+      "warm-white": { "role": "neutral", "displayName": "Warm White", "canonical": "#f1f5f1", "tonalRamp": ["#171b18", "#323833", "#505852", "#717b74", "#96a099", "#bcc4be", "#dde3de", "#f7faf7"] },
+      "status-amber": { "role": "secondary", "displayName": "Status Amber", "canonical": "#e4b45d", "tonalRamp": ["#291d08", "#4b3611", "#70521d", "#98712d", "#bd9140", "#e4b45d", "#f2d594", "#fbf0d5"] },
+      "status-danger": { "role": "tertiary", "displayName": "Status Danger", "canonical": "#e88378", "tonalRamp": ["#2b1110", "#52201d", "#7b322d", "#a54840", "#cb6258", "#e88378", "#f3b2ab", "#fae5e2"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Shop Display", "purpose": "Short hero promises and major section orientation." },
+      "body": { "displayName": "Operational Body", "purpose": "Product, delivery, checkout, policy, and admin content." },
+      "label": { "displayName": "Ledger Label", "purpose": "Compact controls, prices, stock, and metadata." }
+    },
+    "shadows": [
+      { "name": "console-ambient", "value": "0 32px 80px rgba(0,0,0,.36)", "purpose": "Separates the live catalog console from the first-viewport canvas." },
+      { "name": "panel-ambient", "value": "0 25px 72px rgba(0,0,0,.24)", "purpose": "Supports primary transactional panels without a glass effect." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "180ms ease", "purpose": "Color and border feedback." },
+      { "name": "move-confident", "value": "300ms cubic-bezier(.22,1,.36,1)", "purpose": "Short transform-based entry and selection motion." }
+    ],
+    "breakpoints": [
+      { "name": "compact", "value": "720px" },
+      { "name": "wide", "value": "980px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main purchase or confirmation action.",
+      "html": "<button class=\"ds-btn-primary\">立即选购 <span aria-hidden=\"true\">→</span></button>",
+      "css": ".ds-btn-primary{min-height:48px;padding:14px 20px;border:1px solid #68ddb5;border-radius:7px;background:#68ddb5;color:#060a08;font:720 14px 'Noto Sans SC',sans-serif;transition:transform .22s cubic-bezier(.22,1,.36,1),background-color .18s ease}.ds-btn-primary:hover{transform:translateY(-2px);background:#82e7c3}.ds-btn-primary:focus-visible{outline:2px solid #68ddb5;outline-offset:3px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A quieter navigation or query action.",
+      "html": "<button class=\"ds-btn-secondary\">查询订单</button>",
+      "css": ".ds-btn-secondary{min-height:48px;padding:14px 20px;border:1px solid #2b3933;border-radius:7px;background:#0b100e;color:#f1f5f1;font:720 14px 'Noto Sans SC',sans-serif;transition:transform .22s cubic-bezier(.22,1,.36,1),border-color .18s ease}.ds-btn-secondary:hover{transform:translateY(-2px);border-color:#527463}.ds-btn-secondary:focus-visible{outline:2px solid #68ddb5;outline-offset:3px}"
+    },
+    {
+      "name": "Dark Input",
+      "kind": "input",
+      "description": "Email, order, and admin credential entry.",
+      "html": "<label class=\"ds-field\"><span>接收邮箱</span><input placeholder=\"name@example.com\"></label>",
+      "css": ".ds-field{display:grid;gap:8px;color:#9aa8a2;font:720 12px 'Noto Sans SC',sans-serif}.ds-field input{height:48px;padding:0 14px;border:1px solid #26332e;border-radius:7px;background:#0b100e;color:#f1f5f1;font:400 14px 'Noto Sans SC',sans-serif}.ds-field input:focus{border-color:#68ddb5;outline:2px solid rgba(104,221,181,.25);outline-offset:1px}"
+    },
+    {
+      "name": "Stock Chip",
+      "kind": "chip",
+      "description": "Communicates real availability, never decorative urgency.",
+      "html": "<span class=\"ds-stock\">12 份</span>",
+      "css": ".ds-stock{display:inline-flex;padding:5px 8px;border:1px solid #315344;border-radius:999px;background:transparent;color:#82d9b8;font:800 10px 'Noto Sans SC',sans-serif}"
+    },
+    {
+      "name": "Inventory Row",
+      "kind": "card",
+      "description": "Signature real-data catalog row.",
+      "html": "<button class=\"ds-inventory\"><span>01</span><strong>Matcha</strong><em>12 份</em><b>¥29.00</b><i aria-hidden=\"true\">→</i></button>",
+      "css": ".ds-inventory{width:100%;min-height:72px;padding:0 18px;border:0;border-bottom:1px solid #202c27;background:#0b110e;color:#f1f5f1;display:grid;grid-template-columns:32px 1fr auto auto 20px;gap:12px;align-items:center;text-align:left;font-family:'Noto Sans SC',sans-serif;transition:background-color .18s ease}.ds-inventory span{color:#71827a;font-size:11px}.ds-inventory strong{font-size:14px}.ds-inventory em{color:#82d9b8;font:800 10px inherit}.ds-inventory b{font-size:13px}.ds-inventory i{color:#68ddb5}.ds-inventory:hover{background:#121c18}.ds-inventory:focus-visible{outline:2px solid #68ddb5;outline-offset:-2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Live License Ledger",
+    "overview": "Reii 小店 feels like a quiet, always-current ledger for digital inventory: factual, dark, and precise. Its hierarchy makes availability, pricing, delivery, and order traceability visible before decoration. The Reii bear supplies warmth; the interface around it remains restrained and operational.",
+    "keyCharacteristics": ["Real inventory and delivery state lead the first viewport.", "Warm display type sits above compact, highly legible operational text.", "Mint is rare and functional: primary action, focus, selection, success, and live state.", "Dark surfaces are separated by tone and fine structural borders."],
+    "rules": [
+      { "name": "The Mint Means Action Rule", "body": "Mint must identify interaction, live state, selection, focus, or success; it is not a decorative wash.", "section": "colors" },
+      { "name": "The Honest Status Rule", "body": "Amber and danger coral are reserved for actual caution, failure, or exceptional states.", "section": "colors" },
+      { "name": "The Two-Voice Rule", "body": "Serif creates orientation; sans-serif carries every operational detail.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "A surface earns shadow only when it must read above another interactive plane.", "section": "elevation" }
+    ],
+    "dos": ["Do populate catalog and proof surfaces from real product, price, and inventory data.", "Do show delivery, refund, and query expectations before payment.", "Do keep every interactive state keyboard-visible and respect reduced-motion preferences.", "Do record shipping raster provenance in .impeccable/provenance.json."],
+    "donts": ["Don't fabricate sales counts, testimonials, ratings, scarcity, or product availability.", "Don't use Alipay or another payment provider as a visual identity or marketing claim.", "Don't reintroduce light mode, glassmorphism, gradient text, oversized pills, or continuous decorative animation.", "Don't expose development tokens or operational secrets in production UI."]
+  }
+}

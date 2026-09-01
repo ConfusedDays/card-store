@@ -14,7 +14,6 @@ export default function PoliciesPage() {
       <main className="policy-page">
         <Link className="policy-back" href="/"><ArrowLeft size={16} /> 返回购买页面</Link>
         <header className="policy-hero">
-          <span className="section-index">PURCHASE POLICY</span>
           <h1>数字商品购买与售后规则</h1>
           <p>购买前请仔细阅读。下单时的主动勾选将作为您已阅读并确认本规则的记录。</p>
           <small>生效日期：2026 年 8 月 29 日 · 版本：2026-08-29</small>

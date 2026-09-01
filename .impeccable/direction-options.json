@@ -1,0 +1,163 @@
+{
+  "title": "选择 Reii小店的新视觉世界",
+  "question": "选择一个方向继续重构，也可以重新抽取。所有方案都会保留现有功能、熊头像与纯夜间模式。",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "夜间交付站",
+      "kicker": "THE ROLL",
+      "lineage": "深夜邮政分拣台与挂号交付凭证",
+      "thesis": "每一份数字授权都像一件可追踪的挂号件，从库存格安全送达用户手中。",
+      "palette": ["#07110f", "#10231d", "#e8f0e9", "#65e6bb", "#f2b84b"],
+      "materials": ["哑光分拣台", "压印标签", "荧光状态墨"],
+      "viewport": "首屏是一座横向数字分拣台：左侧说明交付流程，右侧实时商品与库存标签沿轨道进入购买区。",
+      "risk": "如果标签语言过重，页面会像物流后台而不是商店。",
+      "raised": [
+        {"from": "split-flap", "raise": "库存与交付状态采用固定列和可读的动态更新节奏。"},
+        {"from": "swiss-grid", "raise": "所有页面共享严格网格，减少装饰性容器。"},
+        {"from": "variable-type", "raise": "用明确的字号反差建立强烈但克制的层级。"}
+      ],
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "品牌与导航", "x": 0, "y": 0, "w": 12, "h": 1, "accent": false},
+        {"label": "品牌主张与流程", "x": 0, "y": 1, "w": 5, "h": 6, "accent": true},
+        {"label": "实时商品分拣台", "x": 5, "y": 1, "w": 7, "h": 6, "accent": false},
+        {"label": "交付状态轨道", "x": 0, "y": 7, "w": 12, "h": 3, "accent": true}
+      ]},
+      "comp": ".impeccable/mocks/decision/assigned.webp"
+    },
+    {
+      "id": "model-pick",
+      "label": "授权台账",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "软件授权证书、库存账本与防伪编号",
+      "thesis": "把商品、规格、库存和交付证明组织成一份精密、可信的数字授权台账。",
+      "palette": ["#0a0d0c", "#161b18", "#f1f4ed", "#79e3b6", "#d9a94d"],
+      "materials": ["账本纸线", "防伪编号", "金属装订点"],
+      "viewport": "巨大商品名称与许可证编号占据左侧，右侧是可立即操作的规格台账，购买动作始终可见。",
+      "risk": "这是最稳妥、最容易建立信任的方向，也最接近成熟授权商店常用的编辑式设计。",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "品牌索引", "x": 0, "y": 0, "w": 12, "h": 1, "accent": false},
+        {"label": "授权标题与编号", "x": 0, "y": 1, "w": 7, "h": 5, "accent": true},
+        {"label": "规格与购买", "x": 7, "y": 1, "w": 5, "h": 8, "accent": false},
+        {"label": "交付凭证说明", "x": 0, "y": 6, "w": 7, "h": 3, "accent": false}
+      ]},
+      "comp": ".impeccable/mocks/decision/model-pick.webp"
+    },
+    {
+      "id": "challenger-split-flap",
+      "label": "库存翻牌大厅",
+      "verdict": "competitive",
+      "lineage": "车站分列式翻牌信息板",
+      "thesis": "商品与库存像车次一样按固定列展示，每次切换都伴随一次清晰的字符翻转。",
+      "palette": ["#080909", "#171918", "#f6f6ef", "#f1a93b", "#b8493f"],
+      "materials": ["哑黑翻牌", "拉丝钢框", "琥珀状态灯"],
+      "viewport": "整屏是一块高密度商品出发板，库存、价格、交付方式与购买入口排列成稳定列。",
+      "case": "商品状态极清楚，但更像信息大厅，情感与品牌亲近感略弱。",
+      "risk": "字符和动效控制不好会显得嘈杂。",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "站名导航", "x": 0, "y": 0, "w": 12, "h": 1, "accent": true},
+        {"label": "商品状态列", "x": 0, "y": 1, "w": 12, "h": 6, "accent": false},
+        {"label": "选中商品购买栏", "x": 0, "y": 7, "w": 12, "h": 3, "accent": true}
+      ]},
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-split-flap-concourse-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/signals-instruments-split-flap-concourse.webp",
+      "comp": ".impeccable/mocks/decision/challenger-split-flap.webp"
+    },
+    {
+      "id": "challenger-cdrom",
+      "label": "软件控制台",
+      "verdict": "competitive",
+      "lineage": "九十年代软件安装盘与实体控制面板",
+      "thesis": "把商店做成一台可操作的软件授权控制台，商品切换像按下真实机械键。",
+      "palette": ["#090b0c", "#2a302f", "#d9ddd7", "#4dd6bd", "#8269d9"],
+      "materials": ["拉丝面板", "凹陷按键", "发光嵌条"],
+      "viewport": "固定控制台包围商品窗口，规格、库存和购买操作都像一组有行程的物理控件。",
+      "case": "软件用户辨识度强，但复古控制台可能降低移动端购买效率。",
+      "risk": "容易从有质感滑向复古玩具感。",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "控制台外框", "x": 0, "y": 0, "w": 12, "h": 10, "accent": false},
+        {"label": "商品显示窗", "x": 2, "y": 1, "w": 7, "h": 6, "accent": true},
+        {"label": "购买控制键", "x": 9, "y": 1, "w": 3, "h": 8, "accent": false},
+        {"label": "状态嵌条", "x": 2, "y": 7, "w": 7, "h": 2, "accent": true}
+      ]},
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-cdrom-chrome-navigation-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/digital-design-canon-cdrom-chrome-navigation.webp",
+      "comp": ".impeccable/mocks/decision/challenger-cdrom.webp"
+    },
+    {
+      "id": "challenger-swiss",
+      "label": "夜间网格海报",
+      "verdict": "declined",
+      "lineage": "瑞士国际主义模块海报墙",
+      "thesis": "用强网格、巨型字与几何商品标记建立绝对清晰的多品牌目录。",
+      "palette": ["#080908", "#f1f0e9", "#55dcae", "#e65846"],
+      "materials": ["哑光海报墨", "模块网格", "几何裁片"],
+      "viewport": "首屏像一张可购买的产品海报，目录随滚动在网格中重新编排。",
+      "case": "信息清楚，但不足以表达自动交付与卡密追踪。",
+      "kept": "严格网格和克制的容器数量。",
+      "risk": "过度客观会削弱商店的亲近感。",
+      "hero": "https://impeccable.style/worlds/cards/design-canon-swiss-grid-poster-wall-hero.webp"
+    },
+    {
+      "id": "challenger-jacquard",
+      "label": "加密织纹",
+      "verdict": "declined",
+      "lineage": "提花织机的穿孔指令与二进制纹样",
+      "thesis": "将卡密加密与库存选择表现为可追踪的二进制织纹。",
+      "palette": ["#070b18", "#14213a", "#d8b863", "#e9ddbf"],
+      "materials": ["午夜丝面", "金色纬线", "穿孔指令卡"],
+      "viewport": "商品图像从授权编码矩阵中逐行织出。",
+      "case": "概念独特，但用户难以快速识别购买入口。",
+      "kept": "从库存到交付的全过程可追溯性。",
+      "risk": "隐喻学习成本高。",
+      "hero": "https://impeccable.style/worlds/cards/textiles-weave-drape-fashion-jacquard-punched-brocade-hero.webp"
+    },
+    {
+      "id": "challenger-binding",
+      "label": "开放装订",
+      "verdict": "declined",
+      "lineage": "结构外露的科普特装订册",
+      "thesis": "把商品、规则和交付步骤像完全摊平的册页一样公开展示。",
+      "palette": ["#0b0c0b", "#d7c6a3", "#816c4f", "#6ad8ac"],
+      "materials": ["裸露装订线", "木质封板", "未漂白纸"],
+      "viewport": "页面沿一条可见装订轴展开，每一节都是一段购买流程。",
+      "case": "透明结构适合规则说明，但不适合高效选购多个商品。",
+      "kept": "关键规则和流程不隐藏在弹窗或次级页面。",
+      "risk": "容易像阅读站而不是商店。",
+      "hero": "https://impeccable.style/worlds/cards/craft-making-coptic-exposed-binding-hero.webp"
+    },
+    {
+      "id": "challenger-type",
+      "label": "动态授权字样",
+      "verdict": "declined",
+      "lineage": "可变字体交互标本",
+      "thesis": "商品名称随规格选择改变字重与尺度，以文字本身承担全部视觉表达。",
+      "palette": ["#070807", "#f2f2eb", "#66deb1"],
+      "materials": ["显示字体", "基线网格", "轴值读数"],
+      "viewport": "一个巨大的商品名称占满首屏，规格轴直接驱动价格和库存状态。",
+      "case": "层级强，但对多商品和交付机制表达不足。",
+      "kept": "极端清晰的字号层级和可读性纪律。",
+      "risk": "商品图片与购买信息容易退居次要。",
+      "hero": "https://impeccable.style/worlds/cards/variable-font-specimen-hero.webp"
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "buildPath": {"value": "code", "toggle": true},
+  "canon": true,
+  "canonCard": {
+    "label": "标准数字商品商城",
+    "thesis": "熟悉的深色导航、营销首屏、商品卡片与右侧购买面板，以最高完成度执行。",
+    "palette": ["#080b0a", "#121817", "#f4f6f2", "#58d8ac"],
+    "materials": ["干净卡片", "商品宣传图", "标准表单"],
+    "viewport": "顶部导航，下方品牌主张，再进入商品卡片和购买表单。",
+    "risk": "易用但与同类卡网难以区分。",
+    "wireframe": {"cols": 12, "rows": 10, "regions": [
+      {"label": "导航", "x": 0, "y": 0, "w": 12, "h": 1, "accent": false},
+      {"label": "标准首屏", "x": 1, "y": 1, "w": 10, "h": 4, "accent": true},
+      {"label": "商品卡片", "x": 1, "y": 5, "w": 7, "h": 5, "accent": false},
+      {"label": "购买面板", "x": 8, "y": 5, "w": 3, "h": 5, "accent": true}
+    ]},
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "steer": true
+}

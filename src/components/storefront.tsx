@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowDown, ArrowRight, Check, CircleHelp, Clock3, Copy, KeyRound, LockKeyhole,
-  MessageCircle, PackageCheck, Search, ShieldCheck, ShoppingBag, Sparkles, WalletCards, Zap,
+  ArrowDown, ArrowRight, Check, CircleHelp, Copy, KeyRound, LockKeyhole,
+  MailCheck, MessageCircle, PackageCheck, Search, ShieldCheck, ShoppingBag, WalletCards,
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
@@ -21,6 +21,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
   const productSwitcherRef = useRef<HTMLDivElement>(null);
   const productButtonRefs = useRef(new Map<string, HTMLButtonElement>());
   const product = useMemo(() => products.find((item) => item.id === productId) ?? products[0], [products, productId]);
+  const catalogStock = useMemo(() => products.reduce((total, item) => total + item.variants.reduce((sum, variant) => sum + variant.availableCount, 0), 0), [products]);
   const [selectedId, setSelectedId] = useState(products[0]?.variants[0]?.id ?? "");
   const [email, setEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay">("alipay");
@@ -140,30 +141,64 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
       <main className={`storefront-main ${view === "orders" ? "order-page" : "catalog-page"}`}>
         {view === "catalog" && (
           <section className="store-hero" aria-labelledby="store-hero-title">
-            <div className="store-hero-glow store-hero-glow-one" aria-hidden="true" />
-            <div className="store-hero-glow store-hero-glow-two" aria-hidden="true" />
             <div className="store-hero-grid" aria-hidden="true" />
             <div className="store-hero-inner">
               <div className="store-hero-copy scroll-reveal" data-scroll-reveal>
-                <span className="store-hero-badge"><Sparkles size={15} /> 数字商品，即时交付</span>
-                <h1 id="store-hero-title">更简单地购买<br /><span>正版数字授权。</span></h1>
-                <p>从选择规格到安全付款，再到卡密自动发放，每一步都清晰、快速且可追溯。</p>
+                <h1 id="store-hero-title">数字授权，<br /><span>即买即发。</span></h1>
+                <p>Potassium、Matcha、Volt 等多款数字商品集中选购。库存实时展示，付款确认后自动发送卡密，每笔订单都可查询。</p>
                 <div className="store-hero-actions">
                   <button type="button" className="store-hero-primary" onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })}>立即选购 <ArrowRight size={18} /></button>
                   <Link className="store-hero-secondary" href="/orders"><Search size={17} /> 查询订单</Link>
                 </div>
+                <div className="hero-assurance" aria-label="购买保障">
+                  <span><ShieldCheck size={16} /> 卡密加密存储</span>
+                  <span><MailCheck size={16} /> 邮箱自动交付</span>
+                </div>
               </div>
-              <div className="store-hero-stats scroll-reveal" data-scroll-reveal>
-                <div><Zap size={19} /><strong>自动发卡</strong><span>支付确认后即时交付</span></div>
-                <div><ShieldCheck size={19} /><strong>加密存储</strong><span>库存与交付安全隔离</span></div>
-                <div><Clock3 size={19} /><strong>全程可查</strong><span>订单状态随时追溯</span></div>
+              <div className="hero-catalog-console scroll-reveal" data-scroll-reveal aria-label="在线商品与库存">
+                <div className="hero-console-head">
+                  <span><i /> 在线商品</span>
+                  <small>{catalogStock} 份可交付</small>
+                </div>
+                <div className="hero-product-list">
+                  {products.slice(0, 4).map((item) => {
+                    const firstVariant = item.variants[0];
+                    const stock = item.variants.reduce((sum, variant) => sum + variant.availableCount, 0);
+                    return (
+                      <button
+                        type="button"
+                        key={`hero-${item.id}`}
+                        onClick={() => {
+                          selectProduct(item.id);
+                          document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                      >
+                        <span className="hero-product-index">{String(products.indexOf(item) + 1).padStart(2, "0")}</span>
+                        <span className="hero-product-name"><strong>{item.name}</strong><small>{item.category}</small></span>
+                        <span className={`hero-stock-state ${stock < 1 ? "empty" : ""}`}>{stock > 0 ? `${stock} 份` : "缺货"}</span>
+                        <span className="hero-product-price">{firstVariant ? money(firstVariant.priceCents) : "--"}</span>
+                        <ArrowRight size={16} />
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="hero-delivery-track">
+                  <span><b>1</b> 选择授权</span><i />
+                  <span><b>2</b> 完成付款</span><i />
+                  <span><b>3</b> 自动发卡</span>
+                </div>
               </div>
               <button type="button" className="store-scroll-cue" onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })}><span>向下浏览商品</span><ArrowDown size={17} /></button>
             </div>
           </section>
         )}
         {view === "catalog" && product && (
-          <section className="catalog-band" id="catalog">          <div className="catalog-wrap scroll-reveal" data-scroll-reveal>
+          <section className="catalog-band" id="catalog">
+          <div className="catalog-heading scroll-reveal" data-scroll-reveal>
+            <h2>选择你需要的授权</h2>
+            <p>先选择商品，再确认规格、库存和接收邮箱。</p>
+          </div>
+          <div className="catalog-wrap scroll-reveal" data-scroll-reveal>
             {products.length > 1 && (
               <div ref={productSwitcherRef} className="product-switcher" role="tablist" aria-label="选择商品">
                 <span className="product-switcher-indicator" aria-hidden="true" />
@@ -209,8 +244,8 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
                 )}
               </div>
               <div className="product-copy">
-                <span className="category-label">{product.category}</span>
                 <h1>{product.name}</h1>
+                <span className="category-label">{product.category}</span>
                 <p>{product.description}</p>
               </div>
               <div className="trust-row">
@@ -277,7 +312,6 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
             <div className="order-wrap">
               <div className="order-intro">
                 <span className="order-intro-mark"><Search size={23} /></span>
-                <span className="section-index">ORDER LOOKUP</span>
                 <h2>查询订单与卡密</h2>
                 <p>使用订单号和下单邮箱查看支付状态及已交付卡密。</p>
               </div>
@@ -285,7 +319,6 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
               <form className="lookup-form" onSubmit={findOrder}>
                 <div className="lookup-form-heading">
                   <div>
-                    <span>订单验证</span>
                     <strong>输入查询信息</strong>
                   </div>
                   <span className="lookup-security" title="安全查询"><ShieldCheck size={19} /></span>

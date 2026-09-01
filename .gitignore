@@ -10,3 +10,6 @@ data/*.pem
 *.patch
 desktop.png
 mobile.png
+.impeccable/review/
+.impeccable/questions/
+.impeccable/storefront-brief.md
