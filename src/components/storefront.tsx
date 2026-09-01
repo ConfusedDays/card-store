@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight, Check, CircleHelp, Copy, KeyRound, LockKeyhole,
-  MessageCircle, PackageCheck, Search, ShieldCheck, ShoppingBag, WalletCards,
+  ArrowDown, ArrowRight, Check, CircleHelp, Clock3, Copy, KeyRound, LockKeyhole,
+  MessageCircle, PackageCheck, Search, ShieldCheck, ShoppingBag, Sparkles, WalletCards, Zap,
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
@@ -32,6 +32,19 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
   const [lookup, setLookup] = useState({ orderNo: "", email: "" });
   const [lookupResult, setLookupResult] = useState<OrderResult | null>(null);
   const [lookupError, setLookupError] = useState("");
+
+  useEffect(() => {
+    if (view !== "catalog") return;
+    const elements = Array.from(document.querySelectorAll<HTMLElement>("[data-scroll-reveal]"));
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      }
+    }, { threshold: 0.16, rootMargin: "0px 0px -7%" });
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, [view]);
 
   const selected = useMemo(() => product?.variants.find((variant) => variant.id === selectedId), [product, selectedId]);
 
@@ -125,8 +138,32 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
       <SiteHeader active={view} />
 
       <main className={`storefront-main ${view === "orders" ? "order-page" : "catalog-page"}`}>
+        {view === "catalog" && (
+          <section className="store-hero" aria-labelledby="store-hero-title">
+            <div className="store-hero-glow store-hero-glow-one" aria-hidden="true" />
+            <div className="store-hero-glow store-hero-glow-two" aria-hidden="true" />
+            <div className="store-hero-grid" aria-hidden="true" />
+            <div className="store-hero-inner">
+              <div className="store-hero-copy scroll-reveal" data-scroll-reveal>
+                <span className="store-hero-badge"><Sparkles size={15} /> 数字商品，即时交付</span>
+                <h1 id="store-hero-title">更简单地购买<br /><span>正版数字授权。</span></h1>
+                <p>从选择规格到安全付款，再到卡密自动发放，每一步都清晰、快速且可追溯。</p>
+                <div className="store-hero-actions">
+                  <button type="button" className="store-hero-primary" onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })}>立即选购 <ArrowRight size={18} /></button>
+                  <Link className="store-hero-secondary" href="/orders"><Search size={17} /> 查询订单</Link>
+                </div>
+              </div>
+              <div className="store-hero-stats scroll-reveal" data-scroll-reveal>
+                <div><Zap size={19} /><strong>自动发卡</strong><span>支付确认后即时交付</span></div>
+                <div><ShieldCheck size={19} /><strong>加密存储</strong><span>库存与交付安全隔离</span></div>
+                <div><Clock3 size={19} /><strong>全程可查</strong><span>订单状态随时追溯</span></div>
+              </div>
+              <button type="button" className="store-scroll-cue" onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })}><span>向下浏览商品</span><ArrowDown size={17} /></button>
+            </div>
+          </section>
+        )}
         {view === "catalog" && product && (
-          <section className="catalog-band" id="catalog">          <div className="catalog-wrap">
+          <section className="catalog-band" id="catalog">          <div className="catalog-wrap scroll-reveal" data-scroll-reveal>
             {products.length > 1 && (
               <div ref={productSwitcherRef} className="product-switcher" role="tablist" aria-label="选择商品">
                 <span className="product-switcher-indicator" aria-hidden="true" />
