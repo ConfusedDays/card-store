@@ -27,7 +27,14 @@ export function SiteHeader({ active }: { active: SiteSection }) {
     ) return;
 
     event.preventDefault();
-    if (href === pathname || isNavigating) return;
+    if (isNavigating) return;
+    if (href === pathname) {
+      if (href === "/") {
+        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
+      }
+      return;
+    }
 
     setIsNavigating(true);
     const route = document.querySelector<HTMLElement>(".route-transition");
@@ -63,6 +70,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         href="/"
         prefetch={true}
         aria-label="Reii小店首页"
+        title="返回首页"
         onClick={(event) => navigateTo("/", event)}
       >
         <span className="brand-mark brand-photo"><Image src="/reii-bear.jpg" alt="" width={34} height={34} priority /></span>
