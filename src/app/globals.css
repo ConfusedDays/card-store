@@ -538,8 +538,11 @@ tbody tr:last-child td { border-bottom: 0; }
 .inventory-key-row:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); }
 .key-value { display: flex; align-items: center; gap: 7px; min-width: 220px; }
 .key-value code { color: var(--text); white-space: nowrap; }
-.copy-key-button { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--muted); transition: transform .18s ease, color .18s ease, border-color .18s ease; }
+.copy-key-button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-width: 64px; height: 30px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 700; transition: transform .18s ease, color .18s ease, border-color .18s ease, background-color .18s ease; }
 .copy-key-button:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-2px); }
+.copy-key-button.copied { color: #d9fff5; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 28%, transparent); animation: copy-success .45s cubic-bezier(.2,1.5,.4,1); }
+.key-value.is-copied code { color: #bff8e8; transition: color .2s ease; }
+@keyframes copy-success { 0% { transform: scale(.86); } 55% { transform: scale(1.08); } 100% { transform: scale(1); } }
 @keyframes inventory-row-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .inventory-key-row { animation: none; } }
 .import-panel { padding: 22px; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
