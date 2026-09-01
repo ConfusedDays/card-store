@@ -57,3 +57,49 @@ export function importLicenseKeys(variantId: string, rawKeys: string[]) {
   tx();
   return { imported, skipped: keys.length - imported };
 }
+
+export type AdminInventoryKey = {
+  id: number;
+  variantId: string;
+  productName: string;
+  variantLabel: string;
+  last4: string;
+  status: "available" | "reserved" | "sold" | "disabled";
+  orderNo: string | null;
+  createdAt: string;
+  soldAt: string | null;
+};
+
+export function getAdminInventoryKeys(options: { variantId?: string; status?: string; search?: string; limit?: number } = {}) {
+  const clauses: string[] = [];
+  const values: unknown[] = [];
+  if (options.variantId) { clauses.push("k.variant_id = ?"); values.push(options.variantId); }
+  if (options.status && ["available", "reserved", "sold", "disabled"].includes(options.status)) { clauses.push("k.status = ?"); values.push(options.status); }
+  if (options.search) { clauses.push("(k.key_last4 LIKE ? OR k.order_no LIKE ?)"); values.push(`%${options.search.trim()}%`, `%${options.search.trim()}%`); }
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  values.push(Math.min(Math.max(options.limit ?? 200, 1), 500));
+  return db.prepare(`
+    SELECT k.id, k.variant_id as variantId, p.name as productName, v.label as variantLabel,
+      k.key_last4 as last4, k.status, k.order_no as orderNo, k.created_at as createdAt, k.sold_at as soldAt
+    FROM license_keys k JOIN variants v ON v.id = k.variant_id JOIN products p ON p.id = v.product_id
+    ${where} ORDER BY k.id DESC LIMIT ?
+  `).all(...values) as AdminInventoryKey[];
+}
+
+export function updateInventoryKeys(ids: number[], status: "available" | "disabled") {
+  if (!ids.length) throw new Error("请选择至少一条卡密");
+  const placeholders = ids.map(() => "?").join(",");
+  const result = db.prepare(`UPDATE license_keys SET status = ? WHERE id IN (${placeholders}) AND status IN ('available', 'disabled')`).run(status, ...ids);
+  db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
+    .run("inventory.status_updated", "license_key", ids.join(","), JSON.stringify({ status, updated: result.changes }));
+  return { updated: result.changes };
+}
+
+export function deleteInventoryKeys(ids: number[]) {
+  if (!ids.length) throw new Error("请选择至少一条卡密");
+  const placeholders = ids.map(() => "?").join(",");
+  const result = db.prepare(`DELETE FROM license_keys WHERE id IN (${placeholders}) AND status IN ('available', 'disabled')`).run(...ids);
+  db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
+    .run("inventory.deleted", "license_key", ids.join(","), JSON.stringify({ deleted: result.changes }));
+  return { deleted: result.changes };
+}

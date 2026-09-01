@@ -512,6 +512,18 @@ th, td { padding: 13px 15px; text-align: left; border-bottom: 1px solid #e7ebe9;
 th { color: #737d79; background: #f7f9f7; font-size: 10px; font-weight: 780; }
 tbody tr:last-child td { border-bottom: 0; }
 .inventory-table table { min-width: 460px; }
+.inventory-manager { margin-top: 18px; padding: 18px; }
+.inventory-manager-toolbar, .inventory-bulk-actions, .inventory-filters { display: flex; align-items: center; gap: 10px; }
+.inventory-manager-toolbar { justify-content: space-between; margin-bottom: 14px; }
+.inventory-manager h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.inventory-manager p { margin: 5px 0 0; color: var(--muted); font-size: .86rem; }
+.inventory-filters label { display: flex; align-items: center; gap: 7px; }
+.inventory-filters input, .inventory-filters select { min-height: 36px; }
+.inventory-bulk-actions { padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+.inventory-bulk-actions span { color: var(--muted); margin-right: auto; }
+.inventory-bulk-actions button { min-height: 34px; padding: 0 12px; }
+.inventory-key-table { overflow-x: auto; }
+.inventory-key-table small { display: block; margin-top: 3px; color: var(--muted); }
 .import-panel { padding: 22px; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
 .import-panel h3 { margin: 0 0 18px; display: flex; align-items: center; gap: 8px; font-size: 16px; }
 .import-panel label { display: block; margin-top: 13px; color: #626c68; font-size: 11px; font-weight: 720; }

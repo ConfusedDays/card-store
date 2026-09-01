@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArchiveRestore, ArrowLeft, Boxes, CircleDollarSign, Download, KeyRound, LoaderCircle, LogIn, MailCheck, PackagePlus, ReceiptText, RefreshCw, Send, ShieldCheck, Tags, TriangleAlert, Upload, X, Menu as MenuIcon } from "lucide-react";
+import { ArchiveRestore, ArrowLeft, Boxes, CircleDollarSign, Download, KeyRound, LoaderCircle, LogIn, MailCheck, PackagePlus, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Tags, Trash2, TriangleAlert, Upload, X, Menu as MenuIcon } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { MenuContainer, MenuItem } from "@/components/ui/fluid-menu";
 import { ProductManager } from "@/components/product-manager";
@@ -27,6 +27,8 @@ type Overview = {
   }[];
 };
 
+type InventoryKey = { id: number; variantId: string; productName: string; variantLabel: string; last4: string; status: "available" | "reserved" | "sold" | "disabled"; orderNo: string | null; createdAt: string; soldAt: string | null };
+
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
 export function AdminDashboard() {
@@ -37,6 +39,11 @@ export function AdminDashboard() {
   const [variantId, setVariantId] = useState("");
   const [keys, setKeys] = useState("");
   const [message, setMessage] = useState("");
+  const [inventoryKeys, setInventoryKeys] = useState<InventoryKey[]>([]);
+  const [inventorySearch, setInventorySearch] = useState("");
+  const [inventoryStatus, setInventoryStatus] = useState("all");
+  const [selectedKeyIds, setSelectedKeyIds] = useState<number[]>([]);
+  const [inventoryBusy, setInventoryBusy] = useState(false);
   const [orderMessage, setOrderMessage] = useState("");
   const [resendingOrderNo, setResendingOrderNo] = useState("");
   const [backupPassphrase, setBackupPassphrase] = useState("");
@@ -166,6 +173,7 @@ export function AdminDashboard() {
       sessionStorage.setItem("card-store-admin-token", authToken);
       setOverview(data);
       setVariantId((current) => current || data.inventory[0]?.variantId || "");
+      void loadInventory(authToken);
     } catch (reason) {
       setOverview(null);
       setError(reason instanceof Error ? reason.message : "加载失败");
@@ -193,6 +201,34 @@ export function AdminDashboard() {
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "导入失败");
     }
+  }
+
+  async function loadInventory(authToken = token) {
+    try {
+      const params = new URLSearchParams();
+      if (variantId) params.set("variantId", variantId);
+      if (inventoryStatus !== "all") params.set("status", inventoryStatus);
+      if (inventorySearch.trim()) params.set("search", inventorySearch.trim());
+      const response = await fetch(`/api/admin/inventory?${params}`, { headers: { authorization: `Bearer ${authToken}` } });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "加载卡密失败");
+      setInventoryKeys(data.keys);
+      setSelectedKeyIds([]);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "加载卡密失败"); }
+  }
+
+  async function mutateInventory(action: "available" | "disabled" | "delete") {
+    if (!selectedKeyIds.length) return;
+    if (action === "delete" && !window.confirm(`确认删除选中的 ${selectedKeyIds.length} 条未售卡密？此操作无法撤销。`)) return;
+    setInventoryBusy(true); setError("");
+    try {
+      const response = await fetch("/api/admin/inventory", { method: action === "delete" ? "DELETE" : "PATCH", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(action === "delete" ? { ids: selectedKeyIds } : { ids: selectedKeyIds, status: action }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "操作失败");
+      setMessage(action === "delete" ? `已删除 ${data.deleted} 条卡密` : `已更新 ${data.updated} 条卡密`);
+      await Promise.all([loadInventory(), loadOverview()]);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "操作失败"); }
+    finally { setInventoryBusy(false); }
   }
 
   async function resendDeliveryEmail(orderNo: string, email: string) {
@@ -374,6 +410,14 @@ export function AdminDashboard() {
               {message && <p className="success-message">{message}</p>}
               <button className="primary-button"><PackagePlus size={18} />导入卡密</button>
             </form>
+          </div>
+          <div className="inventory-manager table-shell">
+            <div className="inventory-manager-toolbar">
+              <div><h3><KeyRound size={18} />卡密管理</h3><p>已售与预留卡密只读，避免影响已交付订单。</p></div>
+              <div className="inventory-filters"><label><Search size={15} /><input value={inventorySearch} onChange={(event) => setInventorySearch(event.target.value)} placeholder="尾号或订单号" /></label><select value={inventoryStatus} onChange={(event) => setInventoryStatus(event.target.value)}><option value="all">全部状态</option><option value="available">可售</option><option value="disabled">已停用</option><option value="sold">已售</option><option value="reserved">预留</option></select><button type="button" className="icon-action" onClick={() => void loadInventory()} title="查询"><RefreshCw size={17} /></button></div>
+            </div>
+            <div className="inventory-bulk-actions"><span>已选 {selectedKeyIds.length} 条</span><button type="button" disabled={!selectedKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("available")}>启用</button><button type="button" disabled={!selectedKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("disabled")}>停用</button><button type="button" className="danger-button" disabled={!selectedKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("delete")}><Trash2 size={15} />删除</button></div>
+            <div className="inventory-key-table"><table><thead><tr><th><input type="checkbox" checked={inventoryKeys.filter((key) => key.status === "available" || key.status === "disabled").length > 0 && inventoryKeys.filter((key) => key.status === "available" || key.status === "disabled").every((key) => selectedKeyIds.includes(key.id))} onChange={(event) => setSelectedKeyIds(event.target.checked ? inventoryKeys.filter((key) => key.status === "available" || key.status === "disabled").map((key) => key.id) : [])} /></th><th>商品 / 规格</th><th>卡密尾号</th><th>状态</th><th>订单号</th><th>导入时间</th></tr></thead><tbody>{inventoryKeys.length ? inventoryKeys.map((key) => { const editable = key.status === "available" || key.status === "disabled"; return <tr key={key.id}><td>{editable && <input type="checkbox" checked={selectedKeyIds.includes(key.id)} onChange={(event) => setSelectedKeyIds((current) => event.target.checked ? [...current, key.id] : current.filter((id) => id !== key.id))} />}</td><td>{key.productName}<small>{key.variantLabel}</small></td><td><code>••••{key.last4}</code></td><td><span className={`status-badge status-${key.status}`}>{key.status === "available" ? "可售" : key.status === "disabled" ? "已停用" : key.status === "sold" ? "已售" : "预留"}</span></td><td>{key.orderNo ? <code>{key.orderNo}</code> : "—"}</td><td>{new Date(key.createdAt.replace(" ", "T") + "Z").toLocaleString("zh-CN")}</td></tr>; }) : <tr><td colSpan={6} className="empty-cell">没有符合条件的卡密</td></tr>}</tbody></table></div>
           </div>
         </section>
 
