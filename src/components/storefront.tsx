@@ -146,7 +146,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
             <div className="store-hero-inner">
               <div className="store-hero-copy scroll-reveal" data-scroll-reveal>
                 <span className="store-hero-badge"><Sparkles size={15} /> 数字商品，即时交付</span>
-                <h1 id="store-hero-title">更简单地购买<br /><span>正版数字授权。</span></h1>
+                <h1 id="store-hero-title">更简单地购买<br /><span>正版卡密。</span></h1>
                 <p>从选择规格到安全付款，再到卡密自动发放，每一步都清晰、快速且可追溯。</p>
                 <div className="store-hero-actions">
                   <button type="button" className="store-hero-primary" onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })}>立即选购 <ArrowRight size={18} /></button>
