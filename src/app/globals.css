@@ -1262,6 +1262,7 @@ html.dark-mode .product-switcher-indicator { background: #293934; box-shadow: 0 
 html.dark-mode .product-switcher small, html.dark-mode .product-switcher em, html.dark-mode .product-table td:nth-child(2) small { color: #91a19b; }
 html.dark-mode .secondary-command, html.dark-mode .table-action, html.dark-mode .remove-variant,
 html.dark-mode .product-editor, html.dark-mode .product-editor-empty { color: var(--ink); background: var(--surface); border-color: var(--line); }
+html.dark-mode .secondary-command:hover:not(.selected) { color: var(--teal); border-color: color-mix(in srgb, var(--teal) 72%, var(--line)); background: color-mix(in srgb, var(--teal) 8%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teal) 16%, transparent); }
 html.dark-mode .table-action:hover { color: var(--teal); border-color: var(--teal); background: #1d3934; }
 html.dark-mode .secondary-command.selected { color: var(--teal); border-color: var(--teal); background: #1d3934; }
 html.dark-mode .table-action.selected { color: #0d1412; border-color: var(--teal); background: var(--teal); }
