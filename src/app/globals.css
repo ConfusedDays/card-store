@@ -616,6 +616,10 @@ tbody tr:last-child td { border-bottom: 0; }
 .import-panel textarea { min-height: 128px; margin-top: 7px; padding: 11px; resize: vertical; line-height: 1.5; }
 .success-message { color: var(--success); font-size: 12px; }
 .status-badge { padding: 4px 7px; border-radius: 4px; color: #5f6966; background: #edf0ef; font-size: 10px; font-weight: 720; }
+.status-available { color: #0b745b; background: rgba(67, 201, 171, .17); border: 1px solid rgba(67, 201, 171, .28); }
+.status-disabled { color: #a86b13; background: rgba(234, 184, 102, .16); border: 1px solid rgba(234, 184, 102, .25); }
+.status-sold { color: #879692; background: rgba(135, 150, 146, .16); border: 1px solid rgba(135, 150, 146, .22); }
+.status-reserved { color: #7469b8; background: rgba(139, 126, 219, .16); border: 1px solid rgba(139, 126, 219, .28); }
 .status-delivered { color: #176847; background: #e1f2e8; }
 .status-paid_no_stock { color: #975b12; background: #f9e8cc; }
 .orders-table table { min-width: 980px; }
