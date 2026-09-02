@@ -252,8 +252,8 @@ body.purchase-notice-open { overflow: hidden; }
   background: var(--charcoal);
 }
 .product-visual.has-promo-image {
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  background: var(--canvas);
+  border: 1px solid transparent;
 }
 .product-visual.has-promo-image img {
   object-fit: contain;
@@ -861,6 +861,12 @@ html.dark-mode body { color: var(--ink); background: var(--canvas); }
 html.dark-mode .site-background::after { background: rgba(8, 15, 13, .03); }
 html.dark-mode .topbar,
 html.dark-mode .checkout-header { background: rgba(25, 35, 32, .74); border-color: color-mix(in srgb, var(--line) 72%, transparent); }
+html.dark-mode .topbar-catalog {
+  background: #030c0a;
+  border-color: rgba(101, 174, 153, .18);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
 html.dark-mode .contact-trigger { border-color: rgba(94, 130, 121, .4); color: #b0c1bb; background: rgba(13, 20, 18, .42); }
 html.dark-mode .contact-trigger:hover, html.dark-mode .contact-trigger[aria-expanded="true"] { border-color: #4c8a7d; color: #7ee0cd; background: #193a33; }
 html.dark-mode .contact-popover { border-color: #3a4f48; background: #192622; box-shadow: 0 18px 42px rgba(0,0,0,.34); }
@@ -954,6 +960,7 @@ html.dark-mode .metric > span { color: #83dfcb; background: #244a42; }
 html.dark-mode .metric.warning > span { color: #f0bf71; background: #4a371d; }
 html.dark-mode .live-dot { box-shadow: 0 0 0 4px #234437; }
 html.dark-mode .product-visual { background: #0b1110; }
+html.dark-mode .product-visual.has-promo-image { background: var(--canvas); }
 html.dark-mode .visual-grid { opacity: .3; }
 
 @media (max-width: 640px) {

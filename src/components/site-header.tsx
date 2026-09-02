@@ -64,7 +64,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
   }
 
   return (
-    <header className="topbar">
+    <header className={`topbar topbar-${active}`}>
       <Link
         className="brand"
         href="/"
