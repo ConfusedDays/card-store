@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArchiveRestore, ArrowLeft, Boxes, CheckCircle2, CircleDollarSign, CircleOff, Copy, Download, KeyRound, LoaderCircle, LogIn, MailCheck, PackagePlus, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Tags, Trash2, TriangleAlert, Upload, X, Menu as MenuIcon } from "lucide-react";
+import { ArchiveRestore, ArrowLeft, Boxes, CheckCircle2, CircleDollarSign, CircleOff, Copy, Download, KeyRound, LoaderCircle, LogIn, MailCheck, Menu as MenuIcon, PackagePlus, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Tags, Trash2, TriangleAlert, Upload } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
-import { MenuContainer, MenuItem } from "@/components/ui/fluid-menu";
+import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { ProductManager } from "@/components/product-manager";
 import type { AdminProduct } from "@/lib/product-admin";
 
@@ -374,23 +374,19 @@ export function AdminDashboard() {
       <aside className="admin-sidebar">
         <Link className="brand" href="/"><span className="brand-mark brand-photo"><Image src="/reii-bear.jpg" alt="" width={34} height={34} /></span><span>Reii小店</span></Link>
         <div className="admin-mobile-fluid-menu">
-          <MenuContainer label="后台快捷导航">
-            <MenuItem
-              closeOnSelect={false}
-              label="展开或收起导航"
-              icon={
-                <div className="relative h-6 w-6">
-                  <div className="absolute inset-0 origin-center rotate-0 scale-100 opacity-100 transition-all duration-300 [div[data-expanded=true]_&]:rotate-180 [div[data-expanded=true]_&]:scale-0 [div[data-expanded=true]_&]:opacity-0"><MenuIcon size={24} strokeWidth={1.5} /></div>
-                  <div className="absolute inset-0 origin-center -rotate-180 scale-0 opacity-0 transition-all duration-300 [div[data-expanded=true]_&]:rotate-0 [div[data-expanded=true]_&]:scale-100 [div[data-expanded=true]_&]:opacity-100"><X size={24} strokeWidth={1.5} /></div>
-                </div>
-              }
-            />
-            <MenuItem label="总览" isActive={activeSection === "overview"} onClick={() => goToAdminSection("overview")} icon={<Boxes size={24} strokeWidth={1.5} />} />
-            <MenuItem label="商品管理" isActive={activeSection === "products"} onClick={() => goToAdminSection("products")} icon={<Tags size={24} strokeWidth={1.5} />} />
-            <MenuItem label="导入库存" isActive={activeSection === "inventory"} onClick={() => goToAdminSection("inventory")} icon={<PackagePlus size={24} strokeWidth={1.5} />} />
-            <MenuItem label="备份恢复" isActive={activeSection === "backups"} onClick={() => goToAdminSection("backups")} icon={<ArchiveRestore size={24} strokeWidth={1.5} />} />
-            <MenuItem label="最近订单" isActive={activeSection === "orders"} onClick={() => goToAdminSection("orders")} icon={<ReceiptText size={24} strokeWidth={1.5} />} />
-          </MenuContainer>
+          <DropdownMenu
+            className="admin-mobile-dropdown"
+            align="left"
+            label="导航"
+            icon={<MenuIcon size={17} />}
+            options={[
+              { label: "总览", icon: <Boxes size={16} />, onSelect: () => goToAdminSection("overview") },
+              { label: "商品管理", icon: <Tags size={16} />, onSelect: () => goToAdminSection("products") },
+              { label: "导入库存", icon: <PackagePlus size={16} />, onSelect: () => goToAdminSection("inventory") },
+              { label: "备份恢复", icon: <ArchiveRestore size={16} />, onSelect: () => goToAdminSection("backups") },
+              { label: "最近订单", icon: <ReceiptText size={16} />, onSelect: () => goToAdminSection("orders") },
+            ]}
+          />
         </div>
         <nav
           data-active-section={activeSection}

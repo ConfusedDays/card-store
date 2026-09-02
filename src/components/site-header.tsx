@@ -4,8 +4,9 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, ChevronDown, Copy, ExternalLink, MessageCircle, Users } from "lucide-react";
+import { Check, Copy, ExternalLink, MessageCircle, Users } from "lucide-react";
 import { SlideTabs, type SlideTabItem } from "@/components/ui/slide-tabs";
+import { DropdownMenu } from "@/components/ui/dropdown-menu";
 
 type SiteSection = "catalog" | "orders" | "admin";
 const ROUTE_EXIT_DURATION = 300;
@@ -14,7 +15,6 @@ export function SiteHeader({ active }: { active: SiteSection }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isNavigating, setIsNavigating] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
   const [qqCopied, setQqCopied] = useState(false);
 
   function navigateTo(href: string, event: React.MouseEvent<HTMLAnchorElement>) {
@@ -80,29 +80,15 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         <SlideTabs items={tabs} activeId={active} onNavigate={navigateTo} />
       </nav>
       <div className="topbar-actions">
-        <div className="contact-menu">
-          <button
-            className="contact-trigger"
-            type="button"
-            aria-expanded={contactOpen}
-            aria-haspopup="menu"
-            onClick={() => setContactOpen((open) => !open)}
-          >
-            <MessageCircle size={16} /> <span>联系方式</span><ChevronDown size={14} />
-          </button>
-          {contactOpen && (
-            <div className="contact-popover" role="menu" aria-label="联系方式">
-              <a href="https://discord.gg/MmXRuWnrQT" target="_blank" rel="noreferrer" role="menuitem">
-                <span><MessageCircle size={16} /> Discord 频道</span><ExternalLink size={14} />
-              </a>
-              <button type="button" role="menuitem" onClick={copyQqGroup}>
-                <span><Users size={16} /> QQ 群 <strong>1107140300</strong></span>
-                {qqCopied ? <Check size={15} /> : <Copy size={14} />}
-              </button>
-              <small>{qqCopied ? "QQ群号已复制" : "点击 QQ 群号即可复制"}</small>
-            </div>
-          )}
-        </div>
+        <DropdownMenu
+          label="联系方式"
+          icon={<MessageCircle size={16} />}
+          footer={qqCopied ? "QQ群号已复制" : "点击 QQ 群号即可复制"}
+          options={[
+            { label: "Discord 频道", icon: <MessageCircle size={16} />, trailing: <ExternalLink size={14} />, href: "https://discord.gg/MmXRuWnrQT", external: true },
+            { label: <><span>QQ 群</span><strong>1107140300</strong></>, icon: <Users size={16} />, trailing: qqCopied ? <Check size={15} /> : <Copy size={14} />, onSelect: copyQqGroup },
+          ]}
+        />
       </div>
     </header>
   );
