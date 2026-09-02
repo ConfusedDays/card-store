@@ -296,6 +296,7 @@ body.purchase-notice-open { overflow: hidden; }
 .category-label { color: var(--teal); font-size: 12px; font-weight: 800; }
 .product-copy h1 { margin: 7px 0 14px; font-size: clamp(32px, 4vw, 48px); line-height: 1.08; max-width: 680px; }
 .product-copy p { max-width: 640px; margin: 0; color: #5f6966; font-size: 15px; line-height: 1.75; }
+.product-copy .product-description { white-space: pre-line; overflow-wrap: anywhere; }
 .trust-row { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 27px; color: #495450; font-size: 12px; font-weight: 650; }
 .trust-row span { display: inline-flex; align-items: center; gap: 7px; }
 .trust-row svg { color: var(--teal); }
@@ -1130,6 +1131,7 @@ html.dark-mode .checkout-header-actions > span { color: var(--muted); }
   to { opacity: 1; transform: translateX(0) scale(1); }
 }
 .product-editor { padding: 22px; animation: product-editor-reveal .4s cubic-bezier(.22,1,.36,1); }
+.product-manager-message { margin: 0 0 14px; }
 .product-editor-empty { animation: product-editor-reveal .36s cubic-bezier(.22,1,.36,1); }
 .product-editor-empty { min-height: 220px; color: #84908b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; font-size: 12px; }
 .editor-heading { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 19px; }

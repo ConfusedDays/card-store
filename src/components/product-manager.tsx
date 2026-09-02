@@ -195,8 +195,8 @@ export function ProductManager({ products, token, onSaved }: {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "保存商品失败");
       await onSaved();
-      setDraft(toDraft(data));
       setMessage(draft.id ? "商品已更新" : "商品已创建，可以导入卡密库存");
+      setDraft(null);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "保存商品失败");
     } finally {
@@ -226,6 +226,8 @@ export function ProductManager({ products, token, onSaved }: {
         >          <Plus size={17} /> 新增商品
         </button>
       </div>
+      {message && <p className="product-manager-message success-message" role="status">{message}</p>}
+      {error && <p className="product-manager-message form-error" role="alert">{error}</p>}
       <div className="product-management-layout">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <div className={`table-shell product-table ${reordering ? "saving-order" : ""}`}>
@@ -252,7 +254,7 @@ export function ProductManager({ products, token, onSaved }: {
               <label>链接标识<input value={draft.slug} onChange={(event) => setDraft({ ...draft, slug: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })} placeholder="potassium-license" required /></label>
               <label>商品分类<input value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })} required /></label>
               <label>展示顺序<input type="number" min="0" max="9999" value={draft.sortOrder} onChange={(event) => setDraft({ ...draft, sortOrder: event.target.value })} required /></label>
-              <label className="editor-wide">商品介绍<textarea value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} required /></label>
+              <label className="editor-wide">商品介绍<textarea value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} placeholder="支持换行；前台会按相同的段落换行展示" required /></label>
               <div className="editor-wide product-image-field">
                 <span>商品宣传图</span>
                 <div className="product-image-control">
@@ -293,8 +295,6 @@ export function ProductManager({ products, token, onSaved }: {
                 </div>
               ))}
             </div>
-            {error && <p className="form-error">{error}</p>}
-            {message && <p className="success-message">{message}</p>}
             <button className="primary-button" disabled={saving || uploadingImage}><Save size={18} /> {saving ? "正在保存..." : "保存商品"}</button>
           </form>
         ) : (

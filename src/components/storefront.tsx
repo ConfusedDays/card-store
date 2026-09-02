@@ -211,7 +211,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
               <div className="product-copy">
                 <span className="category-label">{product.category}</span>
                 <h1>{product.name}</h1>
-                <p>{product.description}</p>
+                <p className="product-description">{product.description}</p>
               </div>
               <div className="trust-row">
                 <span><PackageCheck size={17} /> 支付后自动发货</span>
