@@ -44,6 +44,7 @@ export function AdminDashboard() {
   const [inventoryStatus, setInventoryStatus] = useState("all");
   const [selectedKeyIds, setSelectedKeyIds] = useState<number[]>([]);
   const [inventoryBusy, setInventoryBusy] = useState(false);
+  const [inventoryMessage, setInventoryMessage] = useState("");
   const [copiedKeyId, setCopiedKeyId] = useState<number | null>(null);
   const [orderMessage, setOrderMessage] = useState("");
   const [resendingOrderNo, setResendingOrderNo] = useState("");
@@ -60,6 +61,7 @@ export function AdminDashboard() {
   const navDraggingRef = useRef(false);
   const navTargetRef = useRef("overview");
   const suppressNavClickRef = useRef(false);
+  const inventoryRequestRef = useRef(0);
 
   useEffect(() => {
     if (!overview) return;
@@ -198,13 +200,14 @@ export function AdminDashboard() {
       if (!response.ok) throw new Error(data.error ?? "导入失败");
       setMessage(`已导入 ${data.imported} 条，跳过 ${data.skipped} 条`);
       setKeys("");
-      await loadOverview();
+      await Promise.all([loadOverview(), loadInventory()]);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "导入失败");
     }
   }
 
   async function loadInventory(authToken = token) {
+    const requestId = ++inventoryRequestRef.current;
     try {
       const params = new URLSearchParams();
       if (variantId) params.set("variantId", variantId);
@@ -213,29 +216,42 @@ export function AdminDashboard() {
       const response = await fetch(`/api/admin/inventory?${params}`, { headers: { authorization: `Bearer ${authToken}` } });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "加载卡密失败");
+      if (requestId !== inventoryRequestRef.current) return;
       setInventoryKeys(data.keys);
       setSelectedKeyIds([]);
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "加载卡密失败"); }
+    } catch (reason) {
+      if (requestId === inventoryRequestRef.current) setError(reason instanceof Error ? reason.message : "加载卡密失败");
+    }
   }
 
   async function mutateInventory(action: "available" | "disabled" | "delete") {
     if (!selectedKeyIds.length) return;
-    if (action === "delete" && !window.confirm(`确认删除选中的 ${selectedKeyIds.length} 条未售卡密？此操作无法撤销。`)) return;
-    setInventoryBusy(true); setError("");
+    const ids = [...selectedKeyIds];
+    if (action === "delete" && !window.confirm(`确认删除选中的 ${ids.length} 条未售卡密？此操作无法撤销。`)) return;
+    setInventoryBusy(true);
+    setError("");
+    setInventoryMessage("");
+    setSelectedKeyIds([]);
     try {
-      const response = await fetch("/api/admin/inventory", { method: action === "delete" ? "DELETE" : "PATCH", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(action === "delete" ? { ids: selectedKeyIds } : { ids: selectedKeyIds, status: action }) });
+      const response = await fetch("/api/admin/inventory", { method: action === "delete" ? "DELETE" : "PATCH", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(action === "delete" ? { ids } : { ids, status: action }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "操作失败");
-      setMessage(action === "delete" ? `已删除 ${data.deleted} 条卡密` : `已更新 ${data.updated} 条卡密`);
+      const resultMessage = action === "delete" ? `已删除 ${data.deleted} 条卡密` : `${action === "available" ? "已启用" : "已停用"} ${data.updated} 条卡密`;
+      setMessage(resultMessage);
+      setInventoryMessage(resultMessage);
       await Promise.all([loadInventory(), loadOverview()]);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "操作失败"); }
     finally { setInventoryBusy(false); }
   }
 
   async function copyInventoryKey(id: number, value: string) {
-    await navigator.clipboard.writeText(value);
-    setCopiedKeyId(id);
-    window.setTimeout(() => setCopiedKeyId((current) => current === id ? null : current), 1600);
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedKeyId(id);
+      window.setTimeout(() => setCopiedKeyId((current) => current === id ? null : current), 1600);
+    } catch {
+      setError("复制失败，请检查浏览器的剪贴板权限后重试");
+    }
   }
 
   async function resendDeliveryEmail(orderNo: string, email: string) {
@@ -347,6 +363,10 @@ export function AdminDashboard() {
     );
   }
 
+  const editableInventoryKeys = inventoryKeys.filter((key) => key.status === "available" || key.status === "disabled");
+  const selectedEditableKeyIds = selectedKeyIds.filter((id) => editableInventoryKeys.some((key) => key.id === id));
+  const noEditableInventoryKeys = inventoryKeys.length > 0 && editableInventoryKeys.length === 0;
+
   return (
     <div className="admin-shell">
       <SiteHeader active="admin" />
@@ -421,10 +441,11 @@ export function AdminDashboard() {
           <div className="inventory-manager table-shell">
             <div className="inventory-manager-toolbar">
               <div><h3><KeyRound size={18} />卡密管理</h3><p>已售与预留卡密只读，避免影响已交付订单。</p></div>
-              <div className="inventory-filters"><label><Search size={15} /><input value={inventorySearch} onChange={(event) => setInventorySearch(event.target.value)} placeholder="尾号或订单号" /></label><select value={inventoryStatus} onChange={(event) => setInventoryStatus(event.target.value)}><option value="all">全部状态</option><option value="available">可售</option><option value="disabled">已停用</option><option value="sold">已售</option><option value="reserved">预留</option></select><button type="button" className="icon-action" onClick={() => void loadInventory()} title="查询"><RefreshCw size={17} /></button></div>
+              <div className="inventory-filters"><label><Search size={15} /><input value={inventorySearch} onChange={(event) => setInventorySearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void loadInventory(); }} placeholder="尾号或订单号" disabled={inventoryBusy} /></label><select value={inventoryStatus} onChange={(event) => setInventoryStatus(event.target.value)} disabled={inventoryBusy}><option value="all">全部状态</option><option value="available">可售</option><option value="disabled">已停用</option><option value="sold">已售</option><option value="reserved">预留</option></select><button type="button" className="icon-action" onClick={() => void loadInventory()} title="查询" disabled={inventoryBusy}><RefreshCw className={inventoryBusy ? "spin" : ""} size={17} /></button></div>
             </div>
-            <div className="inventory-bulk-actions"><span>已选 <strong>{selectedKeyIds.length}</strong> 条</span><div className="inventory-bulk-buttons"><button type="button" className="inventory-bulk-button inventory-enable-button" disabled={!selectedKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("available")}><CheckCircle2 size={16} />启用</button><button type="button" className="inventory-bulk-button inventory-disable-button" disabled={!selectedKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("disabled")}><CircleOff size={16} />停用</button><button type="button" className="inventory-bulk-button inventory-delete-button" disabled={!selectedKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("delete")}><Trash2 size={16} />删除</button></div></div>
-            <div className="inventory-key-table"><table><thead><tr><th><input type="checkbox" checked={inventoryKeys.filter((key) => key.status === "available" || key.status === "disabled").length > 0 && inventoryKeys.filter((key) => key.status === "available" || key.status === "disabled").every((key) => selectedKeyIds.includes(key.id))} onChange={(event) => setSelectedKeyIds(event.target.checked ? inventoryKeys.filter((key) => key.status === "available" || key.status === "disabled").map((key) => key.id) : [])} /></th><th>商品 / 规格</th><th>完整卡密</th><th>状态</th><th>订单号</th><th>导入时间</th></tr></thead><tbody>{inventoryKeys.length ? inventoryKeys.map((key, index) => { const editable = key.status === "available" || key.status === "disabled"; const copied = copiedKeyId === key.id; return <tr key={key.id} className="inventory-key-row" style={{ animationDelay: `${Math.min(index, 12) * 35}ms` }}><td>{editable && <input type="checkbox" checked={selectedKeyIds.includes(key.id)} onChange={(event) => setSelectedKeyIds((current) => event.target.checked ? [...current, key.id] : current.filter((id) => id !== key.id))} />}</td><td>{key.productName}<small>{key.variantLabel}</small></td><td><div className={`key-value ${copied ? "is-copied" : ""}`}><code>{key.key}</code><button type="button" className={`copy-key-button ${copied ? "copied" : ""}`} onClick={() => void copyInventoryKey(key.id, key.key)} title={copied ? "已复制" : "复制卡密"}>{copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}<span>{copied ? "已复制" : "复制"}</span></button></div></td><td><span className={`status-badge status-${key.status}`}>{key.status === "available" ? "可售" : key.status === "disabled" ? "已停用" : key.status === "sold" ? "已售" : "预留"}</span></td><td>{key.orderNo ? <code>{key.orderNo}</code> : "—"}</td><td>{new Date(key.createdAt.replace(" ", "T") + "Z").toLocaleString("zh-CN")}</td></tr>; }) : <tr><td colSpan={6} className="empty-cell">没有符合条件的卡密</td></tr>}</tbody></table></div>
+            {inventoryMessage && <p className="inventory-operation-message success-message" role="status"><CheckCircle2 size={16} />{inventoryMessage}</p>}
+            <div className="inventory-bulk-actions" aria-live="polite"><span>{noEditableInventoryKeys ? "当前结果均为只读卡密" : <>已选 <strong>{selectedEditableKeyIds.length}</strong> 条</>}</span>{noEditableInventoryKeys && <small>已售和预留卡密不能再修改或删除。</small>}<div className="inventory-bulk-buttons"><button type="button" className="inventory-bulk-button inventory-enable-button" disabled={!selectedEditableKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("available")}><CheckCircle2 size={16} />启用</button><button type="button" className="inventory-bulk-button inventory-disable-button" disabled={!selectedEditableKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("disabled")}><CircleOff size={16} />停用</button><button type="button" className="inventory-bulk-button inventory-delete-button" disabled={!selectedEditableKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("delete")}><Trash2 size={16} />删除</button></div></div>
+            <div className="inventory-key-table" aria-busy={inventoryBusy}><table><thead><tr><th><input type="checkbox" aria-label="选择当前筛选结果中的全部可操作卡密" disabled={!editableInventoryKeys.length || inventoryBusy} checked={editableInventoryKeys.length > 0 && editableInventoryKeys.every((key) => selectedEditableKeyIds.includes(key.id))} onChange={(event) => setSelectedKeyIds(event.target.checked ? editableInventoryKeys.map((key) => key.id) : [])} /></th><th>商品 / 规格</th><th>完整卡密</th><th>状态</th><th>订单号</th><th>导入时间</th></tr></thead><tbody>{inventoryKeys.length ? inventoryKeys.map((key, index) => { const editable = key.status === "available" || key.status === "disabled"; const copied = copiedKeyId === key.id; return <tr key={key.id} className="inventory-key-row" style={{ animationDelay: `${Math.min(index, 12) * 35}ms` }}><td>{editable && <input type="checkbox" aria-label={`选择卡密 ${key.key}`} disabled={inventoryBusy} checked={selectedEditableKeyIds.includes(key.id)} onChange={(event) => setSelectedKeyIds((current) => event.target.checked ? [...current, key.id] : current.filter((id) => id !== key.id))} />}</td><td>{key.productName}<small>{key.variantLabel}</small></td><td><div className={`key-value ${copied ? "is-copied" : ""}`}><code>{key.key}</code><button type="button" className={`copy-key-button ${copied ? "copied" : ""}`} onClick={() => void copyInventoryKey(key.id, key.key)} title={copied ? "已复制" : "复制卡密"}>{copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}<span>{copied ? "已复制" : "复制"}</span></button></div></td><td><span className={`status-badge status-${key.status}`}>{key.status === "available" ? "可售" : key.status === "disabled" ? "已停用" : key.status === "sold" ? "已售" : "预留"}</span></td><td>{key.orderNo ? <code>{key.orderNo}</code> : "—"}</td><td>{new Date(key.createdAt.replace(" ", "T") + "Z").toLocaleString("zh-CN")}</td></tr>; }) : <tr><td colSpan={6} className="empty-cell">没有符合条件的卡密</td></tr>}</tbody></table></div>
           </div>
         </section>
 

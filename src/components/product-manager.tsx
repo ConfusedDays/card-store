@@ -5,7 +5,7 @@ import Image from "next/image";
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, GripVertical, ImagePlus, LoaderCircle, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import { Check, Eye, EyeOff, GripVertical, ImagePlus, LoaderCircle, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import type { AdminProduct } from "@/lib/product-admin";
 
 type DraftVariant = {
@@ -162,6 +162,36 @@ export function ProductManager({ products, token, onSaved }: {
       setUploadingImage(false);
     }
   }
+
+  async function persistProduct(product: DraftProduct) {
+    const variants = product.variants.map((variant) => ({
+      id: variant.id,
+      label: variant.label,
+      durationLabel: variant.durationLabel,
+      priceCents: Math.round(Number(variant.priceYuan) * 100),
+      active: variant.active,
+    }));
+    if (variants.some((variant) => !Number.isFinite(variant.priceCents) || variant.priceCents < 1)) throw new Error("请填写有效的规格价格");
+    const response = await fetch("/api/admin/products", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        id: product.id,
+        slug: product.slug.trim(),
+        name: product.name.trim(),
+        description: product.description.trim(),
+        category: product.category.trim(),
+        accent: product.accent,
+        imageUrl: product.imageUrl,
+        active: product.active,
+        sortOrder: Number(product.sortOrder) || 0,
+        variants,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error ?? "保存商品失败");
+  }
+
   async function saveProduct(event: React.FormEvent) {
     event.preventDefault();
     if (!draft) return;
@@ -169,32 +199,7 @@ export function ProductManager({ products, token, onSaved }: {
     setError("");
     setMessage("");
     try {
-      const variants = draft.variants.map((variant) => ({
-        id: variant.id,
-        label: variant.label,
-        durationLabel: variant.durationLabel,
-        priceCents: Math.round(Number(variant.priceYuan) * 100),
-        active: variant.active,
-      }));
-      if (variants.some((variant) => !Number.isFinite(variant.priceCents) || variant.priceCents < 1)) throw new Error("请填写有效的规格价格");
-      const response = await fetch("/api/admin/products", {
-        method: "POST",
-        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-        body: JSON.stringify({
-          id: draft.id,
-          slug: draft.slug.trim(),
-          name: draft.name.trim(),
-          description: draft.description.trim(),
-          category: draft.category.trim(),
-          accent: draft.accent,
-          imageUrl: draft.imageUrl,
-          active: draft.active,
-          sortOrder: Number(draft.sortOrder) || 0,
-          variants,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "保存商品失败");
+      await persistProduct(draft);
       await onSaved();
       setMessage(draft.id ? "商品已更新" : "商品已创建，可以导入卡密库存");
       setDraft(null);
@@ -229,6 +234,27 @@ export function ProductManager({ products, token, onSaved }: {
       setError(reason instanceof Error ? reason.message : "删除商品失败");
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function toggleProductAvailability() {
+    if (!draft?.id || saving || deleting || uploadingImage) return;
+    const nextActive = !draft.active;
+    const productName = draft.name.trim() || "此商品";
+    if (!nextActive && !window.confirm(`确定下架“${productName}”吗？\n\n下架后将不会在商店前台展示，现有订单和卡密记录会保留。`)) return;
+
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      await persistProduct({ ...draft, active: nextActive });
+      await onSaved();
+      setDraft(null);
+      setMessage(nextActive ? `已重新上架商品「${productName}」` : `已下架商品「${productName}」`);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "更新商品状态失败");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -289,10 +315,7 @@ export function ProductManager({ products, token, onSaved }: {
                 <div className="product-image-control">
                   <div className={`product-image-preview ${draft.imageUrl ? "has-image" : ""}`}>
                     {draft.imageUrl ? (
-                      <>
-                        <Image className="product-preview-backdrop" src={draft.imageUrl} alt="" aria-hidden fill sizes="320px" unoptimized />
-                        <Image className="product-preview-image" src={draft.imageUrl} alt={`${draft.name || "商品"}宣传图预览`} fill sizes="320px" unoptimized />
-                      </>
+                      <Image className="product-preview-image" src={draft.imageUrl} alt={`${draft.name || "商品"}宣传图预览`} fill sizes="320px" unoptimized />
                     ) : (
                       <ImagePlus size={25} />
                     )}
@@ -328,6 +351,7 @@ export function ProductManager({ products, token, onSaved }: {
               ))}
             </div>
             <div className="product-editor-actions">
+              {draft.id && <button className="product-availability-button" type="button" onClick={() => void toggleProductAvailability()} disabled={saving || deleting || uploadingImage}>{draft.active ? <EyeOff size={17} /> : <Eye size={17} />} {draft.active ? "下架商品" : "重新上架"}</button>}
               {draft.id && <button className="product-delete-button" type="button" onClick={() => void deleteCurrentProduct()} disabled={saving || deleting || uploadingImage}><Trash2 size={17} /> {deleting ? "正在删除..." : "删除商品"}</button>}
               <button className="primary-button" disabled={saving || deleting || uploadingImage}><Save size={18} /> {saving ? "正在保存..." : "保存商品"}</button>
             </div>
