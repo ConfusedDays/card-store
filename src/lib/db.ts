@@ -10,7 +10,14 @@ fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
 const globalForDb = globalThis as unknown as { cardStoreDb?: Database.Database };
 export const db = globalForDb.cardStoreDb ?? new Database(dbPath);
-db.pragma("journal_mode = WAL");
+try {
+  db.pragma("journal_mode = WAL");
+} catch (error) {
+  // During a concurrent production build another worker may already be changing
+  // the journal mode. The existing mode remains safe to use, so avoid failing
+  // the build solely because that one-time optimization is temporarily locked.
+  if ((error as { code?: string }).code !== "SQLITE_BUSY") throw error;
+}
 db.pragma("foreign_keys = ON");
 if (process.env.NODE_ENV !== "production") globalForDb.cardStoreDb = db;
 
