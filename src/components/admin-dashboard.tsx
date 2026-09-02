@@ -415,7 +415,7 @@ export function AdminDashboard() {
         <Link className="back-store" href="/"><ArrowLeft size={17} />返回商店</Link>
       </aside>
       <div className="admin-content">
-        <header><div><span className="section-index">OPERATIONS</span><h1>销售与库存</h1></div><div className="admin-header-actions"><button className="icon-action" onClick={() => loadOverview()} title="刷新数据"><RefreshCw size={18} /></button></div></header>
+        <header><div><span className="section-index">OPERATIONS</span><h1>销售与库存</h1></div><div className="admin-header-actions"><button className="icon-action admin-refresh-button" onClick={() => loadOverview()} title="刷新数据"><RefreshCw size={18} /></button></div></header>
         {error && <p className="form-error">{error}</p>}
         <section className="metric-grid" id="overview">
           <Metric icon={<ReceiptText />} label="累计订单" value={String(overview.totals.orders)} />
