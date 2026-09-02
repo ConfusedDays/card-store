@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminRequest } from "@/lib/admin";
-import { reorderProducts, saveProduct } from "@/lib/product-admin";
+import { deleteProduct, reorderProducts, saveProduct } from "@/lib/product-admin";
 
 const variantSchema = z.object({
   id: z.string().min(1).optional(),
@@ -49,6 +49,19 @@ export async function PATCH(request: Request) {
     const message = error instanceof z.ZodError
       ? error.issues[0]?.message
       : error instanceof Error ? error.message : "保存商品排序失败";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  if (!isAdminRequest(request)) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
+  try {
+    const id = z.string().min(1, "缺少商品标识").parse(new URL(request.url).searchParams.get("id"));
+    return NextResponse.json(deleteProduct(id));
+  } catch (error) {
+    const message = error instanceof z.ZodError
+      ? error.issues[0]?.message
+      : error instanceof Error ? error.message : "删除商品失败";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

@@ -102,6 +102,29 @@ export function saveProduct(input: ProductInput) {
   return getAdminProducts().find((product) => product.id === productId);
 }
 
+export function deleteProduct(productId: string) {
+  const product = db.prepare("SELECT id, name FROM products WHERE id = ?").get(productId) as { id: string; name: string } | undefined;
+  if (!product) throw new Error("商品不存在");
+
+  const usage = db.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM license_keys keys INNER JOIN variants ON variants.id = keys.variant_id WHERE variants.product_id = ?) AS keyCount,
+      (SELECT COUNT(*) FROM orders INNER JOIN variants ON variants.id = orders.variant_id WHERE variants.product_id = ?) AS orderCount
+  `).get(productId, productId) as { keyCount: number; orderCount: number };
+
+  if (usage.orderCount > 0) throw new Error("该商品已有订单记录，不能删除；请改为下架销售");
+  if (usage.keyCount > 0) throw new Error("该商品仍有关联卡密，不能删除；请先在卡密管理中清空库存");
+
+  const transaction = db.transaction(() => {
+    db.prepare("DELETE FROM variants WHERE product_id = ?").run(productId);
+    db.prepare("DELETE FROM products WHERE id = ?").run(productId);
+    db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
+      .run("product.deleted", "product", productId, JSON.stringify({ name: product.name }));
+  });
+  transaction();
+  return { id: productId, name: product.name };
+}
+
 
 export function reorderProducts(productIds: string[]) {
   const existing = db.prepare("SELECT id FROM products").all() as { id: string }[];

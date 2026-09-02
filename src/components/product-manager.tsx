@@ -70,6 +70,7 @@ export function ProductManager({ products, token, onSaved }: {
 }) {
   const [draft, setDraft] = useState<DraftProduct | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -203,6 +204,34 @@ export function ProductManager({ products, token, onSaved }: {
       setSaving(false);
     }
   }
+
+  async function deleteCurrentProduct() {
+    if (!draft?.id || deleting) return;
+    const productId = draft.id;
+    const productName = draft.name.trim() || "此商品";
+    const confirmed = window.confirm(`确定永久删除“${productName}”吗？\n\n只有没有卡密库存和订单记录的商品才能删除；已有记录的商品请改为下架。`);
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(`/api/admin/products?id=${encodeURIComponent(productId)}`, {
+        method: "DELETE",
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "删除商品失败");
+      await onSaved();
+      setDraft(null);
+      setMessage(`已删除商品「${productName}」`);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "删除商品失败");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   function toggleNewProduct() {
     setDraft((current) => current && !current.id ? null : emptyProduct());
     setError("");
@@ -260,7 +289,10 @@ export function ProductManager({ products, token, onSaved }: {
                 <div className="product-image-control">
                   <div className={`product-image-preview ${draft.imageUrl ? "has-image" : ""}`}>
                     {draft.imageUrl ? (
-                      <Image src={draft.imageUrl} alt={`${draft.name || "商品"}宣传图预览`} fill sizes="320px" unoptimized />
+                      <>
+                        <Image className="product-preview-backdrop" src={draft.imageUrl} alt="" aria-hidden fill sizes="320px" unoptimized />
+                        <Image className="product-preview-image" src={draft.imageUrl} alt={`${draft.name || "商品"}宣传图预览`} fill sizes="320px" unoptimized />
+                      </>
                     ) : (
                       <ImagePlus size={25} />
                     )}
@@ -295,7 +327,10 @@ export function ProductManager({ products, token, onSaved }: {
                 </div>
               ))}
             </div>
-            <button className="primary-button" disabled={saving || uploadingImage}><Save size={18} /> {saving ? "正在保存..." : "保存商品"}</button>
+            <div className="product-editor-actions">
+              {draft.id && <button className="product-delete-button" type="button" onClick={() => void deleteCurrentProduct()} disabled={saving || deleting || uploadingImage}><Trash2 size={17} /> {deleting ? "正在删除..." : "删除商品"}</button>}
+              <button className="primary-button" disabled={saving || deleting || uploadingImage}><Save size={18} /> {saving ? "正在保存..." : "保存商品"}</button>
+            </div>
           </form>
         ) : (
           <button

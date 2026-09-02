@@ -194,7 +194,10 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
               <div className="eyebrow"><span className="live-dot" /> 即时库存</div>
               <div className={`product-visual ${product.imageUrl ? "has-promo-image" : ""}`}>
                 {product.imageUrl ? (
-                  <Image src={product.imageUrl} alt={`${product.name} 宣传图`} fill sizes="(max-width: 920px) calc(100vw - 48px), 650px" unoptimized priority />
+                  <>
+                    <Image className="product-promo-backdrop" src={product.imageUrl} alt="" aria-hidden fill sizes="(max-width: 920px) calc(100vw - 48px), 650px" unoptimized priority />
+                    <Image className="product-promo-image" src={product.imageUrl} alt={`${product.name} 宣传图`} fill sizes="(max-width: 920px) calc(100vw - 48px), 650px" unoptimized priority />
+                  </>
                 ) : (
                   <div aria-hidden="true">
                     <div className="visual-grid" />
