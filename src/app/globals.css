@@ -578,6 +578,9 @@ tbody tr:last-child td { border-bottom: 0; }
 .inventory-status-select { width: 126px; margin-top: 0; flex: 0 0 126px; }
 .inventory-status-select .dropdown-select-trigger { min-height: 36px; padding-inline: 9px; border-radius: 8px; font-size: 12px; }
 .inventory-status-select .dropdown-select-surface { min-width: 154px; }
+.inventory-refresh-button svg { transition: transform .36s cubic-bezier(.16,1,.3,1); }
+.inventory-refresh-button:hover:not(:disabled) svg { transform: rotate(180deg); }
+.inventory-refresh-button .spin { animation: image-upload-spin .8s linear infinite; }
 .inventory-bulk-actions { padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 10px; }
 .inventory-bulk-actions > span { color: var(--muted); min-width: 92px; white-space: nowrap; }
 .inventory-bulk-actions > span strong { color: var(--text); font-size: 1rem; }
