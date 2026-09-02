@@ -212,7 +212,6 @@ export function AdminDashboard() {
     if (showProgress) setInventoryRefreshing(true);
     try {
       const params = new URLSearchParams();
-      if (variantId) params.set("variantId", variantId);
       if (inventoryStatus !== "all") params.set("status", inventoryStatus);
       if (inventorySearch.trim()) params.set("search", inventorySearch.trim());
       const response = await fetch(`/api/admin/inventory?${params}`, { headers: { authorization: `Bearer ${authToken}` } });

@@ -957,6 +957,10 @@ html.dark-mode .delivery-success button { color: var(--success); border-color: #
 html.dark-mode th { color: #a5b3ae; background: #18231f; }
 html.dark-mode th, html.dark-mode td { border-color: #2d3c38; }
 html.dark-mode .status-badge { color: #c7d3ce; background: #2a3632; }
+html.dark-mode .status-available { color: #8be2c8; background: rgba(36, 115, 91, .52); border-color: rgba(110, 225, 190, .34); }
+html.dark-mode .status-disabled { color: #f1c478; background: rgba(108, 78, 31, .55); border-color: rgba(241, 196, 120, .3); }
+html.dark-mode .status-sold { color: #c6d0cc; background: rgba(68, 83, 78, .7); border-color: rgba(180, 195, 189, .18); }
+html.dark-mode .status-reserved { color: #c8bcff; background: rgba(82, 68, 136, .52); border-color: rgba(200, 188, 255, .3); }
 html.dark-mode .status-delivered { color: #8be2b3; background: #214a37; }
 html.dark-mode .status-paid_no_stock { color: #f1c478; background: #4b391f; }
 html.dark-mode .email-status { color: #c7d3ce; background: #2a3632; }
