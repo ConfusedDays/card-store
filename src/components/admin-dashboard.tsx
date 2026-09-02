@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArchiveRestore, ArrowLeft, Boxes, CheckCircle2, CircleDollarSign, CircleOff, Copy, Download, KeyRound, LoaderCircle, LogIn, MailCheck, Menu as MenuIcon, PackagePlus, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Tags, Trash2, TriangleAlert, Upload } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
-import { DropdownMenu } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownSelect } from "@/components/ui/dropdown-menu";
 import { ProductManager } from "@/components/product-manager";
 import type { AdminProduct } from "@/lib/product-admin";
 
@@ -428,7 +428,7 @@ export function AdminDashboard() {
             </div>
             <form className="import-panel" onSubmit={importKeys}>
               <h3><PackagePlus size={19} />批量导入</h3>
-              <label>商品规格<select value={variantId} onChange={(event) => setVariantId(event.target.value)}>{overview.inventory.map((item) => <option key={item.variantId} value={item.variantId}>{item.label} · {item.productName}</option>)}</select></label>
+              <label>商品规格<DropdownSelect value={variantId} onValueChange={setVariantId} ariaLabel="选择要导入卡密的商品规格" options={overview.inventory.map((item) => ({ value: item.variantId, label: `${item.label} · ${item.productName}` }))} /></label>
               <label>卡密列表<textarea value={keys} onChange={(event) => setKeys(event.target.value)} placeholder={"每行一条卡密\nAAAA-BBBB-CCCC"} required /></label>
               {message && <p className="success-message">{message}</p>}
               <button className="primary-button"><PackagePlus size={18} />导入卡密</button>
@@ -437,7 +437,7 @@ export function AdminDashboard() {
           <div className="inventory-manager table-shell">
             <div className="inventory-manager-toolbar">
               <div><h3><KeyRound size={18} />卡密管理</h3><p>已售与预留卡密只读，避免影响已交付订单。</p></div>
-              <div className="inventory-filters"><label><Search size={15} /><input value={inventorySearch} onChange={(event) => setInventorySearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void loadInventory(); }} placeholder="尾号或订单号" disabled={inventoryBusy} /></label><select value={inventoryStatus} onChange={(event) => setInventoryStatus(event.target.value)} disabled={inventoryBusy}><option value="all">全部状态</option><option value="available">可售</option><option value="disabled">已停用</option><option value="sold">已售</option><option value="reserved">预留</option></select><button type="button" className="icon-action" onClick={() => void loadInventory()} title="查询" disabled={inventoryBusy}><RefreshCw className={inventoryBusy ? "spin" : ""} size={17} /></button></div>
+              <div className="inventory-filters"><label><Search size={15} /><input value={inventorySearch} onChange={(event) => setInventorySearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void loadInventory(); }} placeholder="尾号或订单号" disabled={inventoryBusy} /></label><DropdownSelect className="inventory-status-select" value={inventoryStatus} onValueChange={setInventoryStatus} ariaLabel="筛选卡密状态" disabled={inventoryBusy} options={[{ value: "all", label: "全部状态" }, { value: "available", label: "可售" }, { value: "disabled", label: "已停用" }, { value: "sold", label: "已售" }, { value: "reserved", label: "预留" }]} /><button type="button" className="icon-action" onClick={() => void loadInventory()} title="查询" disabled={inventoryBusy}><RefreshCw className={inventoryBusy ? "spin" : ""} size={17} /></button></div>
             </div>
             {inventoryMessage && <p className="inventory-operation-message success-message" role="status"><CheckCircle2 size={16} />{inventoryMessage}</p>}
             <div className="inventory-bulk-actions" aria-live="polite"><span>{noEditableInventoryKeys ? "当前结果均为只读卡密" : <>已选 <strong>{selectedEditableKeyIds.length}</strong> 条</>}</span>{noEditableInventoryKeys && <small>已售和预留卡密不能再修改或删除。</small>}<div className="inventory-bulk-buttons"><button type="button" className="inventory-bulk-button inventory-enable-button" disabled={!selectedEditableKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("available")}><CheckCircle2 size={16} />启用</button><button type="button" className="inventory-bulk-button inventory-disable-button" disabled={!selectedEditableKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("disabled")}><CircleOff size={16} />停用</button><button type="button" className="inventory-bulk-button inventory-delete-button" disabled={!selectedEditableKeyIds.length || inventoryBusy} onClick={() => void mutateInventory("delete")}><Trash2 size={16} />删除</button></div></div>

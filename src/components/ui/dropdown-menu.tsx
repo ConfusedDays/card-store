@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 export type DropdownMenuOption = {
@@ -11,6 +11,17 @@ export type DropdownMenuOption = {
   href?: string;
   external?: boolean;
   onSelect?: () => void;
+};
+
+export type DropdownSelectOption = { value: string; label: ReactNode; disabled?: boolean };
+
+type DropdownSelectProps = {
+  value: string;
+  options: DropdownSelectOption[];
+  onValueChange: (value: string) => void;
+  ariaLabel: string;
+  disabled?: boolean;
+  className?: string;
 };
 
 type DropdownMenuProps = {
@@ -84,6 +95,83 @@ export function DropdownMenu({ label, icon, options, footer, align = "right", cl
               })}
             </div>
             {footer && <div className="dropdown-menu-footer">{footer}</div>}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export function DropdownSelect({ value, options, onValueChange, ariaLabel, disabled = false, className = "" }: DropdownSelectProps) {
+  const [open, setOpen] = useState(false);
+  const selectRef = useRef<HTMLDivElement>(null);
+  const listboxId = useId();
+  const reduceMotion = useReducedMotion();
+  const selected = options.find((option) => option.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!selectRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
+  const surfaceMotion = reduceMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+    : { initial: { opacity: 0, y: -6, scale: 0.97, filter: "blur(8px)" }, animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }, exit: { opacity: 0, y: -4, scale: 0.98, filter: "blur(5px)" } };
+
+  return (
+    <div ref={selectRef} className={`dropdown-select ${className}`}>
+      <button
+        type="button"
+        className="dropdown-select-trigger"
+        role="combobox"
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-controls={listboxId}
+        aria-haspopup="listbox"
+        disabled={disabled}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setOpen(true);
+          }
+        }}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>{selected?.label ?? "请选择"}</span>
+        <motion.span className="dropdown-menu-chevron" animate={{ rotate: open ? 180 : 0 }} transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.16, 1, 0.3, 1] }}><ChevronDown size={17} /></motion.span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div id={listboxId} role="listbox" aria-label={ariaLabel} className="dropdown-select-surface" {...surfaceMotion} transition={{ duration: reduceMotion ? 0.1 : 0.24, ease: [0.16, 1, 0.3, 1] }}>
+            {options.map((option, index) => (
+              <motion.button
+                key={option.value}
+                type="button"
+                role="option"
+                aria-selected={option.value === value}
+                disabled={option.disabled}
+                className={`dropdown-select-option ${option.value === value ? "selected" : ""}`}
+                initial={reduceMotion ? undefined : { opacity: 0, x: 8, filter: "blur(4px)" }}
+                animate={reduceMotion ? undefined : { opacity: 1, x: 0, filter: "blur(0px)" }}
+                exit={reduceMotion ? undefined : { opacity: 0, x: 4 }}
+                transition={{ duration: reduceMotion ? 0.1 : 0.18, delay: reduceMotion ? 0 : index * 0.035, ease: [0.16, 1, 0.3, 1] }}
+                onClick={() => { onValueChange(option.value); setOpen(false); }}
+              >
+                <span>{option.label}</span>
+                {option.value === value && <Check size={15} />}
+              </motion.button>
+            ))}
           </motion.div>
         )}
       </AnimatePresence>

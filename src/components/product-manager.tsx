@@ -6,6 +6,7 @@ import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type D
 import { SortableContext, arrayMove, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Check, Eye, EyeOff, GripVertical, ImagePlus, LoaderCircle, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import { DropdownSelect } from "@/components/ui/dropdown-menu";
 import type { AdminProduct } from "@/lib/product-admin";
 
 type DraftVariant = {
@@ -334,7 +335,7 @@ export function ProductManager({ products, token, onSaved }: {
                   </div>
                 </div>
               </div>
-              <label>主题色<select value={draft.accent} onChange={(event) => setDraft({ ...draft, accent: event.target.value })}><option value="teal">青绿</option><option value="amber">琥珀</option><option value="blue">蓝色</option><option value="green">绿色</option></select></label>
+              <label>主题色<DropdownSelect value={draft.accent} onValueChange={(accent) => setDraft({ ...draft, accent })} ariaLabel="选择商品主题色" options={[{ value: "teal", label: "青绿" }, { value: "amber", label: "琥珀" }, { value: "blue", label: "蓝色" }, { value: "green", label: "绿色" }]} /></label>
               <label className="toggle-field"><input type="checkbox" checked={draft.active} onChange={(event) => setDraft({ ...draft, active: event.target.checked })} /><span><Check size={14} /></span>上架销售</label>
             </div>
 
