@@ -102,8 +102,8 @@ export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mock
       </header>
       <div className="checkout-layout">
         <section className="payment-area">
+          <span className="section-index">{mockMode ? "DEVELOPMENT CHECKOUT" : "ALIPAY CHECKOUT"}</span>
           <h1>{result?.status === "delivered" ? "卡密已交付" : "确认支付结果"}</h1>
-          <p className="checkout-context">{mockMode ? "开发环境模拟结账" : "正在核对订单与支付平台返回结果"}</p>
           {!result?.licenseKey ? (
             mockMode ? (
               <>
