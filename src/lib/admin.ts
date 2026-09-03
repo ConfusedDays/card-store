@@ -94,7 +94,7 @@ export function getAdminInventoryKeys(options: { variantId?: string; status?: st
 export function updateInventoryKeys(ids: number[], status: "available" | "disabled") {
   if (!ids.length) throw new Error("请选择至少一条卡密");
   const placeholders = ids.map(() => "?").join(",");
-  const result = db.prepare(`UPDATE license_keys SET status = ? WHERE id IN (${placeholders}) AND status IN ('available', 'disabled')`).run(status, ...ids);
+  const result = db.prepare(`UPDATE license_keys SET status = ? WHERE id IN (${placeholders})`).run(status, ...ids);
   db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
     .run("inventory.status_updated", "license_key", ids.join(","), JSON.stringify({ status, updated: result.changes }));
   return { updated: result.changes };
@@ -103,8 +103,12 @@ export function updateInventoryKeys(ids: number[], status: "available" | "disabl
 export function deleteInventoryKeys(ids: number[]) {
   if (!ids.length) throw new Error("请选择至少一条卡密");
   const placeholders = ids.map(() => "?").join(",");
-  const result = db.prepare(`DELETE FROM license_keys WHERE id IN (${placeholders}) AND status IN ('available', 'disabled')`).run(...ids);
-  db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
-    .run("inventory.deleted", "license_key", ids.join(","), JSON.stringify({ deleted: result.changes }));
-  return { deleted: result.changes };
+  const remove = db.transaction(() => {
+    const detachedDeliveries = db.prepare(`DELETE FROM deliveries WHERE license_key_id IN (${placeholders})`).run(...ids).changes;
+    const deleted = db.prepare(`DELETE FROM license_keys WHERE id IN (${placeholders})`).run(...ids).changes;
+    db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
+      .run("inventory.deleted", "license_key", ids.join(","), JSON.stringify({ deleted, detachedDeliveries }));
+    return { deleted, detachedDeliveries };
+  });
+  return remove();
 }
