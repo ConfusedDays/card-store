@@ -2,6 +2,7 @@ import { cnyToCents } from "@/lib/payment-money";
 import { getAlipayClient } from "@/lib/payment-provider";
 import { completePaidOrder } from "@/lib/order-service";
 import { trySendDeliveryEmail } from "@/lib/delivery-email";
+import { trySendPaymentEmails } from "@/lib/order-email";
 
 export const runtime = "nodejs";
 
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       providerRef: notification.trade_no,
       amountCents: cnyToCents(notification.total_amount),
     });
+    await trySendPaymentEmails(order);
     if (order.status === "delivered") await trySendDeliveryEmail(order.orderNo);
     return reply("success");
   } catch (error) {

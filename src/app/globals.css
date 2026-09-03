@@ -529,6 +529,18 @@ footer { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 23px 0;
 .policy-card strong { color: var(--ink); }
 .policy-action { display: inline-flex; margin-top: 4px; padding: 9px 13px; border: 1px solid var(--teal); border-radius: 5px; color: var(--teal); font-size: 12px; font-weight: 750; }
 .policy-action:hover { color: #072b26; background: var(--teal); }
+.contact-form { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); display: grid; gap: 14px; }
+.contact-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.contact-form label { min-width: 0; display: grid; gap: 7px; color: var(--ink); font-size: 12px; font-weight: 740; }
+.contact-form input, .contact-form textarea { width: 100%; min-height: 42px; padding: 10px 11px; border: 1px solid #cfd6d3; border-radius: 7px; outline: none; color: var(--ink); background: color-mix(in srgb, var(--surface) 80%, transparent); font-size: 16px; font-weight: 500; line-height: 1.5; transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease; }
+.contact-form textarea { min-height: 126px; resize: vertical; }
+.contact-form input::placeholder, .contact-form textarea::placeholder { color: #88928f; }
+.contact-form input:focus, .contact-form textarea:focus { border-color: var(--teal); background: var(--surface); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 17%, transparent); }
+.contact-form-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.contact-form-footer p { min-width: 0; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.65; overflow-wrap: anywhere; }
+.contact-form .policy-action { align-items: center; gap: 7px; margin: 0; background: transparent; }
+.contact-form .policy-action:hover:not(:disabled) { color: #fff; background: var(--teal); }
+.contact-form .policy-action:disabled { cursor: wait; opacity: .62; }
 
 /* Admin */
 .admin-login { min-height: calc(100vh - 72px); padding: 30px; background: var(--charcoal); display: grid; place-items: center; position: relative; }
@@ -727,6 +739,9 @@ tbody tr:last-child td { border-bottom: 0; }
   .policy-hero { padding: 42px 0 28px; }
   .policy-card { padding: 22px 20px; grid-template-columns: 38px 1fr; gap: 13px; }
   .policy-icon { width: 38px; height: 38px; }
+  .contact-form-grid { grid-template-columns: 1fr; }
+  .contact-form-footer { align-items: stretch; flex-direction: column; }
+  .contact-form .policy-action { justify-content: center; min-height: 44px; }
   .checkout-header { height: 62px; padding: 0 14px; grid-template-columns: 1fr auto; }
   .checkout-header .brand { display: none; }
   .checkout-layout { width: 100%; border: 0; }

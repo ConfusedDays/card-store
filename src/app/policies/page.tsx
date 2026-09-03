@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, CircleHelp, FileCheck2, LockKeyhole, PackageCheck } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
+import { ContactForm } from "@/components/contact-form";
 
 export const metadata = {
   title: "数字商品购买与售后规则 · Reii小店",
@@ -56,6 +57,7 @@ export default function PoliciesPage() {
               <p>需要售后时，请先在订单查询页确认订单状态，并通过购买时约定的客服渠道提交订单号、下单邮箱和问题截图。请勿在公开页面发送完整卡密。</p>
               <p>对于卡密无效等问题，我们会核对交付记录、库存记录和激活状态，再提供补发或退款方案。</p>
               <Link className="policy-action" href="/orders">前往订单查询</Link>
+              <ContactForm />
             </div>
           </section>
         </div>

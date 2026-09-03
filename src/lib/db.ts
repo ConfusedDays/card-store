@@ -93,6 +93,17 @@ db.exec(`
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     sent_at TEXT
   );
+  CREATE TABLE IF NOT EXISTS order_email_events (
+    order_no TEXT NOT NULL REFERENCES orders(order_no),
+    event_type TEXT NOT NULL CHECK(event_type IN ('order_created','payment_succeeded','status_paid_no_stock')),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','sending','sent','failed')),
+    attempts INTEGER NOT NULL DEFAULT 0,
+    message_id TEXT,
+    last_error TEXT,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sent_at TEXT,
+    PRIMARY KEY (order_no, event_type)
+  );
   CREATE TABLE IF NOT EXISTS audit_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     action TEXT NOT NULL,

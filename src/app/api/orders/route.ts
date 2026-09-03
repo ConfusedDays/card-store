@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createPendingOrder } from "@/lib/order-service";
+import { trySendOrderEmail } from "@/lib/order-email";
 import { assertPaymentConfigured, createPaymentCheckout } from "@/lib/payment-provider";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
     const remoteIp = request.headers.get("cf-connecting-ip") ?? forwardedFor;
     await verifyTurnstileToken(input.turnstileToken, remoteIp);
     const order = createPendingOrder(input);
+    await trySendOrderEmail(order.orderNo, "order_created");
     const checkout = createPaymentCheckout({
       orderNo: order.orderNo,
       paymentMethod: input.paymentMethod,
