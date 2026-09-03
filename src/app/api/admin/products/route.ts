@@ -25,7 +25,7 @@ const productSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
   try {
     const input = productSchema.parse(await request.json());
     return NextResponse.json(saveProduct(input), { status: input.id ? 200 : 201 });
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 const reorderSchema = z.object({ productIds: z.array(z.string().min(1)).min(1).max(500) });
 
 export async function PATCH(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
   try {
     const { productIds } = reorderSchema.parse(await request.json());
     return NextResponse.json({ products: reorderProducts(productIds) });
@@ -54,7 +54,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
   try {
     const id = z.string().min(1, "缺少商品标识").parse(new URL(request.url).searchParams.get("id"));
     return NextResponse.json(deleteProduct(id));

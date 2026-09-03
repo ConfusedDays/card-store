@@ -5,7 +5,7 @@ import { trySendDeliveryEmail } from "@/lib/delivery-email";
 export const runtime = "nodejs";
 
 export async function POST(request: Request, context: { params: Promise<{ orderNo: string }> }) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
   }
 

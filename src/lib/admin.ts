@@ -1,10 +1,37 @@
 import { db } from "@/lib/db";
 import { decryptLicenseKey, encryptLicenseKey, keyFingerprint, keyLast4 } from "@/lib/crypto";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
-export function isAdminRequest(request: Request) {
+const accessJwksByTeamDomain = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+
+function getAccessJwks(teamDomain: string) {
+  const cached = accessJwksByTeamDomain.get(teamDomain);
+  if (cached) return cached;
+  const jwks = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
+  accessJwksByTeamDomain.set(teamDomain, jwks);
+  return jwks;
+}
+
+async function hasValidCloudflareAccessToken(request: Request) {
+  const teamDomain = process.env.CLOUDFLARE_ACCESS_TEAM_DOMAIN?.replace(/\/$/, "");
+  const audience = process.env.CLOUDFLARE_ACCESS_AUD;
+  const token = request.headers.get("cf-access-jwt-assertion");
+  if (!teamDomain || !audience || !token) return false;
+
+  try {
+    await jwtVerify(token, getAccessJwks(teamDomain), { issuer: teamDomain, audience });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function isAdminRequest(request: Request) {
   const expected = process.env.ADMIN_TOKEN ?? (process.env.NODE_ENV === "production" ? "" : "dev-admin-token");
   const provided = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  return Boolean(provided && provided === expected);
+  if (!provided || provided !== expected) return false;
+  if (process.env.NODE_ENV !== "production") return true;
+  return hasValidCloudflareAccessToken(request);
 }
 
 export function getAdminOverview() {

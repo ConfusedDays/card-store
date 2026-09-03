@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > MAX_BACKUP_FILE_BYTES + 1024 * 1024) return NextResponse.json({ error: "备份文件过大" }, { status: 413 });
 

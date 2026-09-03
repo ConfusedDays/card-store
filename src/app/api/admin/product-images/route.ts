@@ -12,7 +12,7 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
 
   try {
     const formData = await request.formData();

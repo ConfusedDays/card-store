@@ -8,7 +8,7 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
   try {
     const input = schema.parse(await request.json());
     return NextResponse.json(importLicenseKeys(input.variantId, input.keys));
@@ -21,19 +21,19 @@ export async function POST(request: Request) {
 const selectedSchema = z.object({ ids: z.array(z.number().int().positive()).min(1).max(500) });
 
 export async function GET(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
   const { searchParams } = new URL(request.url);
   return NextResponse.json({ keys: getAdminInventoryKeys({ variantId: searchParams.get("variantId") || undefined, status: searchParams.get("status") || undefined, search: searchParams.get("search") || undefined }) });
 }
 
 export async function PATCH(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
   try { const input = selectedSchema.extend({ status: z.enum(["available", "disabled"]) }).parse(await request.json()); return NextResponse.json(updateInventoryKeys(input.ids, input.status)); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "更新失败" }, { status: 400 }); }
 }
 
 export async function DELETE(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
   try { return NextResponse.json(deleteInventoryKeys(selectedSchema.parse(await request.json()).ids)); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "删除失败" }, { status: 400 }); }
 }
