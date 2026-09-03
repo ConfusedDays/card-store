@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SiteBackground } from "@/components/site-background";
 import { PurchaseNoticeGate } from "@/components/purchase-notice-gate";
+import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,10 +11,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-CN" className="dark-mode" style={{ colorScheme: "dark" }}>
+    <html lang="zh-CN" className="dark-mode" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <body>
         <SiteBackground />
         {children}
+        <ThemeToggle />
         <PurchaseNoticeGate />
       </body>
     </html>
