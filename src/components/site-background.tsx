@@ -3,14 +3,17 @@
 import { useEffect, useState } from "react";
 import Velaris from "@/components/ui/velaris";
 
-const darkColors = ["#213c36", "#17665a", "#2d8c7d", "#0d1412"];
-const lightColors = ["#d9f3ed", "#9ed8cc", "#5fb6a5", "#f4f6f3"];
+const palettes = {
+  teal: ["#213c36", "#17665a", "#2d8c7d", "#0d1412"],
+  violet: ["#33284f", "#58418d", "#7d63c6", "#100d1a"],
+  amber: ["#49351d", "#7c5524", "#b57420", "#171006"],
+};
 
 export function SiteBackground() {
-  const [isDark, setIsDark] = useState(true);
+  const [accent, setAccent] = useState<keyof typeof palettes>("teal");
 
   useEffect(() => {
-    const syncTheme = () => setIsDark(document.documentElement.classList.contains("dark-mode"));
+    const syncTheme = () => setAccent((document.documentElement.dataset.accent as keyof typeof palettes) || "teal");
     syncTheme();
     window.addEventListener("reii-theme-change", syncTheme);
     return () => window.removeEventListener("reii-theme-change", syncTheme);
@@ -20,8 +23,8 @@ export function SiteBackground() {
     <Velaris
       className="site-background"
       height="100dvh"
-      bg={isDark ? "#0d1412" : "#f4f6f3"}
-      colors={isDark ? darkColors : lightColors}
+      bg={palettes[accent][3]}
+      colors={palettes[accent]}
       speed={0.72}
       grain={0.13}
     />

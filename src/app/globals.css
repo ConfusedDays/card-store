@@ -293,6 +293,8 @@ html.dark-mode[data-accent="amber"] { --teal: #f3bb62; --teal-dark: #dc9b3a; --m
   gap: 76px;
   align-items: center;
 }
+.purchase-panel { position: sticky; top: 92px; }
+@media (max-width: 920px) { .purchase-panel { position: static; } }
 .product-summary { min-width: 0; }
 .eyebrow {
   display: inline-flex;
