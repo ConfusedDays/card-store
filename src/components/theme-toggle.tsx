@@ -10,7 +10,6 @@ const accents = [
   { id: "amber", label: "琥珀金" },
   { id: "ocean", label: "海洋蓝" },
   { id: "rose", label: "玫瑰红" },
-  { id: "aurora", label: "极光绿" },
 ] as const;
 type Accent = (typeof accents)[number]["id"];
 

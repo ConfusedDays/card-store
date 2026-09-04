@@ -9,7 +9,6 @@ const palettes = {
   amber: ["#49351d", "#7c5524", "#b57420", "#171006"],
   ocean: ["#17384f", "#21678d", "#318bc3", "#07131d"],
   rose: ["#4d223b", "#863e68", "#ca5d93", "#1b0b15"],
-  aurora: ["#123f3b", "#1f7770", "#4fc8a9", "#071713"],
 };
 
 export function SiteBackground() {
