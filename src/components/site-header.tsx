@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Check, Copy, ExternalLink, MessageCircle, Users } from "lucide-react";
-import { SlideTabs, type SlideTabItem } from "@/components/ui/slide-tabs";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 
 type SiteSection = "catalog" | "orders" | "admin";
@@ -47,10 +46,10 @@ export function SiteHeader({ active }: { active: SiteSection }) {
     window.setTimeout(() => router.push(href), ROUTE_EXIT_DURATION);
   }
 
-  const tabs: SlideTabItem[] = [
-    { id: "catalog", label: "购买", href: "/" },
-    { id: "orders", label: "订单查询", href: "/orders" },
-    ...(active === "admin" ? [{ id: "admin", label: "库存后台", href: "/admin" }] : []),
+  const navigationItems = [
+    { id: "catalog", label: "商品", href: "/" },
+    { id: "orders", label: "订单", href: "/orders" },
+    ...(active === "admin" ? [{ id: "admin", label: "后台", href: "/admin" }] : []),
   ];
 
   async function copyQqGroup() {
@@ -77,7 +76,19 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         <span>Reii小店</span>
       </Link>
       <nav className="nav-links" aria-label="主导航">
-        <SlideTabs items={tabs} activeId={active} onNavigate={navigateTo} />
+        <span className="nav-rail" aria-hidden="true" />
+        <div className="nav-items">
+          {navigationItems.map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              aria-current={active === item.id ? "page" : undefined}
+              onClick={(event) => navigateTo(item.href, event)}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
       </nav>
       <div className="topbar-actions">
         <DropdownMenu
