@@ -17,10 +17,13 @@ const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "curren
 export function Storefront({ products, view = "catalog", turnstileSiteKey }: { products: Product[]; view?: "catalog" | "orders"; turnstileSiteKey?: string }) {
   const router = useRouter();
   const [productId, setProductId] = useState(products[0]?.id ?? "");
+  const [category, setCategory] = useState("all");
   const [switchDirection, setSwitchDirection] = useState<"forward" | "backward">("forward");
   const productSwitcherRef = useRef<HTMLDivElement>(null);
   const productButtonRefs = useRef(new Map<string, HTMLButtonElement>());
-  const product = useMemo(() => products.find((item) => item.id === productId) ?? products[0], [products, productId]);
+  const categories = useMemo(() => [...new Set(products.map((item) => item.category))], [products]);
+  const visibleProducts = useMemo(() => category === "all" ? products : products.filter((item) => item.category === category), [category, products]);
+  const product = useMemo(() => visibleProducts.find((item) => item.id === productId) ?? visibleProducts[0], [visibleProducts, productId]);
   const [selectedId, setSelectedId] = useState(products[0]?.variants[0]?.id ?? "");
   const [email, setEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay">("alipay");
@@ -45,6 +48,11 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
     elements.forEach((element) => observer.observe(element));
     return () => observer.disconnect();
   }, [view]);
+
+  useEffect(() => {
+    if (product && product.id !== productId) selectProduct(product.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, product?.id]);
 
   const selected = useMemo(() => product?.variants.find((variant) => variant.id === selectedId), [product, selectedId]);
 
@@ -164,10 +172,11 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
         )}
         {view === "catalog" && product && (
           <section className="catalog-band" id="catalog">          <div className="catalog-wrap scroll-reveal" data-scroll-reveal>
-            {products.length > 1 && (
+            {categories.length > 1 && <div className="catalog-category-filter" role="tablist" aria-label="按商品分类筛选"><button type="button" className={category === "all" ? "active" : ""} onClick={() => setCategory("all")}>全部</button>{categories.map((item) => <button key={item} type="button" className={category === item ? "active" : ""} onClick={() => setCategory(item)}>{item}</button>)}</div>}
+            {visibleProducts.length > 1 && (
               <div ref={productSwitcherRef} className="product-switcher" role="tablist" aria-label="选择商品">
                 <span className="product-switcher-indicator" aria-hidden="true" />
-                {products.map((item) => {
+                {visibleProducts.map((item) => {
                   const firstVariant = item.variants[0];
                   const totalStock = item.variants.reduce((sum, variant) => sum + variant.availableCount, 0);
                   return (
