@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowDown, ArrowRight, Check, CircleHelp, Clock3, Copy, KeyRound, LockKeyhole,
+  ArrowRight, Check, CircleHelp, Clock3, Copy, KeyRound, LockKeyhole,
   MessageCircle, PackageCheck, Search, ShieldCheck, ShoppingBag, Sparkles, WalletCards, Zap,
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
@@ -167,7 +167,6 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
                 <div><ShieldCheck size={19} /><strong>加密存储</strong><span>库存与交付安全隔离</span></div>
                 <div><Clock3 size={19} /><strong>全程可查</strong><span>订单状态随时追溯</span></div>
               </div>
-              <button type="button" className="store-scroll-cue" onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })}><span>向下浏览商品</span><ArrowDown size={17} /></button>
             </div>
           </section>
         )}
