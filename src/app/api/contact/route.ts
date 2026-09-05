@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 const contactSchema = z.object({
   name: z.string().trim().min(1, "请填写称呼").max(80, "称呼不能超过 80 个字符"),
   email: z.email("请输入有效邮箱"),
-  orderNo: z.string().trim().max(80, "订单号不能超过 80 个字符").optional(),
+  orderNo: z.string().trim().min(1, "请填写订单号").max(80, "订单号不能超过 80 个字符"),
   message: z.string().trim().min(10, "请至少填写 10 个字符，便于客服处理").max(3000, "问题说明不能超过 3000 个字符"),
 });
 

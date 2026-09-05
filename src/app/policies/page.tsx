@@ -11,7 +11,7 @@ export const metadata = {
 export default function PoliciesPage() {
   return (
     <div className="site-shell policy-shell">
-      <SiteHeader active="catalog" />
+      <SiteHeader active="policies" />
       <main className="policy-page">
         <Link className="policy-back" href="/"><ArrowLeft size={16} /> 返回购买页面</Link>
         <header className="policy-hero">
