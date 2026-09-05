@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Check, Copy, ExternalLink, MessageCircle, Users } from "lucide-react";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
+import { TextEffect } from "@/components/ui/text-effect";
 
 type SiteSection = "catalog" | "orders" | "admin";
 type NavigationId = SiteSection | "policies";
@@ -83,10 +84,11 @@ export function SiteHeader({ active }: { active: SiteSection }) {
             <Link
               key={item.id}
               href={item.href}
+              aria-label={item.label}
               aria-current={active === item.id ? "page" : undefined}
               onClick={(event) => navigateTo(item.href, event)}
             >
-              {item.label}
+              {active === "catalog" ? <TextEffect delay={0.16 + navigationItems.indexOf(item) * 0.07}>{item.label}</TextEffect> : item.label}
             </Link>
           ))}
         </div>
