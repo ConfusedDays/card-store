@@ -11,6 +11,7 @@ import {
 import type { OrderResult, Product, Variant } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import CapsuleTabs from "@/components/ui/capsule-tabs";
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
@@ -172,7 +173,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
         )}
         {view === "catalog" && product && (
           <section className="catalog-band" id="catalog">          <div className="catalog-wrap scroll-reveal" data-scroll-reveal>
-            {categories.length > 1 && <div className="catalog-category-filter" role="tablist" aria-label="按商品分类筛选"><button type="button" className={category === "all" ? "active" : ""} onClick={() => setCategory("all")}>全部</button>{categories.map((item) => <button key={item} type="button" className={category === item ? "active" : ""} onClick={() => setCategory(item)}>{item}</button>)}</div>}
+            {categories.length > 1 && <CapsuleTabs className="catalog-category-filter" ariaLabel="按商品分类筛选" value={category} onValueChange={setCategory} items={[{ value: "all", label: "全部" }, ...categories.map((item) => ({ value: item, label: item }))]} />}
             {visibleProducts.length > 1 && (
               <div ref={productSwitcherRef} className="product-switcher" role="tablist" aria-label="选择商品">
                 <span className="product-switcher-indicator" aria-hidden="true" />
