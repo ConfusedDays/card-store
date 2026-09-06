@@ -47,6 +47,19 @@ export function SiteHeader({ active }: { active: SiteSection }) {
     window.setTimeout(() => router.push(href), ROUTE_EXIT_DURATION);
   }
 
+  function refreshPage(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) return;
+
+    event.preventDefault();
+    window.location.reload();
+  }
+
   const navigationItems: Array<{ id: SiteSection; label: string; href: string }> = [
     { id: "catalog", label: "商品", href: "/" },
     { id: "orders", label: "订单", href: "/orders" },
@@ -71,8 +84,8 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         href="/"
         prefetch={true}
         aria-label="Reii小店首页"
-        title="返回首页"
-        onClick={(event) => navigateTo("/", event)}
+        title="刷新网页"
+        onClick={refreshPage}
       >
         <span className="brand-mark brand-photo"><Image src="/reii-bear.jpg" alt="" width={34} height={34} priority /></span>
         <span>Reii小店</span>
