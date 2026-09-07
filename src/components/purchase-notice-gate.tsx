@@ -43,10 +43,11 @@ export function PurchaseNoticeGate() {
         <p className="notice-intro">请在购买或查询订单前阅读以下内容</p>
 
         <ul className="notice-rules">
-          <li><ShieldCheck size={17} /><span>请勿向他人透露订单号、接收邮箱或完整卡密；因泄露造成的损失需自行承担。</span></li>
-          <li><ShieldCheck size={17} /><span>本站商品为数字化授权内容，支付确认后将自动交付至结算页、订单查询页或下单邮箱。</span></li>
-          <li><ShieldCheck size={17} /><span>卡密一经展示、复制或发送，即视为交付，原则上不支持七日无理由退款；未交付、重复扣款、交付时即无效等法定例外除外。</span></li>
-          <li><ShieldCheck size={17} /><span>请确认商品说明及使用条件，并遵守相关平台和软件的规则。购买前请核对接收邮箱。</span></li>
+          <li><ShieldCheck size={17} /><span>本站提供的产品皆为代购代付海外虚拟产品。</span></li>
+          <li><ShieldCheck size={17} /><span>只为代购海外虚拟产品密钥，只保证密钥有效性，其他使用产生的后果均由你自行承担。</span></li>
+          <li><ShieldCheck size={17} /><span>购买前请务必了解服务器状态；一旦售出只保证卡密正确。不是卡密问题不退不换；下单后遇到没有教程等问题，请咨询在线客服，或查看公告获取售后联系方式。</span></li>
+          <li><ShieldCheck size={17} /><span>若支付后未能发货，请联系右下角在线客服或添加售后；请保存好订单号和付款凭证，以保障售后服务。</span></li>
+          <li><ShieldCheck size={17} /><span>禁止未成年人购买。购买前请仔细阅读，下单后默认同意上述条例。</span></li>
         </ul>
 
         <label className="notice-agreement">
