@@ -1,9 +1,13 @@
 node_modules
 .next
+*.tsbuildinfo
 data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal
 data/*.pem
+*.pem
+*.key
+xpay_v2_keys_*.txt
 .env*
 !.env.local.example
 *.log

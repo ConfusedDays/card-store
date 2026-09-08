@@ -35,7 +35,32 @@ npm run dev
 
 SQLite 数据库、WAL 文件、环境变量和卡密库存均不能提交到 Git。生产 Volume 需要定期备份。
 
-## 支付宝接入
+## 余宽聚合支付 V2 接入
+
+设置以下服务器环境变量（示例不包含真实密钥）：
+
+```text
+PAYMENT_MODE=epay
+APP_URL=https://你的商城域名
+EPAY_GATEWAY=https://zf.yk520.top/xpay/epayn/
+EPAY_PID=后台商户ID
+EPAY_PRIVATE_KEY=商户私钥
+EPAY_PUBLIC_KEY=平台公钥
+```
+
+`EPAY_GATEWAY` 请以后台当前 V2 线路为准，必须使用 HTTPS 并保留 `/xpay/epayn/`；不要填经典 MD5 网关。`EPAY_PUBLIC_KEY` 是平台公钥，不是应用公钥。私钥支持 PKCS8 PEM 或裸 Base64；PEM 支持多行或字面量 `\n`。不要使用 `NEXT_PUBLIC_` 前缀，也不要覆盖现有 `LICENSE_KEY_SECRET`。曾在聊天或截图中公开过的私钥应先重置，再将新私钥直接写入服务器变量。
+
+当前实现使用页面支付 `POST api/pay/submit`，不使用 API 下单生成二维码。请求按字段名字典序排列，排除 `sign`、`sign_type` 和空值，拼接原始值并使用 RSA-SHA256；协议字段发送 `sign_type=RSA`。参考：[平台 API 页面](https://www.mzafu2.cn/user/api)、[通知字段说明](https://www.mzafu2.cn/docs/epay_notify.md)。
+
+流程：创建订单并保存平台标识 → 30 分钟有效的签名链接 → 服务端按数据库金额生成 POST 表单 → 平台收银台 → 异步回调验签 → `POST api/pay/query` 主动查单并验证平台签名 → 核对商户、订单、金额、渠道、流水及已支付状态 → 事务入账和自动发卡。查询响应时间戳允许 5 分钟偏差，服务器需保持时钟同步。回调允许平台延迟重试，重复通知仍会查单，但只入账、发卡一次；缺货保留 `paid_no_stock`。
+
+回调地址为 `https://你的商城域名/api/payments/epay/notify`，支持 GET 和表单 POST。确认完成才返回纯文本 `success`；查单失败、未支付或校验不通过返回 `failure`，让平台重试。公网回调路径不能被登录页、验证码或 Cloudflare Access 拦截。
+
+返回页的 URL 参数不能证明付款：浏览器只通过下单邮箱查询订单，必要时触发服务器查单补偿。旧订单保留原支付平台归属；切换支付配置后也不会通过另一个平台发货。开发环境显式设置 `PAYMENT_MODE=epay` 也会真实跳转，且这类订单禁止模拟支付。
+
+部署前备份 SQLite Volume。启动时自动增加 `orders.payment_provider` 列，旧订单无需改写。更新 Railway 变量并部署代码后，再做小额真实联调，核对平台到账、回调、卡密交付、重复通知和断网重试。本地测试使用临时数据库、临时生成的 RSA 密钥和模拟网关响应，不能替代真实通道联调。
+
+## 官方支付宝接入（保留旧订单兼容）
 
 项目已实现电脑网站支付 `alipay.trade.page.pay`、RSA2 异步通知验签、商户/应用/金额核对、幂等支付入账和事务发卡。异步通知地址为：
 

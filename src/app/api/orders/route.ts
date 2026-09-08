@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
     const remoteIp = request.headers.get("cf-connecting-ip") ?? forwardedFor;
     await verifyTurnstileToken(input.turnstileToken, remoteIp);
-    const order = createPendingOrder(input);
+    const order = createPendingOrder({ ...input, paymentProvider: process.env.PAYMENT_MODE === "epay" ? "epay" : input.paymentMethod });
     await trySendOrderEmail(order.orderNo, "order_created");
     const checkout = createPaymentCheckout({
       orderNo: order.orderNo,

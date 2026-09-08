@@ -39,7 +39,7 @@ export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mock
       attempts += 1;
       try {
         const returnedFromPayment = new URLSearchParams(window.location.search).get("payment") === "returned";
-        const reconcile = returnedFromPayment && attempts === 1 ? "&reconcile=alipay" : "";
+        const reconcile = returnedFromPayment && (attempts === 1 || attempts % 10 === 0) ? "&reconcile=payment" : "";
         const response = await fetch(`/api/orders/${encodeURIComponent(order.orderNo)}?email=${encodeURIComponent(email ?? "")}${reconcile}`, {
           cache: "no-store",
         });
@@ -102,7 +102,7 @@ export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mock
       </header>
       <div className="checkout-layout">
         <section className="payment-area">
-          <span className="section-index">{mockMode ? "DEVELOPMENT CHECKOUT" : "ALIPAY CHECKOUT"}</span>
+          <span className="section-index">{mockMode ? "DEVELOPMENT CHECKOUT" : "PAYMENT CHECKOUT"}</span>
           <h1>{result?.status === "delivered" ? "卡密已交付" : "确认支付结果"}</h1>
           {!result?.licenseKey ? (
             mockMode ? (
@@ -119,9 +119,9 @@ export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mock
               <>
                 <div className="qr-frame">
                   {polling ? <LoaderCircle className="spin" size={76} strokeWidth={1.4} /> : <ShieldCheck size={76} strokeWidth={1.4} />}
-                  <span>{currentStatus === "paid_no_stock" ? "已支付，等待补货" : polling ? "正在确认支付宝支付结果" : statusText(currentStatus)}</span>
+                  <span>{currentStatus === "paid_no_stock" ? "已支付，等待补货" : polling ? "正在确认支付结果" : statusText(currentStatus)}</span>
                 </div>
-                <p className="payment-hint">只有支付宝服务器验签通知成功后才会自动发卡，请勿重复付款。</p>
+                <p className="payment-hint">服务器确认支付成功后会自动发卡，请勿重复付款。</p>
                 {error && <p className="form-error">{error}</p>}
                 {!polling && !result?.licenseKey && <Link className="primary-button mock-pay" href="/orders">前往订单查询</Link>}
               </>

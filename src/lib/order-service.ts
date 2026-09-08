@@ -10,6 +10,7 @@ type StoredOrder = {
   amount_cents: number;
   currency: "CNY";
   payment_method: string;
+  payment_provider: string | null;
   payment_ref: string | null;
   status: OrderResult["status"];
   variantLabel: string;
@@ -20,17 +21,17 @@ function makeOrderNo() {
   return `K${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 }
 
-export function createPendingOrder(input: { variantId: string; email: string; paymentMethod: string }) {
+export function createPendingOrder(input: { variantId: string; email: string; paymentMethod: string; paymentProvider?: string }) {
   const variant = getVariant(input.variantId);
   if (!variant) throw new Error("商品规格不存在或已下架");
   const orderNo = makeOrderNo();
   db.prepare(`
     INSERT INTO orders (
       order_no, variant_id, email, amount_cents, currency, payment_method,
-      terms_accepted_at, terms_version
+      terms_accepted_at, terms_version, payment_provider
     )
-    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-  `).run(orderNo, input.variantId, input.email.toLowerCase(), variant.priceCents, variant.currency, input.paymentMethod, "2026-08-29");
+    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+  `).run(orderNo, input.variantId, input.email.toLowerCase(), variant.priceCents, variant.currency, input.paymentMethod, "2026-08-29", input.paymentProvider ?? input.paymentMethod);
   db.prepare(`INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)`)
     .run("order.created", "order", orderNo, JSON.stringify({ paymentMethod: input.paymentMethod, termsVersion: "2026-08-29" }));
   return {
@@ -56,7 +57,8 @@ export function completeMockPayment(orderNo: string): OrderResult {
 
 export function completePaidOrder(input: {
   orderNo: string;
-  provider: "mock" | "alipay" | "wechat";
+  provider: "mock" | "alipay" | "wechat" | "epay";
+  paymentMethod?: string;
   providerRef: string;
   amountCents: number;
 }): OrderResult {
@@ -67,7 +69,13 @@ export function completePaidOrder(input: {
       WHERE o.order_no = ?
     `).get(input.orderNo) as StoredOrder | undefined;
     if (!order) throw new Error("订单不存在");
-    if (input.provider !== "mock" && order.payment_method !== input.provider) {
+    if (input.provider === "mock" && (process.env.NODE_ENV === "production" || order.payment_provider === "epay")) {
+      throw new Error("此订单禁止模拟支付");
+    }
+    if (input.provider !== "mock" && (order.payment_provider ?? order.payment_method) !== input.provider) {
+      throw new Error("订单支付平台不匹配");
+    }
+    if (input.provider !== "mock" && order.payment_method !== (input.provider === "epay" ? input.paymentMethod : input.provider)) {
       throw new Error("订单支付方式不匹配");
     }
     if (order.amount_cents !== input.amountCents) throw new Error("支付金额与订单不一致");

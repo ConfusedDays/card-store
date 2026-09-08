@@ -113,7 +113,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
       if (!response.ok) throw new Error(data.error ?? "创建订单失败");
       sessionStorage.setItem(`order-email:${data.orderNo}`, email.trim());
       const checkoutUrl = new URL(data.checkoutUrl, window.location.origin);
-      if (checkoutUrl.origin === window.location.origin) router.push(checkoutUrl.pathname + checkoutUrl.search);
+      if (checkoutUrl.origin === window.location.origin && !checkoutUrl.pathname.startsWith("/api/")) router.push(checkoutUrl.pathname + checkoutUrl.search);
       else window.location.assign(checkoutUrl.href);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "创建订单失败");

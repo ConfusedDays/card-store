@@ -134,6 +134,7 @@ const orderColumns = db.prepare("PRAGMA table_info(orders)").all() as { name: st
 for (const [column, definition] of [
   ["terms_accepted_at", "TEXT"],
   ["terms_version", "TEXT"],
+  ["payment_provider", "TEXT"],
 ] as const) {
   if (orderColumns.some((item) => item.name === column)) continue;
   try {

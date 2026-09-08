@@ -1,11 +1,12 @@
 import { AlipaySdk } from "alipay-sdk";
 import { centsToCny, cnyToCents } from "@/lib/payment-money";
+import { createEpayCheckoutToken, epayType, getEpayConfig } from "@/lib/epay";
 
 export type PaymentMethod = "wechat" | "alipay" | "mock";
 
 export type PaymentCheckout = {
   checkoutUrl: string;
-  provider: "mock" | "wechat" | "alipay";
+  provider: "mock" | "wechat" | "alipay" | "epay";
 };
 
 export type VerifiedAlipayTrade = {
@@ -23,7 +24,7 @@ function normalizeKey(value: string) {
   return value.replace(/\\n/g, "\n");
 }
 
-function publicBaseUrl() {
+export function publicBaseUrl() {
   const configured = process.env.APP_URL?.trim()
     || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : "");
   if (!configured) throw new Error("支付宝配置缺少 APP_URL");
@@ -80,6 +81,12 @@ export async function queryAlipayTrade(orderNo: string): Promise<VerifiedAlipayT
 }
 
 export function assertPaymentConfigured(paymentMethod: PaymentMethod) {
+  if (process.env.PAYMENT_MODE === "epay") {
+    epayType(paymentMethod);
+    getEpayConfig();
+    publicBaseUrl();
+    return;
+  }
   if (process.env.NODE_ENV !== "production") return;
   if (process.env.PAYMENT_MODE === "mock") throw new Error("生产环境禁止使用模拟支付");
   if (paymentMethod !== "alipay") throw new Error("微信支付商户接口尚未配置");
@@ -93,6 +100,10 @@ export function createPaymentCheckout(input: {
   amountCents: number;
   subject: string;
 }): PaymentCheckout {
+  if (process.env.PAYMENT_MODE === "epay") {
+    assertPaymentConfigured(input.paymentMethod);
+    return { checkoutUrl: `/api/payments/epay/checkout?token=${createEpayCheckoutToken(input.orderNo)}`, provider: "epay" };
+  }
   if (process.env.NODE_ENV !== "production") {
     return { checkoutUrl: `/checkout/${input.orderNo}`, provider: "mock" };
   }
