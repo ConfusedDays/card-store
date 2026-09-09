@@ -152,7 +152,9 @@ export async function queryEpayTrade(orderNo: string) {
     const result: unknown = await response.json();
     if (!result || typeof result !== "object" || Array.isArray(result)) throw new Error("Invalid response");
     return parseEpayQuery(result as Parameters, orderNo);
-  } catch {
+  } catch (error) {
+    // Keep enough observability for live integration issues without logging credentials or response payloads.
+    console.error("Epay V2 order query failed", error instanceof Error ? error.message : "Unknown error");
     throw new Error("聚合支付查单未通过，请稍后重试");
   }
 }
