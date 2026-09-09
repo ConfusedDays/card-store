@@ -4,5 +4,5 @@ import { Storefront } from "@/components/storefront";
 export const dynamic = "force-dynamic";
 
 export default function HomePage() {
-  return <Storefront products={getStorefrontProducts()} turnstileSiteKey={process.env.TURNSTILE_SITE_KEY} />;
+  return <Storefront products={getStorefrontProducts()} turnstileSiteKey={process.env.TURNSTILE_SITE_KEY} wechatEnabled={process.env.PAYMENT_MODE === "epay" || process.env.NODE_ENV !== "production"} />;
 }

@@ -15,7 +15,7 @@ import CapsuleTabs from "@/components/ui/capsule-tabs";
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
-export function Storefront({ products, view = "catalog", turnstileSiteKey }: { products: Product[]; view?: "catalog" | "orders"; turnstileSiteKey?: string }) {
+export function Storefront({ products, view = "catalog", turnstileSiteKey, wechatEnabled = false }: { products: Product[]; view?: "catalog" | "orders"; turnstileSiteKey?: string; wechatEnabled?: boolean }) {
   const router = useRouter();
   const [productId, setProductId] = useState(products[0]?.id ?? "");
   const [category, setCategory] = useState("all");
@@ -244,7 +244,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey }: { p
               <input id="email" className="text-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" required />
               <span className="field-label">支付方式</span>
               <div className="payment-segments" role="radiogroup" aria-label="支付方式">
-                <button type="button" disabled title="暂未开放" role="radio" aria-checked="false">
+                <button type="button" disabled={!wechatEnabled} title={wechatEnabled ? undefined : "暂未开放"} className={paymentMethod === "wechat" ? "active" : ""} onClick={() => setPaymentMethod("wechat")} role="radio" aria-checked={paymentMethod === "wechat"}>
                   <MessageCircle size={18} /> 微信支付
                 </button>
                 <button type="button" className={paymentMethod === "alipay" ? "active" : ""} onClick={() => setPaymentMethod("alipay")} role="radio" aria-checked={paymentMethod === "alipay"}>
