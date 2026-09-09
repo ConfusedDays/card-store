@@ -133,8 +133,9 @@ export function parseEpayQuery(result: Parameters, expectedOrderNo: string): Epa
   if (!/^\d{10}$/.test(timestamp) || Math.abs(Number(timestamp) - Math.floor(Date.now() / 1000)) > 300) {
     throw new Error("聚合支付查单响应已过期");
   }
-  if (String(result.status) === "0") return null;
-  if (String(result.status) !== "1") throw new Error("聚合支付查单状态无效");
+  // Epay V2 uses 1 for pending and 2 for paid. Do not fulfill while pending.
+  if (String(result.status) === "1") return null;
+  if (String(result.status) !== "2") throw new Error("聚合支付查单状态无效");
   if (typeof result.trade_no !== "string" || !result.trade_no) throw new Error("聚合支付查单流水缺失");
   return { providerRef: result.trade_no, amountCents: cnyToCents(String(result.money)), paymentMethod: paymentMethod(result.type) };
 }

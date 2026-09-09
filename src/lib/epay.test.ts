@@ -32,7 +32,7 @@ function notification(order: ReturnType<typeof newOrder>, extra: Fields = {}) {
 }
 
 function query(order: ReturnType<typeof newOrder>, extra: Fields = {}) {
-  return platformSigned({ pid: "1000", code: 0, status: 1, trade_no: `T${order.orderNo}`, out_trade_no: order.orderNo,
+  return platformSigned({ pid: "1000", code: 0, status: 2, trade_no: `T${order.orderNo}`, out_trade_no: order.orderNo,
     type: "alipay", money: (order.amountCents / 100).toFixed(2), timestamp: String(Math.floor(Date.now() / 1000)), ...extra });
 }
 
@@ -106,10 +106,11 @@ describe("V2 RSA protocol", () => {
 
   it("rejects expired and mismatched signed query responses", () => {
     const order = newOrder();
+    expect(parseEpayQuery(query(order, { status: 1 }), order.orderNo)).toBeNull();
     expect(() => parseEpayQuery(query(order, { timestamp: "1700000000" }), order.orderNo)).toThrow("已过期");
     expect(() => parseEpayQuery(query(order, { pid: "9999" }), order.orderNo)).toThrow("不匹配");
     expect(() => parseEpayQuery(query(order, { out_trade_no: "OTHER" }), order.orderNo)).toThrow("不匹配");
-    expect(() => parseEpayQuery(query(order, { status: 2 }), order.orderNo)).toThrow("状态无效");
+    expect(() => parseEpayQuery(query(order, { status: 3 }), order.orderNo)).toThrow("状态无效");
     expect(() => parseEpayQuery(query(order, { money: "1e2" }), order.orderNo)).toThrow();
   });
 });
