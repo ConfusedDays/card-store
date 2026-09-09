@@ -40,7 +40,7 @@ const emptyProduct = (): DraftProduct => ({
   imageUrl: null,
   active: true,
   sortOrder: "0",
-  variants: [emptyVariant()],
+  variants: [],
 });
 
 function toDraft(product: AdminProduct): DraftProduct {
