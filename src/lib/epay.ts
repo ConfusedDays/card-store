@@ -61,7 +61,13 @@ export function verifyEpayParameters(params: Parameters) {
   if ((params.sign_type !== "RSA" && params.sign_type !== "RSA2") || typeof params.sign !== "string"
     || !/^[A-Za-z0-9+/]+={0,2}$/.test(params.sign)) return false;
   try {
-    return verify("RSA-SHA256", Buffer.from(canonicalEpayParameters(params)), getEpayConfig().publicKey, Buffer.from(params.sign, "base64"));
+    const content = Buffer.from(canonicalEpayParameters(params));
+    const publicKey = getEpayConfig().publicKey;
+    const signature = Buffer.from(params.sign, "base64");
+    if (verify("RSA-SHA256", content, publicKey, signature)) return true;
+    // Some Epay V2 deployments label legacy SHA-1 signatures as RSA. The
+    // platform public key still authenticates the response; RSA2 remains SHA-256 only.
+    return params.sign_type === "RSA" && verify("RSA-SHA1", content, publicKey, signature);
   } catch {
     return false;
   }

@@ -91,6 +91,14 @@ describe("V2 RSA protocol", () => {
     expect(verifyEpayParameters(signEpayParameters({ money: "1.00" }))).toBe(false);
   });
 
+  it("accepts the legacy SHA-1 RSA label used by some V2 gateways", () => {
+    const fields = { code: 0, money: "1.00" };
+    const content = canonicalEpayParameters(fields);
+    const signature = sign("RSA-SHA1", Buffer.from(content), platform.privateKey).toString("base64");
+    expect(verifyEpayParameters({ ...fields, sign_type: "RSA", sign: signature })).toBe(true);
+    expect(verifyEpayParameters({ ...fields, sign_type: "RSA2", sign: signature })).toBe(false);
+  });
+
   it("normalizes bare Base64 and escaped PEM keys", () => {
     const originalPrivate = process.env.EPAY_PRIVATE_KEY!;
     const originalPublic = process.env.EPAY_PUBLIC_KEY!;
