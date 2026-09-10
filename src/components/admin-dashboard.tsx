@@ -12,7 +12,7 @@ import type { AdminProduct } from "@/lib/product-admin";
 type Overview = {
   totals: { orders: number; revenueCents: number; stockIssues: number };
   products: AdminProduct[];
-  inventory: { variantId: string; productName: string; label: string; available: number; sold: number; active: boolean }[];
+  inventory: { variantId: string; productId: string; productName: string; label: string; available: number; sold: number; active: boolean }[];
   recentOrders: {
     orderNo: string;
     email: string;
@@ -186,7 +186,7 @@ export function AdminDashboard() {
       const currentVariantId = variantIdRef.current || variantId;
       const nextVariantId = data.inventory.some((item: Overview["inventory"][number]) => item.variantId === currentVariantId)
         ? currentVariantId
-        : data.inventory[0]?.variantId || "";
+        : data.inventory.find((item: Overview["inventory"][number]) => item.active)?.variantId || data.inventory[0]?.variantId || "";
       variantIdRef.current = nextVariantId;
       setVariantId(nextVariantId);
       if (refreshInventory) void loadInventory(authToken);
@@ -249,6 +249,12 @@ export function AdminDashboard() {
   function selectInventoryVariant(nextVariantId: string) {
     variantIdRef.current = nextVariantId;
     setVariantId(nextVariantId);
+  }
+
+  function selectInventoryProduct(nextProductId: string) {
+    const nextVariant = overview?.inventory.find((item) => item.productId === nextProductId && item.active)
+      ?? overview?.inventory.find((item) => item.productId === nextProductId);
+    if (nextVariant) selectInventoryVariant(nextVariant.variantId);
   }
 
   async function loadRecycledOrders(authToken = token) {
@@ -461,6 +467,9 @@ export function AdminDashboard() {
   }
 
   const inventoryPending = inventoryBusy || inventoryRefreshing;
+  const inventoryProducts = Array.from(new Map(overview.inventory.map((item) => [item.productId, { productId: item.productId, productName: item.productName }])).values());
+  const selectedInventoryProductId = overview.inventory.find((item) => item.variantId === variantId)?.productId ?? inventoryProducts[0]?.productId ?? "";
+  const selectedInventoryVariants = overview.inventory.filter((item) => item.productId === selectedInventoryProductId);
 
   return (
     <div className="admin-shell">
@@ -523,7 +532,8 @@ export function AdminDashboard() {
             </div>
             <form className="import-panel" onSubmit={importKeys}>
               <h3><PackagePlus size={19} />批量导入</h3>
-              <label>商品规格<DropdownSelect value={variantId} onValueChange={selectInventoryVariant} ariaLabel="选择要导入卡密的商品规格" options={overview.inventory.map((item) => ({ value: item.variantId, label: `${item.label} · ${item.productName}${item.active ? "" : "（已停用）"}` }))} /></label>
+              <label>商品名称<DropdownSelect value={selectedInventoryProductId} onValueChange={selectInventoryProduct} ariaLabel="选择要导入卡密的商品名称" options={inventoryProducts.map((item) => ({ value: item.productId, label: item.productName }))} /></label>
+              <label>天数 / 规格<DropdownSelect value={variantId} onValueChange={selectInventoryVariant} ariaLabel="选择商品天数或规格" options={selectedInventoryVariants.map((item) => ({ value: item.variantId, label: `${item.label}${item.active ? "" : "（已停用）"}` }))} /></label>
               <label>卡密列表<textarea value={keys} onChange={(event) => setKeys(event.target.value)} placeholder={"每行一条卡密\nAAAA-BBBB-CCCC"} required /></label>
               {message && <p className="success-message">{message}</p>}
               <button className="primary-button"><PackagePlus size={18} />导入卡密</button>
