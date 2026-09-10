@@ -179,8 +179,14 @@ export function AdminDashboard() {
       if (!response.ok) throw new Error(data.error ?? "加载失败");
       sessionStorage.setItem("card-store-admin-token", authToken);
       setOverview(data);
-      setVariantId((current) => current || data.inventory[0]?.variantId || "");
-      if (refreshInventory) void loadInventory(authToken);
+      // Keep the selected variant tied to an actual option after refreshing the
+      // overview. Otherwise the select can fall back to the first visual option
+      // while the form still submits a stale variant ID.
+      const nextVariantId = data.inventory.some((item: Overview["inventory"][number]) => item.variantId === variantId)
+        ? variantId
+        : data.inventory[0]?.variantId || "";
+      setVariantId(nextVariantId);
+      if (refreshInventory) void loadInventory(authToken, false, nextVariantId);
       void loadRecycledOrders(authToken);
     } catch (reason) {
       setOverview(null);
@@ -205,17 +211,18 @@ export function AdminDashboard() {
       if (!response.ok) throw new Error(data.error ?? "导入失败");
       setMessage(`已导入 ${data.imported} 条，跳过 ${data.skipped} 条`);
       setKeys("");
-      await Promise.all([loadOverview(token, false), loadInventory()]);
+      await Promise.all([loadOverview(token, false), loadInventory(token, false, variantId)]);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "导入失败");
     }
   }
 
-  async function loadInventory(authToken = token, showProgress = false) {
+  async function loadInventory(authToken = token, showProgress = false, selectedVariantId = variantId) {
     const requestId = ++inventoryRequestRef.current;
     if (showProgress) setInventoryRefreshing(true);
     try {
       const params = new URLSearchParams();
+      if (selectedVariantId) params.set("variantId", selectedVariantId);
       if (inventoryStatus !== "all") params.set("status", inventoryStatus);
       if (inventorySearch.trim()) params.set("search", inventorySearch.trim());
       const response = await fetch(`/api/admin/inventory?${params}`, { headers: { authorization: `Bearer ${authToken}` } });
@@ -229,6 +236,13 @@ export function AdminDashboard() {
     } finally {
       if (showProgress) setInventoryRefreshing(false);
     }
+  }
+
+  function selectInventoryVariant(nextVariantId: string) {
+    setVariantId(nextVariantId);
+    // Fetch the selected variant immediately so the management table and the
+    // import target always describe the same product.
+    void loadInventory(token, true, nextVariantId);
   }
 
   async function loadRecycledOrders(authToken = token) {
@@ -503,7 +517,7 @@ export function AdminDashboard() {
             </div>
             <form className="import-panel" onSubmit={importKeys}>
               <h3><PackagePlus size={19} />批量导入</h3>
-              <label>商品规格<DropdownSelect value={variantId} onValueChange={setVariantId} ariaLabel="选择要导入卡密的商品规格" options={overview.inventory.map((item) => ({ value: item.variantId, label: `${item.label} · ${item.productName}` }))} /></label>
+              <label>商品规格<DropdownSelect value={variantId} onValueChange={selectInventoryVariant} ariaLabel="选择要导入卡密的商品规格" options={overview.inventory.map((item) => ({ value: item.variantId, label: `${item.label} · ${item.productName}` }))} /></label>
               <label>卡密列表<textarea value={keys} onChange={(event) => setKeys(event.target.value)} placeholder={"每行一条卡密\nAAAA-BBBB-CCCC"} required /></label>
               {message && <p className="success-message">{message}</p>}
               <button className="primary-button"><PackagePlus size={18} />导入卡密</button>
