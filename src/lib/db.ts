@@ -70,6 +70,7 @@ db.exec(`
     deleted_at TEXT
   );
   CREATE INDEX IF NOT EXISTS idx_orders_email ON orders(email);
+  CREATE INDEX IF NOT EXISTS idx_orders_deleted_at ON orders(deleted_at);
   CREATE TABLE IF NOT EXISTS payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_no TEXT NOT NULL REFERENCES orders(order_no),
