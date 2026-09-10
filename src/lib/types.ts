@@ -17,6 +17,7 @@ export type Product = {
   category: string;
   accent: string;
   imageUrl: string | null;
+  contactEnabled: boolean;
   variants: Variant[];
 };
 

@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight, Check, CircleHelp, Clock3, Copy, LockKeyhole,
+  ArrowRight, Check, CircleHelp, Clock3, Copy, LockKeyhole, Mail, MessageCircle, Users,
   PackageCheck, Search, ShieldCheck, ShoppingBag, Sparkles, Zap,
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
@@ -190,6 +190,16 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                 <span className="category-label">{product.category}</span>
                 <h1>{product.name}</h1>
                 <p className="product-description">{product.description}</p>
+                {product.contactEnabled && (
+                  <div className="product-contact" aria-label="商品联系方式">
+                    <span className="product-contact-title">需要联系我</span>
+                    <div className="product-contact-links">
+                      <a href="mailto:support@reiishop.cn"><Mail size={14} aria-hidden="true" /> support@reiishop.cn</a>
+                      <a href="https://discord.gg/MmXRuWnrQT" target="_blank" rel="noreferrer"><MessageCircle size={14} aria-hidden="true" /> Discord 频道</a>
+                      <span><Users size={14} aria-hidden="true" /> QQ 群 1107140300</span>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="trust-row">
                 <span><PackageCheck size={17} /> 支付后自动发货</span>

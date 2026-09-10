@@ -3,7 +3,8 @@ import type { Product, Variant } from "@/lib/types";
 
 export function getStorefrontProducts(): Product[] {
   const products = db.prepare(`
-    SELECT id, slug, name, description, category, accent, image_url as imageUrl
+    SELECT id, slug, name, description, category, accent, image_url as imageUrl,
+      contact_enabled as contactEnabled
     FROM products WHERE active = 1 ORDER BY sort_order, name
   `).all() as Omit<Product, "variants">[];
   const variants = db.prepare(`
@@ -15,6 +16,7 @@ export function getStorefrontProducts(): Product[] {
   `).all() as (Variant & { productId: string })[];
   return products.map((product) => ({
     ...product,
+    contactEnabled: Boolean(product.contactEnabled),
     variants: variants.filter((variant) => variant.productId === product.id),
   }));
 }

@@ -25,6 +25,7 @@ type DraftProduct = {
   category: string;
   accent: string;
   imageUrl: string | null;
+  contactEnabled: boolean;
   active: boolean;
   sortOrder: string;
   variants: DraftVariant[];
@@ -38,6 +39,7 @@ const emptyProduct = (): DraftProduct => ({
   category: "数字授权",
   accent: "teal",
   imageUrl: null,
+  contactEnabled: false,
   active: true,
   sortOrder: "0",
   variants: [],
@@ -52,6 +54,7 @@ function toDraft(product: AdminProduct): DraftProduct {
     category: product.category,
     accent: product.accent,
     imageUrl: product.imageUrl,
+    contactEnabled: product.contactEnabled,
     active: product.active,
     sortOrder: String(product.sortOrder),
     variants: product.variants.map((variant) => ({
@@ -179,6 +182,7 @@ export function ProductManager({ products, token, onSaved }: {
         category: product.category.trim(),
         accent: product.accent,
         imageUrl: product.imageUrl,
+        contactEnabled: product.contactEnabled,
         active: product.active,
         sortOrder: Number(product.sortOrder) || 0,
         variants,
@@ -331,6 +335,7 @@ export function ProductManager({ products, token, onSaved }: {
                 </div>
               </div>
               <label>主题色<DropdownSelect value={draft.accent} onValueChange={(accent) => setDraft({ ...draft, accent })} ariaLabel="选择商品主题色" options={[{ value: "teal", label: "青绿" }, { value: "amber", label: "琥珀" }, { value: "blue", label: "蓝色" }, { value: "green", label: "绿色" }]} /></label>
+              <label className="toggle-field"><input type="checkbox" checked={draft.contactEnabled} onChange={(event) => setDraft({ ...draft, contactEnabled: event.target.checked })} /><span><Check size={14} /></span>需要联系我</label>
               <label className="toggle-field"><input type="checkbox" checked={draft.active} onChange={(event) => setDraft({ ...draft, active: event.target.checked })} /><span><Check size={14} /></span>上架销售</label>
             </div>
 

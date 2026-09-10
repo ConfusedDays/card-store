@@ -18,6 +18,7 @@ export type AdminProduct = {
   category: string;
   accent: string;
   imageUrl: string | null;
+  contactEnabled: boolean;
   active: boolean;
   sortOrder: number;
   variants: AdminProductVariant[];
@@ -28,12 +29,13 @@ export type ProductInput = Omit<AdminProduct, "id" | "variants"> & {
   variants: Array<Omit<AdminProductVariant, "id" | "currency"> & { id?: string }>;
 };
 
-type ProductRow = Omit<AdminProduct, "active" | "variants"> & { active: number };
+type ProductRow = Omit<AdminProduct, "active" | "contactEnabled" | "variants"> & { active: number; contactEnabled: number };
 type VariantRow = Omit<AdminProductVariant, "active"> & { productId: string; active: number };
 
 export function getAdminProducts(): AdminProduct[] {
   const products = db.prepare(`
-    SELECT id, slug, name, description, category, accent, image_url as imageUrl, active, sort_order as sortOrder
+    SELECT id, slug, name, description, category, accent, image_url as imageUrl,
+      contact_enabled as contactEnabled, active, sort_order as sortOrder
     FROM products ORDER BY sort_order, name
   `).all() as ProductRow[];
   const variants = db.prepare(`
@@ -45,6 +47,7 @@ export function getAdminProducts(): AdminProduct[] {
   return products.map((product) => ({
     ...product,
     active: Boolean(product.active),
+    contactEnabled: Boolean(product.contactEnabled),
     variants: variants
       .filter((variant) => variant.productId === product.id)
       .map((variant) => ({ id: variant.id, label: variant.label, durationLabel: variant.durationLabel, priceCents: variant.priceCents, currency: variant.currency, active: Boolean(variant.active) })),
@@ -61,14 +64,14 @@ export function saveProduct(input: ProductInput) {
       const existing = db.prepare("SELECT id FROM products WHERE id = ?").get(input.id);
       if (!existing) throw new Error("商品不存在");
       db.prepare(`
-        UPDATE products SET slug = ?, name = ?, description = ?, category = ?, accent = ?, image_url = ?, active = ?, sort_order = ?
+        UPDATE products SET slug = ?, name = ?, description = ?, category = ?, accent = ?, image_url = ?, contact_enabled = ?, active = ?, sort_order = ?
         WHERE id = ?
-      `).run(input.slug, input.name, input.description, input.category, input.accent, input.imageUrl, Number(input.active), input.sortOrder, productId);
+      `).run(input.slug, input.name, input.description, input.category, input.accent, input.imageUrl, Number(input.contactEnabled), Number(input.active), input.sortOrder, productId);
     } else {
       db.prepare(`
-        INSERT INTO products (id, slug, name, description, category, accent, image_url, active, sort_order)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(productId, input.slug, input.name, input.description, input.category, input.accent, input.imageUrl, Number(input.active), input.sortOrder);
+        INSERT INTO products (id, slug, name, description, category, accent, image_url, contact_enabled, active, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(productId, input.slug, input.name, input.description, input.category, input.accent, input.imageUrl, Number(input.contactEnabled), Number(input.active), input.sortOrder);
     }
 
     const submittedVariantIds: string[] = [];

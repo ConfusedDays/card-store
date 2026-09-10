@@ -30,6 +30,7 @@ db.exec(`
     category TEXT NOT NULL,
     accent TEXT NOT NULL,
     active INTEGER NOT NULL DEFAULT 1,
+    contact_enabled INTEGER NOT NULL DEFAULT 0,
     sort_order INTEGER NOT NULL DEFAULT 0
   );
   CREATE TABLE IF NOT EXISTS variants (
@@ -126,6 +127,14 @@ if (!productColumns.some((column) => column.name === "image_url")) {
     db.exec("ALTER TABLE products ADD COLUMN image_url TEXT");
   } catch (error) {
     const concurrentlyAdded = error instanceof Error && error.message.includes("duplicate column name: image_url");
+    if (!concurrentlyAdded) throw error;
+  }
+}
+if (!productColumns.some((column) => column.name === "contact_enabled")) {
+  try {
+    db.exec("ALTER TABLE products ADD COLUMN contact_enabled INTEGER NOT NULL DEFAULT 0");
+  } catch (error) {
+    const concurrentlyAdded = error instanceof Error && error.message.includes("duplicate column name: contact_enabled");
     if (!concurrentlyAdded) throw error;
   }
 }
