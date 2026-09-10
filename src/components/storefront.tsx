@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ import type { OrderResult, Product, Variant } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
 import { StoreHeroTitle } from "@/components/store-hero-title";
 import { TurnstileWidget } from "@/components/turnstile-widget";
-import CapsuleTabs from "@/components/ui/capsule-tabs";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
@@ -21,8 +21,6 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   const [productId, setProductId] = useState(products[0]?.id ?? "");
   const [category, setCategory] = useState("all");
   const [switchDirection, setSwitchDirection] = useState<"forward" | "backward">("forward");
-  const productSwitcherRef = useRef<HTMLDivElement>(null);
-  const productButtonRefs = useRef(new Map<string, HTMLButtonElement>());
   const categories = useMemo(() => [...new Set(products.map((item) => item.category))], [products]);
   const visibleProducts = useMemo(() => category === "all" ? products : products.filter((item) => item.category === category), [category, products]);
   const product = useMemo(() => visibleProducts.find((item) => item.id === productId) ?? visibleProducts[0], [visibleProducts, productId]);
@@ -57,25 +55,6 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   }, [category, product?.id]);
 
   const selected = useMemo(() => product?.variants.find((variant) => variant.id === selectedId), [product, selectedId]);
-
-  const updateProductIndicator = useCallback(() => {
-    const switcher = productSwitcherRef.current;
-    const activeButton = productButtonRefs.current.get(productId);
-    if (!switcher || !activeButton) return;
-
-    switcher.style.setProperty("--indicator-left", `${activeButton.offsetLeft}px`);
-    switcher.style.setProperty("--indicator-width", `${activeButton.offsetWidth}px`);
-    switcher.dataset.indicatorReady = "true";
-  }, [productId]);
-
-  useLayoutEffect(() => {
-    updateProductIndicator();
-    const activeButton = productButtonRefs.current.get(productId);
-    const observer = new ResizeObserver(updateProductIndicator);
-    if (productSwitcherRef.current) observer.observe(productSwitcherRef.current);
-    if (activeButton) observer.observe(activeButton);
-    return () => observer.disconnect();
-  }, [productId, updateProductIndicator]);
 
   function selectProduct(nextProductId: string) {
     if (nextProductId === productId) return;
@@ -173,32 +152,19 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
         )}
         {view === "catalog" && product && (
           <section className="catalog-band" id="catalog">          <div className="catalog-wrap scroll-reveal" data-scroll-reveal>
-            {categories.length > 1 && <CapsuleTabs className="catalog-category-filter" ariaLabel="按商品分类筛选" value={category} onValueChange={setCategory} items={[{ value: "all", label: "全部" }, ...categories.map((item) => ({ value: item, label: item }))]} />}
+            {categories.length > 1 && <SegmentedControl className="catalog-category-filter segmented-categories" role="tablist" label="按商品分类筛选" value={category} onValueChange={setCategory} options={[{ value: "all", label: "全部", accessibleLabel: "全部" }, ...categories.map((item) => ({ value: item, label: item, accessibleLabel: item }))]} />}
             {visibleProducts.length > 1 && (
-              <div ref={productSwitcherRef} className="product-switcher" role="tablist" aria-label="选择商品">
-                <span className="product-switcher-indicator" aria-hidden="true" />
-                {visibleProducts.map((item) => {
+              <SegmentedControl className="segmented-products" role="tablist" label="选择商品" value={product.id} onValueChange={selectProduct} options={visibleProducts.map((item) => {
                   const firstVariant = item.variants[0];
                   const totalStock = item.variants.reduce((sum, variant) => sum + variant.availableCount, 0);
-                  return (
-                    <button
-                      key={item.id}
-                      ref={(node) => {
-                        if (node) productButtonRefs.current.set(item.id, node);
-                        else productButtonRefs.current.delete(item.id);
-                      }}
-                      type="button"                      role="tab"
-                      aria-selected={item.id === product.id}
-                      className={item.id === product.id ? "active" : ""}
-                      onClick={() => selectProduct(item.id)}
-                    >
-                      <span className="product-tab-icon"><KeyRound size={17} /></span>
-                      <span><strong>{item.name}</strong><small>{firstVariant ? `起价 ${money(firstVariant.priceCents)}` : "暂无规格"}</small></span>
-                      <em>{totalStock > 0 ? `${totalStock} 件` : "缺货"}</em>
-                    </button>
-                  );
-                })}
-              </div>
+                  const price = firstVariant ? `起价 ${money(firstVariant.priceCents)}` : "暂无规格";
+                  const stock = totalStock > 0 ? `${totalStock} 件` : "缺货";
+                  return {
+                    value: item.id,
+                    accessibleLabel: `${item.name} ${price} ${stock}`,
+                    label: <span className="segmented-product-label"><KeyRound size={17} /><span><strong>{item.name}</strong><small>{price}</small></span><em>{stock}</em></span>,
+                  };
+                })} />
             )}
             <div key={`summary-${product.id}`} className="product-summary" data-switch-direction={switchDirection}>
               <div className="eyebrow"><span className="live-dot" /> 即时库存</div>
@@ -244,14 +210,10 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
               <label className="field-label" htmlFor="email">接收邮箱</label>
               <input id="email" className="text-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" required />
               <span className="field-label">支付方式</span>
-              <div className="payment-segments" role="radiogroup" aria-label="支付方式">
-                <button type="button" disabled={!wechatEnabled} title={wechatEnabled ? undefined : "暂未开放"} className={paymentMethod === "wechat" ? "active" : ""} onClick={() => setPaymentMethod("wechat")} role="radio" aria-checked={paymentMethod === "wechat"}>
-                  <MessageCircle size={18} /> 微信支付
-                </button>
-                <button type="button" className={paymentMethod === "alipay" ? "active" : ""} onClick={() => setPaymentMethod("alipay")} role="radio" aria-checked={paymentMethod === "alipay"}>
-                  <WalletCards size={18} /> 支付宝
-                </button>
-              </div>
+              <SegmentedControl className="segmented-payment" label="支付方式" value={paymentMethod} onValueChange={(method) => { if (method === "wechat" || method === "alipay") setPaymentMethod(method); }} options={[
+                { value: "wechat", label: <span className="segmented-payment-label"><MessageCircle size={18} />微信支付</span>, accessibleLabel: "微信支付", disabled: !wechatEnabled },
+                { value: "alipay", label: <span className="segmented-payment-label"><WalletCards size={18} />支付宝</span>, accessibleLabel: "支付宝" },
+              ]} />
               <div className="order-total"><span>应付金额</span><strong>{selected ? money(selected.priceCents) : "--"}</strong></div>
               <label className="digital-terms-confirmation">
                 <input

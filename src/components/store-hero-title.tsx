@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const names = ["Volt", "Potassium", "Matcah", "Wave", "Real"] as const;
+const names = ["Volt", "Potassium", "Matcha", "Wave", "Real"] as const;
 
 export function StoreHeroTitle() {
   const headingRef = useRef<HTMLHeadingElement>(null);
