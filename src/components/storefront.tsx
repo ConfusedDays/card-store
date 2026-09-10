@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { StoreHeroTitle } from "@/components/store-hero-title";
 import { ProductThumbnail } from "@/components/product-thumbnail";
 import { TurnstileWidget } from "@/components/turnstile-widget";
@@ -282,14 +283,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
             </div>
           </section>
         )}      </main>
-      <footer>
-        <span>Reii小店 · 仅销售获得正式授权的数字商品</span>
-        <span className="footer-links">
-          <Link href="/policies#refund">退款规则</Link>
-          <Link href="/policies#privacy">隐私政策</Link>
-          <Link href="/policies#contact">售后说明</Link>
-        </span>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
