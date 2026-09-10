@@ -57,7 +57,7 @@ function toDraft(product: AdminProduct): DraftProduct {
     variants: product.variants.map((variant) => ({
       id: variant.id,
       label: variant.label,
-      durationLabel: variant.durationLabel,
+      durationLabel: "",
       priceYuan: (variant.priceCents / 100).toFixed(2),
       active: variant.active,
     })),
@@ -125,11 +125,6 @@ export function ProductManager({ products, token, onSaved }: {
 
   function removeVariant(index: number) {
     if (!draft) return;
-    const variant = draft.variants[index];
-    if (variant.id) {
-      editVariant(index, { active: false });
-      return;
-    }
     setDraft({ ...draft, variants: draft.variants.filter((_, itemIndex) => itemIndex !== index) });
   }
 
@@ -344,10 +339,9 @@ export function ProductManager({ products, token, onSaved }: {
               {draft.variants.map((variant, index) => (
                 <div className={`variant-editor-row ${variant.active ? "" : "inactive"}`} key={variant.id ?? `new-${index}`}>
                   <input aria-label="规格名称" value={variant.label} onChange={(event) => editVariant(index, { label: event.target.value })} placeholder="月卡" required />
-                  <input aria-label="规格说明" value={variant.durationLabel} onChange={(event) => editVariant(index, { durationLabel: event.target.value })} placeholder="30 天" required />
                   <label className="price-input"><span>¥</span><input aria-label="价格" type="number" min="0.01" step="0.01" value={variant.priceYuan} onChange={(event) => editVariant(index, { priceYuan: event.target.value })} placeholder="89.90" required /></label>
                   <label className="mini-toggle" title={variant.active ? "停用规格" : "启用规格"}><input type="checkbox" checked={variant.active} onChange={(event) => editVariant(index, { active: event.target.checked })} /><span><Check size={12} /></span></label>
-                  <button className="remove-variant" type="button" onClick={() => removeVariant(index)} title={variant.id ? "停用规格" : "删除规格"}><Trash2 size={15} /></button>
+                  <button className="remove-variant" type="button" onClick={() => removeVariant(index)} title={variant.id ? "移除规格（保存后停用）" : "删除规格"}><Trash2 size={15} /></button>
                 </div>
               ))}
             </div>

@@ -6,7 +6,7 @@ import { deleteProduct, reorderProducts, saveProduct } from "@/lib/product-admin
 const variantSchema = z.object({
   id: z.string().min(1).optional(),
   label: z.string().trim().min(1, "请输入规格名称").max(80),
-  durationLabel: z.string().trim().min(1, "请输入规格说明").max(120),
+  durationLabel: z.string().trim().max(120).default(""),
   priceCents: z.number().int().min(1, "价格必须大于 0").max(100_000_000),
   active: z.boolean(),
 });

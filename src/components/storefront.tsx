@@ -293,7 +293,7 @@ function VariantOption({ variant, selected, onSelect }: { variant: Variant; sele
     <label className={`variant-option ${selected ? "selected" : ""} ${variant.availableCount < 1 ? "disabled" : ""}`}>
       <input type="radio" name="variant" checked={selected} disabled={variant.availableCount < 1} onChange={() => onSelect(variant.id)} />
       <span className="radio-check">{selected && <Check size={14} />}</span>
-      <span className="variant-name"><strong>{variant.label}</strong><small>{variant.durationLabel}</small></span>
+      <span className="variant-name"><strong>{variant.label}</strong></span>
       <span className="variant-stock">{variant.availableCount > 0 ? `${variant.availableCount} 件` : "缺货"}</span>
       <strong className="variant-price">{money(variant.priceCents)}</strong>
     </label>
