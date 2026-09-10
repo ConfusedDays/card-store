@@ -1,0 +1,8 @@
+wechat-pay.svg: Remix Icon (Remix Design), wechat-pay-fill; fill color adapted.
+Source: https://github.com/Remix-Design/RemixIcon/blob/master/icons/Logos/wechat-pay-fill.svg
+License: see REMIXICON-LICENSE.txt.
+
+alipay.svg: Simple Icons contributors; fill color adapted.
+Source: https://github.com/simple-icons/simple-icons/blob/develop/icons/alipay.svg
+License: CC0-1.0, https://creativecommons.org/publicdomain/zero/1.0/
+Brand marks remain the property of their respective owners.

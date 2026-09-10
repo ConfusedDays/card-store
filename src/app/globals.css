@@ -300,17 +300,35 @@ html.dark-mode[data-accent="rose"] { --teal: #ffa1cf; --teal-dark: #ef75ae; --mi
 @media (max-width: 720px) { .store-hero-inner { width: min(100% - 28px, 1120px); padding-top: 68px; } .store-hero h1 { font-size: clamp(44px, 14vw, 68px); } .store-hero-actions { width: 100%; flex-direction: column; } .store-hero-primary, .store-hero-secondary { width: 100%; } .store-hero-stats { grid-template-columns: 1fr; gap: 15px; margin-top: 44px; } .store-hero-stats > div { max-width: 280px; width: 100%; margin: 0 auto; } .store-hero-stats > div + div { border-left: 0; } }
 @media (prefers-reduced-motion: reduce) { .scroll-reveal { opacity: 1; transform: none; transition: none; } .store-scroll-cue svg { animation: none; } .nav-cursor { transition: opacity .01ms linear, background-color .01ms linear; } }
 .catalog-category-filter { grid-column: 1 / -1; margin-bottom: 8px; }
-.segmented-control { scrollbar-width: thin; }
+.segmented-control { scrollbar-width: thin; border: 1px solid color-mix(in srgb, var(--line) 72%, var(--teal)); background: color-mix(in srgb, var(--surface) 88%, var(--mint)); box-shadow: inset 0 1px 2px color-mix(in srgb, var(--ink) 7%, transparent); }
+.segmented-label { color: var(--muted); }
+.segmented-label-hover { color: var(--ink); }
+.segmented-label-disabled { color: color-mix(in srgb, var(--muted) 50%, var(--surface)); }
+.segmented-thumb { background: var(--teal); box-shadow: 0 2px 5px color-mix(in srgb, var(--teal) 25%, transparent); }
+.segmented-label-active { color: #fff; }
+html.dark-mode .segmented-label-active { color: var(--hero-button-ink, #06261f); }
+.segmented-button:focus-visible { box-shadow: inset 0 0 0 2px var(--ink); }
 .segmented-categories { --segment-min-width: 76px; justify-self: start; }
-.segmented-products { --segment-min-width: 210px; grid-column: 1 / -1; width: 100%; }
-.segmented-products .segmented-cell { display: flex; align-items: center; min-width: 0; min-height: 58px; }
-.segmented-product-label { display: grid; grid-template-columns: 17px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; text-align: left; }
-.segmented-product-label > span { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+.segmented-products { grid-column: 1 / -1; width: 100%; }
+.segmented-products .segmented-cell { display: flex; align-items: center; min-width: 0; min-height: 72px; }
+.segmented-product-label { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; text-align: left; }
+.segmented-product-copy { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+.product-thumbnail { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; overflow: hidden; border-radius: 6px; }
+.product-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
 .segmented-product-label strong { overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
 .segmented-product-label small, .segmented-product-label em { font-size: 11px; font-style: normal; }
 .segmented-payment { display: block; width: 100%; }
 .segmented-payment .segmented-cell { padding-block: 9px; }
 .segmented-payment-label { display: flex; justify-content: center; align-items: center; gap: 7px; }
+.payment-brand-icon { flex: 0 0 22px; width: 22px; height: 22px; padding: 2px; border-radius: 5px; background: #fff; }
+@media (max-width: 720px) {
+  .segmented-products .segmented-cell { padding: 10px 6px; }
+  .segmented-product-label { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 5px; text-align: center; }
+  .segmented-product-copy { width: 100%; }
+  .segmented-product-label strong { font-size: 12px; }
+  .segmented-product-label small, .segmented-product-label em { font-size: 10px; }
+  .product-thumbnail { width: 32px; height: 32px; }
+}
 .capsule-tabs { width: 100%; }
 .capsule-tabs-controls { display: flex; align-items: center; gap: 8px; }
 .capsule-tabs-controls > button { flex: 0 0 auto; width: 34px; height: 34px; padding: 0; border: 1px solid color-mix(in srgb, var(--line) 72%, var(--teal)); border-radius: 999px; color: var(--teal); background: color-mix(in srgb, var(--surface) 78%, transparent); }

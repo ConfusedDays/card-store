@@ -5,12 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight, Check, CircleHelp, Clock3, Copy, KeyRound, LockKeyhole,
-  MessageCircle, PackageCheck, Search, ShieldCheck, ShoppingBag, Sparkles, WalletCards, Zap,
+  ArrowRight, Check, CircleHelp, Clock3, Copy, LockKeyhole,
+  PackageCheck, Search, ShieldCheck, ShoppingBag, Sparkles, Zap,
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
 import { SiteHeader } from "@/components/site-header";
 import { StoreHeroTitle } from "@/components/store-hero-title";
+import { ProductThumbnail } from "@/components/product-thumbnail";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 
@@ -154,7 +155,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
           <section className="catalog-band" id="catalog">          <div className="catalog-wrap scroll-reveal" data-scroll-reveal>
             {categories.length > 1 && <SegmentedControl className="catalog-category-filter segmented-categories" role="tablist" label="按商品分类筛选" value={category} onValueChange={setCategory} options={[{ value: "all", label: "全部", accessibleLabel: "全部" }, ...categories.map((item) => ({ value: item, label: item, accessibleLabel: item }))]} />}
             {visibleProducts.length > 1 && (
-              <SegmentedControl className="segmented-products" role="tablist" label="选择商品" value={product.id} onValueChange={selectProduct} options={visibleProducts.map((item) => {
+              <SegmentedControl className="segmented-products" columns={3} role="tablist" label="选择商品" value={product.id} onValueChange={selectProduct} options={visibleProducts.map((item) => {
                   const firstVariant = item.variants[0];
                   const totalStock = item.variants.reduce((sum, variant) => sum + variant.availableCount, 0);
                   const price = firstVariant ? `起价 ${money(firstVariant.priceCents)}` : "暂无规格";
@@ -162,7 +163,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                   return {
                     value: item.id,
                     accessibleLabel: `${item.name} ${price} ${stock}`,
-                    label: <span className="segmented-product-label"><KeyRound size={17} /><span><strong>{item.name}</strong><small>{price}</small></span><em>{stock}</em></span>,
+                    label: <span className="segmented-product-label"><ProductThumbnail src={item.imageUrl} /><span className="segmented-product-copy"><strong>{item.name}</strong><small>{price}</small></span><em>{stock}</em></span>,
                   };
                 })} />
             )}
@@ -211,8 +212,8 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
               <input id="email" className="text-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" required />
               <span className="field-label">支付方式</span>
               <SegmentedControl className="segmented-payment" label="支付方式" value={paymentMethod} onValueChange={(method) => { if (method === "wechat" || method === "alipay") setPaymentMethod(method); }} options={[
-                { value: "wechat", label: <span className="segmented-payment-label"><MessageCircle size={18} />微信支付</span>, accessibleLabel: "微信支付", disabled: !wechatEnabled },
-                { value: "alipay", label: <span className="segmented-payment-label"><WalletCards size={18} />支付宝</span>, accessibleLabel: "支付宝" },
+                { value: "wechat", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/wechat-pay.svg" alt="" width={22} height={22} />微信支付</span>, accessibleLabel: "微信支付", disabled: !wechatEnabled },
+                { value: "alipay", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/alipay.svg" alt="" width={22} height={22} />支付宝</span>, accessibleLabel: "支付宝" },
               ]} />
               <div className="order-total"><span>应付金额</span><strong>{selected ? money(selected.priceCents) : "--"}</strong></div>
               <label className="digital-terms-confirmation">

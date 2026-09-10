@@ -21,11 +21,15 @@ export type SegmentedControlProps = {
   onValueChange?: (value: string) => void;
   className?: string;
   role?: "radiogroup" | "tablist";
+  columns?: number;
 };
 
-export function SegmentedControl({ options, label, value, defaultValue, onValueChange, className = "", role = "radiogroup" }: SegmentedControlProps) {
+export function SegmentedControl({ options, label, value, defaultValue, onValueChange, className = "", role = "radiogroup", columns }: SegmentedControlProps) {
   const count = Math.max(1, options.length);
-  const template = `repeat(${count}, minmax(0, 1fr))`;
+  const columnCount = Math.max(1, Math.min(columns ?? count, count));
+  const rowCount = Math.ceil(count / columnCount);
+  const template = `repeat(${columnCount}, minmax(0, 1fr))`;
+  const rowTemplate = `repeat(${rowCount}, minmax(0, 1fr))`;
   const firstEnabled = options.findIndex((option) => !option.disabled);
   const [internal, setInternal] = useState(() => defaultValue ?? options.find((option) => !option.disabled)?.value ?? "");
   const [hovered, setHovered] = useState(-1);
@@ -34,19 +38,26 @@ export function SegmentedControl({ options, label, value, defaultValue, onValueC
   const focusIndex = index >= 0 ? index : firstEnabled;
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
   const reduced = useReducedMotion();
-  const pos = useMotionValue(Math.max(0, index));
+  const column = Math.max(0, index) % columnCount;
+  const row = Math.floor(Math.max(0, index) / columnCount);
+  const pos = useMotionValue(column);
+  const rowPos = useMotionValue(row);
   const thumbX = useTransform(pos, (position) => `${position * 100}%`);
   const maskX = useTransform(pos, (position) => `${position * -100}%`);
+  const thumbY = useTransform(rowPos, (position) => `${position * 100}%`);
+  const maskY = useTransform(rowPos, (position) => `${position * -100}%`);
 
   useEffect(() => {
     if (index < 0) return;
     if (reduced) {
-      pos.set(index);
+      pos.set(column);
+      rowPos.set(row);
       return;
     }
-    const controls = animate(pos, index, CELL);
-    return () => controls.stop();
-  }, [index, reduced, pos]);
+    const horizontal = animate(pos, column, CELL);
+    const vertical = animate(rowPos, row, CELL);
+    return () => { horizontal.stop(); vertical.stop(); };
+  }, [index, column, row, reduced, pos, rowPos]);
 
   function select(next: string) {
     if (value === undefined) setInternal(next);
@@ -63,10 +74,21 @@ export function SegmentedControl({ options, label, value, defaultValue, onValueC
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, from: number) {
+    const seekRow = (direction: number) => {
+      if (rowCount === 1) return seek(from, direction);
+      for (let step = 1; step <= rowCount; step++) {
+        const nextRow = (Math.floor(from / columnCount) + direction * step + rowCount) % rowCount;
+        const next = Math.min(nextRow * columnCount + from % columnCount, options.length - 1);
+        if (!options[next]?.disabled) return next;
+      }
+      return from;
+    };
     let next: number;
     switch (event.key) {
-      case "ArrowRight": case "ArrowDown": next = seek(from, 1); break;
-      case "ArrowLeft": case "ArrowUp": next = seek(from, -1); break;
+      case "ArrowRight": next = seek(from, 1); break;
+      case "ArrowLeft": next = seek(from, -1); break;
+      case "ArrowDown": next = seekRow(1); break;
+      case "ArrowUp": next = seekRow(-1); break;
       case "Home": next = seek(count - 1, 1); break;
       case "End": next = seek(0, -1); break;
       default: return;
@@ -82,21 +104,21 @@ export function SegmentedControl({ options, label, value, defaultValue, onValueC
   if (!options.length) return null;
 
   return (
-    <div role={role} aria-label={label} aria-orientation="horizontal" className={`segmented-control relative inline-block max-w-full min-w-0 select-none overflow-x-auto rounded-[9px] border border-stone-200 bg-stone-100/70 p-[3px] shadow-[inset_0_1px_2px_rgba(28,25,23,0.07)] dark:border-white/[0.16] dark:bg-[#1D1D1A] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.45)] ${className}`}>
-      <div className="relative grid" style={{ gridTemplateColumns: template, minWidth: `calc(${count} * var(--segment-min-width, 0px))`, touchAction: "manipulation" }}>
+    <div role={role} aria-label={label} aria-orientation="horizontal" className={`segmented-control relative inline-block max-w-full min-w-0 select-none overflow-x-auto rounded-[9px] p-[3px] ${className}`}>
+      <div className="relative grid" style={{ gridTemplateColumns: template, gridTemplateRows: rowTemplate, minWidth: `calc(${columnCount} * var(--segment-min-width, 0px))`, touchAction: "manipulation" }}>
         {options.map((option, optionIndex) => (
-          <span key={option.value} aria-hidden="true" className={`${SEG} pointer-events-none ${option.disabled ? "text-stone-300 dark:text-stone-600" : hovered === optionIndex && optionIndex !== index ? "text-stone-700 dark:text-stone-200" : "text-stone-500 dark:text-stone-400"}`}>
+          <span key={option.value} aria-hidden="true" className={`${SEG} pointer-events-none ${option.disabled ? "segmented-label-disabled" : hovered === optionIndex && optionIndex !== index ? "segmented-label-hover" : "segmented-label"}`}>
             {option.label}
           </span>
         ))}
-        {index >= 0 && <motion.div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 overflow-hidden rounded-[6px] bg-stone-800 shadow-[0_1px_2px_rgba(28,25,23,0.28)] dark:bg-stone-100 dark:shadow-[0_1px_2px_rgba(0,0,0,0.5)]" style={{ width: `${100 / count}%`, x: thumbX }} initial={false}>
-          <motion.div className="absolute inset-0" style={{ x: maskX }} initial={false}>
-            <div className="absolute inset-y-0 left-0 grid" style={{ width: `${count * 100}%`, gridTemplateColumns: template }}>
-              {options.map((option) => <span key={option.value} className={`${SEG} text-stone-50 dark:text-stone-900`}>{option.label}</span>)}
+        {index >= 0 && <motion.div aria-hidden="true" className="segmented-thumb pointer-events-none absolute top-0 left-0 overflow-hidden rounded-[6px]" style={{ width: `${100 / columnCount}%`, height: `${100 / rowCount}%`, x: thumbX, y: thumbY }} initial={false}>
+          <motion.div className="absolute inset-0" style={{ x: maskX, y: maskY }} initial={false}>
+            <div className="absolute top-0 left-0 grid" style={{ width: `${columnCount * 100}%`, height: `${rowCount * 100}%`, gridTemplateColumns: template, gridTemplateRows: rowTemplate }}>
+              {options.map((option) => <span key={option.value} className={`${SEG} segmented-label-active`}>{option.label}</span>)}
             </div>
           </motion.div>
         </motion.div>}
-        <div className="absolute inset-0 grid" style={{ gridTemplateColumns: template }} onPointerLeave={() => setHovered(-1)}>
+        <div className="absolute inset-0 grid" style={{ gridTemplateColumns: template, gridTemplateRows: rowTemplate }} onPointerLeave={() => setHovered(-1)}>
           {options.map((option, optionIndex) => (
             <button key={option.value} ref={(node) => { buttons.current[optionIndex] = node; }} type="button" role={role === "tablist" ? "tab" : "radio"}
               aria-selected={role === "tablist" ? optionIndex === index : undefined}
@@ -105,7 +127,7 @@ export function SegmentedControl({ options, label, value, defaultValue, onValueC
               tabIndex={optionIndex === focusIndex ? 0 : -1} title={option.accessibleLabel}
               onClick={() => select(option.value)} onKeyDown={(event) => onKeyDown(event, optionIndex)}
               onPointerEnter={() => !option.disabled && setHovered(optionIndex)}
-              className="cursor-pointer rounded-[6px] border-0 bg-transparent p-0 outline-none focus-visible:bg-[#4568FF]/[0.06] focus-visible:shadow-[inset_0_0_0_1px_#4568FF] disabled:cursor-not-allowed dark:focus-visible:bg-[#93B0FF]/[0.08] dark:focus-visible:shadow-[inset_0_0_0_1px_#93B0FF]">
+              className="segmented-button cursor-pointer rounded-[6px] border-0 bg-transparent p-0 outline-none disabled:cursor-not-allowed">
               <span className="sr-only">{option.accessibleLabel}</span>
             </button>
           ))}
