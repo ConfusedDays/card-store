@@ -1299,6 +1299,21 @@ html.dark-mode .resend-email-button:hover:not(:disabled) { color: var(--teal); b
   .site-footer-luke-brand a { padding-top: 20px; font-size: clamp(3.8rem, 20vw, 6.8rem); }
   .site-footer-luke-bottom { align-items: flex-start; flex-direction: column; gap: 5px; }
 }
+@media (max-height: 560px) and (min-width: 681px) {
+  .site-footer-luke { min-height: 100svh; }
+  .site-footer-luke-inner { min-height: 100svh; padding: 5px 0 4px; }
+  .site-footer-luke-top { padding-bottom: 4px; }
+  .site-footer-luke-body { gap: 16px; padding: 8px 0 4px; }
+  .site-footer-luke-cta h2 { margin: 3px 0 5px; font-size: clamp(1.35rem, 2.45vw, 2.5rem); line-height: .94; }
+  .site-footer-luke-cta p { max-width: 280px; font-size: 10px; line-height: 1.25; }
+  .site-footer-luke-primary { min-height: 24px; margin-top: 6px; padding-inline: 9px; }
+  .site-footer-luke-links { gap: 12px; }
+  .site-footer-luke-link-group { gap: 3px; }
+  .site-footer-luke-link-group a, .site-footer-luke-link-group button { font-size: 11px; }
+  .site-footer-luke-label { margin-bottom: 2px; }
+  .site-footer-luke-brand a { padding-top: 4px; font-size: clamp(2rem, 5.5vw, 4.6rem); }
+  .site-footer-luke-bottom { padding-top: 3px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .site-footer-luke [data-footer-reveal] { opacity: 1; transform: none; transition: none; }
   .site-footer-luke-orb, .site-footer-luke-primary, .site-footer-luke-link-group a, .site-footer-luke-link-group button { transition: none; }
