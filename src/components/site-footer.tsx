@@ -45,7 +45,7 @@ export function SiteFooter() {
   }
 
   return (
-    <footer ref={footerRef} className="site-footer-luke" aria-labelledby="site-footer-title">
+    <footer ref={footerRef} className="site-footer-luke scroll-reveal" data-scroll-reveal aria-labelledby="site-footer-title">
       <div className="site-footer-luke-grid" aria-hidden="true" />
       <div className="site-footer-luke-orb" aria-hidden="true" />
       <div className="site-footer-luke-inner">
