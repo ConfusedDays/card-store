@@ -12,7 +12,7 @@ import type { AdminProduct } from "@/lib/product-admin";
 type Overview = {
   totals: { orders: number; revenueCents: number; stockIssues: number };
   products: AdminProduct[];
-  inventory: { variantId: string; productName: string; label: string; available: number; sold: number }[];
+  inventory: { variantId: string; productName: string; label: string; available: number; sold: number; active: boolean }[];
   recentOrders: {
     orderNo: string;
     email: string;
@@ -66,6 +66,7 @@ export function AdminDashboard() {
   const navTargetRef = useRef("overview");
   const suppressNavClickRef = useRef(false);
   const inventoryRequestRef = useRef(0);
+  const variantIdRef = useRef("");
 
   useEffect(() => {
     if (!overview) return;
@@ -182,9 +183,11 @@ export function AdminDashboard() {
       // Keep the selected variant tied to an actual option after refreshing the
       // overview. Otherwise the select can fall back to the first visual option
       // while the form still submits a stale variant ID.
-      const nextVariantId = data.inventory.some((item: Overview["inventory"][number]) => item.variantId === variantId)
-        ? variantId
+      const currentVariantId = variantIdRef.current || variantId;
+      const nextVariantId = data.inventory.some((item: Overview["inventory"][number]) => item.variantId === currentVariantId)
+        ? currentVariantId
         : data.inventory[0]?.variantId || "";
+      variantIdRef.current = nextVariantId;
       setVariantId(nextVariantId);
       if (refreshInventory) void loadInventory(authToken, false, nextVariantId);
       void loadRecycledOrders(authToken);
@@ -200,24 +203,25 @@ export function AdminDashboard() {
     event.preventDefault();
     setMessage("");
     setError("");
+    const selectedVariantId = variantIdRef.current || variantId;
     const lines = keys.split(/\r?\n|,/).map((line) => line.trim()).filter(Boolean);
     try {
       const response = await fetch("/api/admin/inventory", {
         method: "POST",
         headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-        body: JSON.stringify({ variantId, keys: lines }),
+        body: JSON.stringify({ variantId: selectedVariantId, keys: lines }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "导入失败");
       setMessage(`已导入 ${data.imported} 条，跳过 ${data.skipped} 条`);
       setKeys("");
-      await Promise.all([loadOverview(token, false), loadInventory(token, false, variantId)]);
+      await Promise.all([loadOverview(token, false), loadInventory(token, false, selectedVariantId)]);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "导入失败");
     }
   }
 
-  async function loadInventory(authToken = token, showProgress = false, selectedVariantId = variantId) {
+  async function loadInventory(authToken = token, showProgress = false, selectedVariantId = variantIdRef.current || variantId) {
     const requestId = ++inventoryRequestRef.current;
     if (showProgress) setInventoryRefreshing(true);
     try {
@@ -239,6 +243,7 @@ export function AdminDashboard() {
   }
 
   function selectInventoryVariant(nextVariantId: string) {
+    variantIdRef.current = nextVariantId;
     setVariantId(nextVariantId);
     // Fetch the selected variant immediately so the management table and the
     // import target always describe the same product.
@@ -517,7 +522,7 @@ export function AdminDashboard() {
             </div>
             <form className="import-panel" onSubmit={importKeys}>
               <h3><PackagePlus size={19} />批量导入</h3>
-              <label>商品规格<DropdownSelect value={variantId} onValueChange={selectInventoryVariant} ariaLabel="选择要导入卡密的商品规格" options={overview.inventory.map((item) => ({ value: item.variantId, label: `${item.label} · ${item.productName}` }))} /></label>
+              <label>商品规格<DropdownSelect value={variantId} onValueChange={selectInventoryVariant} ariaLabel="选择要导入卡密的商品规格" options={overview.inventory.map((item) => ({ value: item.variantId, label: `${item.label} · ${item.productName}${item.active ? "" : "（已停用）"}` }))} /></label>
               <label>卡密列表<textarea value={keys} onChange={(event) => setKeys(event.target.value)} placeholder={"每行一条卡密\nAAAA-BBBB-CCCC"} required /></label>
               {message && <p className="success-message">{message}</p>}
               <button className="primary-button"><PackagePlus size={18} />导入卡密</button>

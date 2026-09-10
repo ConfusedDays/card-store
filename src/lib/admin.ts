@@ -46,11 +46,13 @@ export function getAdminOverview() {
   const inventory = db.prepare(`
     SELECT v.id as variantId, p.name as productName, v.label,
       SUM(CASE WHEN k.status = 'available' THEN 1 ELSE 0 END) as available,
-      SUM(CASE WHEN k.status = 'sold' THEN 1 ELSE 0 END) as sold
+      SUM(CASE WHEN k.status = 'sold' THEN 1 ELSE 0 END) as sold,
+      v.active
     FROM variants v JOIN products p ON p.id = v.product_id
     LEFT JOIN license_keys k ON k.variant_id = v.id
     GROUP BY v.id ORDER BY v.price_cents
-  `).all();
+  `).all() as { variantId: string; productName: string; label: string; available: number; sold: number; active: number }[];
+  const inventoryWithStatus = inventory.map((item) => ({ ...item, active: Boolean(item.active) }));
   const recentOrders = db.prepare(`
     SELECT o.order_no as orderNo, o.email, o.amount_cents as amountCents, o.status,
       o.created_at as createdAt, v.label as variantLabel,
@@ -61,7 +63,7 @@ export function getAdminOverview() {
     WHERE o.deleted_at IS NULL
     ORDER BY o.created_at DESC LIMIT 20
   `).all();
-  return { totals, inventory, recentOrders };
+  return { totals, inventory: inventoryWithStatus, recentOrders };
 }
 
 export type AdminOrder = {
