@@ -39,8 +39,9 @@ export function getAdminOverview() {
     SELECT
       COUNT(*) as orders,
       COALESCE(SUM(CASE WHEN status = 'delivered' THEN amount_cents ELSE 0 END), 0) as revenueCents,
-      SUM(CASE WHEN status = 'paid_no_stock' THEN 1 ELSE 0 END) as stockIssues
+      COALESCE(SUM(CASE WHEN status = 'paid_no_stock' THEN 1 ELSE 0 END), 0) as stockIssues
     FROM orders
+    WHERE deleted_at IS NULL
   `).get() as { orders: number; revenueCents: number; stockIssues: number };
   const inventory = db.prepare(`
     SELECT v.id as variantId, p.name as productName, v.label,
@@ -57,9 +58,83 @@ export function getAdminOverview() {
       de.last_error as emailLastError
     FROM orders o JOIN variants v ON v.id = o.variant_id
     LEFT JOIN delivery_emails de ON de.order_no = o.order_no
+    WHERE o.deleted_at IS NULL
     ORDER BY o.created_at DESC LIMIT 20
   `).all();
   return { totals, inventory, recentOrders };
+}
+
+export type AdminOrder = {
+  orderNo: string;
+  email: string;
+  amountCents: number;
+  status: string;
+  createdAt: string;
+  variantLabel: string;
+  emailStatus: "pending" | "sending" | "sent" | "failed" | null;
+  emailAttempts: number | null;
+  emailSentAt: string | null;
+  emailLastError: string | null;
+};
+
+export type RecycleOrder = AdminOrder & { deletedAt: string };
+
+export function getRecycledOrders(): RecycleOrder[] {
+  return db.prepare(`
+    SELECT o.order_no as orderNo, o.email, o.amount_cents as amountCents, o.status,
+      o.created_at as createdAt, o.deleted_at as deletedAt, v.label as variantLabel,
+      de.status as emailStatus, de.attempts as emailAttempts, de.sent_at as emailSentAt,
+      de.last_error as emailLastError
+    FROM orders o JOIN variants v ON v.id = o.variant_id
+    LEFT JOIN delivery_emails de ON de.order_no = o.order_no
+    WHERE o.deleted_at IS NOT NULL
+    ORDER BY o.deleted_at DESC
+  `).all() as RecycleOrder[];
+}
+
+function orderPlaceholders(orderNos: string[]) {
+  if (!orderNos.length) throw new Error("请选择至少一个订单");
+  return orderNos.map(() => "?").join(",");
+}
+
+export function recycleOrders(orderNos: string[]) {
+  const placeholders = orderPlaceholders(orderNos);
+  const result = db.prepare(`UPDATE orders SET deleted_at = CURRENT_TIMESTAMP WHERE order_no IN (${placeholders}) AND deleted_at IS NULL`).run(...orderNos);
+  if (result.changes) {
+    db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
+      .run("orders.recycled", "order", orderNos.join(","), JSON.stringify({ count: result.changes }));
+  }
+  return { recycled: result.changes };
+}
+
+export function restoreOrders(orderNos: string[]) {
+  const placeholders = orderPlaceholders(orderNos);
+  const result = db.prepare(`UPDATE orders SET deleted_at = NULL WHERE order_no IN (${placeholders}) AND deleted_at IS NOT NULL`).run(...orderNos);
+  if (result.changes) {
+    db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
+      .run("orders.restored", "order", orderNos.join(","), JSON.stringify({ count: result.changes }));
+  }
+  return { restored: result.changes };
+}
+
+export function permanentlyDeleteOrders(orderNos: string[]) {
+  const placeholders = orderPlaceholders(orderNos);
+  const deleted = db.transaction(() => {
+    const existing = db.prepare(`SELECT order_no as orderNo FROM orders WHERE order_no IN (${placeholders}) AND deleted_at IS NOT NULL`).all(...orderNos) as { orderNo: string }[];
+    if (!existing.length) return 0;
+    const existingNos = existing.map((order) => order.orderNo);
+    const existingPlaceholders = orderPlaceholders(existingNos);
+    db.prepare(`DELETE FROM order_email_events WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
+    db.prepare(`DELETE FROM delivery_emails WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
+    db.prepare(`DELETE FROM payments WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
+    db.prepare(`DELETE FROM deliveries WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
+    db.prepare(`UPDATE license_keys SET order_no = NULL WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
+    const result = db.prepare(`DELETE FROM orders WHERE order_no IN (${existingPlaceholders}) AND deleted_at IS NOT NULL`).run(...existingNos);
+    db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
+      .run("orders.permanently_deleted", "order", existingNos.join(","), JSON.stringify({ count: result.changes }));
+    return result.changes;
+  })();
+  return { deleted };
 }
 
 export function importLicenseKeys(variantId: string, rawKeys: string[]) {

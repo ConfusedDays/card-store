@@ -66,7 +66,7 @@ export function completePaidOrder(input: {
     const order = db.prepare(`
       SELECT o.*, v.label as variantLabel
       FROM orders o JOIN variants v ON v.id = o.variant_id
-      WHERE o.order_no = ?
+      WHERE o.order_no = ? AND o.deleted_at IS NULL
     `).get(input.orderNo) as StoredOrder | undefined;
     if (!order) throw new Error("订单不存在");
     if (input.provider === "mock" && (process.env.NODE_ENV === "production" || order.payment_provider === "epay")) {
@@ -167,7 +167,7 @@ function toOrderResult(order: { order_no: string; status: OrderResult["status"];
 export function getOrderForCustomer(orderNo: string, email: string) {
   const order = db.prepare(`
     SELECT o.*, v.label as variantLabel FROM orders o JOIN variants v ON v.id = o.variant_id
-    WHERE o.order_no = ? AND lower(o.email) = lower(?)
+    WHERE o.order_no = ? AND lower(o.email) = lower(?) AND o.deleted_at IS NULL
   `).get(orderNo, email.trim()) as StoredOrder | undefined;
   if (!order) return undefined;
   return toOrderResult(order, order.status === "delivered" ? getDeliveryKey(orderNo) : undefined);

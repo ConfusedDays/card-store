@@ -66,7 +66,8 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     paid_at TEXT,
     terms_accepted_at TEXT,
-    terms_version TEXT
+    terms_version TEXT,
+    deleted_at TEXT
   );
   CREATE INDEX IF NOT EXISTS idx_orders_email ON orders(email);
   CREATE TABLE IF NOT EXISTS payments (
@@ -144,6 +145,7 @@ for (const [column, definition] of [
   ["terms_accepted_at", "TEXT"],
   ["terms_version", "TEXT"],
   ["payment_provider", "TEXT"],
+  ["deleted_at", "TEXT"],
 ] as const) {
   if (orderColumns.some((item) => item.name === column)) continue;
   try {

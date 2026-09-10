@@ -7,7 +7,7 @@ export function getCheckoutOrder(orderNo: string) {
       o.payment_method as paymentMethod, COALESCE(o.payment_provider, o.payment_method) as paymentProvider, o.status, v.label as variantLabel,
       p.name as productName, substr(o.email, 1, 2) || '***@' || substr(o.email, instr(o.email, '@') + 1) as maskedEmail
     FROM orders o JOIN variants v ON v.id = o.variant_id JOIN products p ON p.id = v.product_id
-    WHERE o.order_no = ?
+    WHERE o.order_no = ? AND o.deleted_at IS NULL
   `).get(orderNo) as {
     orderNo: string; amountCents: number; currency: "CNY"; paymentMethod: string;
     status: OrderResult["status"]; variantLabel: string; productName: string; maskedEmail: string; paymentProvider: string;

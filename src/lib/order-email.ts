@@ -32,7 +32,7 @@ function getOrderEmailData(orderNo: string) {
     SELECT o.order_no AS orderNo, o.email, o.amount_cents AS amountCents, o.currency,
       o.payment_method AS paymentMethod, o.status, p.name AS productName, v.label AS variantLabel
     FROM orders o JOIN variants v ON v.id = o.variant_id JOIN products p ON p.id = v.product_id
-    WHERE o.order_no = ?
+    WHERE o.order_no = ? AND o.deleted_at IS NULL
   `).get(orderNo) as OrderEmailData | undefined;
 }
 

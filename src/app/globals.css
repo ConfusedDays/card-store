@@ -845,17 +845,28 @@ tbody tr:last-child td { border-bottom: 0; }
 .status-delivered { color: #176847; background: #e1f2e8; }
 .status-paid_no_stock { color: #975b12; background: #f9e8cc; }
 .orders-table table { min-width: 980px; }
+.order-trash-jump { display: inline-flex; align-items: center; gap: 7px; }
 .email-status { display: inline-flex; align-items: center; padding: 4px 7px; border-radius: 4px; color: #68726f; background: #edf0ef; font-size: 10px; font-weight: 720; }
 .email-status-sent { color: #176847; background: #e1f2e8; }
 .email-status-failed { color: #a13737; background: #f9e1e1; }
 .email-status-sending, .email-status-pending { color: #87601c; background: #f8ecd5; }
 .order-message { display: flex; align-items: center; gap: 7px; margin: -5px 0 12px; }
-.order-action-cell { width: 112px; }
+.order-action-cell { width: 220px; }
+.order-action-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .resend-email-button { height: 32px; padding: 0 10px; border: 1px solid #cbd5d1; border-radius: 5px; color: #52605b; background: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 720; cursor: pointer; transition: color .22s ease, border-color .22s ease, background-color .22s ease, transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s ease; }
 .resend-email-button:hover:not(:disabled) { color: var(--teal); border-color: var(--teal); background: #f1faf7; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(29,47,42,.1); }
 .resend-email-button:active:not(:disabled) { transform: scale(.92); box-shadow: none; }
 .resend-email-button:disabled { cursor: wait; opacity: .58; }
 .resend-email-button:focus-visible { outline: 2px solid color-mix(in srgb, var(--teal) 45%, transparent); outline-offset: 2px; }
+.order-recycle-button, .order-purge-button { height: 32px; padding: 0 9px; border: 1px solid color-mix(in srgb, var(--danger) 48%, var(--line)); border-radius: 5px; color: var(--danger); background: transparent; display: inline-flex; align-items: center; justify-content: center; gap: 5px; font-size: 11px; font-weight: 720; transition: color .2s ease, border-color .2s ease, background-color .2s ease, transform .2s ease; }
+.order-recycle-button:hover, .order-purge-button:hover { color: #fff; border-color: var(--danger); background: var(--danger); transform: translateY(-1px); }
+.order-recycle-bin { margin-top: 18px; padding: 18px; }
+.order-recycle-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 13px; }
+.order-recycle-heading h3 { margin: 0 0 5px; display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.order-recycle-heading h3 svg { color: var(--teal); }
+.order-recycle-heading p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.order-recycle-table { overflow-x: auto; }
+.order-recycle-table table { min-width: 800px; }
 .backup-message { display: flex; align-items: center; gap: 7px; margin: -5px 0 12px; }
 .backup-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .backup-panel { padding: 22px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); display: grid; gap: 14px; }

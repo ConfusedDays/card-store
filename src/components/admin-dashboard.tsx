@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArchiveRestore, ArrowLeft, Boxes, CheckCircle2, CircleDollarSign, CircleOff, Copy, Download, KeyRound, LoaderCircle, LogIn, MailCheck, Menu as MenuIcon, PackagePlus, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Tags, Trash2, TriangleAlert, Upload } from "lucide-react";
+import { ArchiveRestore, ArrowLeft, Boxes, CheckCircle2, CircleDollarSign, CircleOff, Copy, Download, KeyRound, LoaderCircle, LogIn, MailCheck, Menu as MenuIcon, PackagePlus, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Tags, Trash2, TriangleAlert, Undo2, Upload } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { DropdownMenu, DropdownSelect } from "@/components/ui/dropdown-menu";
 import { ProductManager } from "@/components/product-manager";
@@ -28,6 +28,7 @@ type Overview = {
 };
 
 type InventoryKey = { id: number; variantId: string; productName: string; variantLabel: string; last4: string; key: string; status: "available" | "reserved" | "sold" | "disabled"; orderNo: string | null; createdAt: string; soldAt: string | null };
+type RecycledOrder = Overview["recentOrders"][number] & { deletedAt: string };
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
@@ -49,6 +50,8 @@ export function AdminDashboard() {
   const [copiedKeyId, setCopiedKeyId] = useState<number | null>(null);
   const [orderMessage, setOrderMessage] = useState("");
   const [resendingOrderNo, setResendingOrderNo] = useState("");
+  const [recycledOrders, setRecycledOrders] = useState<RecycledOrder[]>([]);
+  const [recycleLoading, setRecycleLoading] = useState(false);
   const [backupPassphrase, setBackupPassphrase] = useState("");
   const [restorePassphrase, setRestorePassphrase] = useState("");
   const [restoreConfirmation, setRestoreConfirmation] = useState("");
@@ -178,6 +181,7 @@ export function AdminDashboard() {
       setOverview(data);
       setVariantId((current) => current || data.inventory[0]?.variantId || "");
       if (refreshInventory) void loadInventory(authToken);
+      void loadRecycledOrders(authToken);
     } catch (reason) {
       setOverview(null);
       setError(reason instanceof Error ? reason.message : "加载失败");
@@ -224,6 +228,20 @@ export function AdminDashboard() {
       if (requestId === inventoryRequestRef.current) setError(reason instanceof Error ? reason.message : "加载卡密失败");
     } finally {
       if (showProgress) setInventoryRefreshing(false);
+    }
+  }
+
+  async function loadRecycledOrders(authToken = token) {
+    setRecycleLoading(true);
+    try {
+      const response = await fetch("/api/admin/orders?scope=trash", { headers: { authorization: `Bearer ${authToken}` } });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "加载订单回收站失败");
+      setRecycledOrders(data.orders);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "加载订单回收站失败");
+    } finally {
+      setRecycleLoading(false);
     }
   }
 
@@ -366,6 +384,62 @@ export function AdminDashboard() {
     );
   }
 
+  async function recycleOrder(orderNo: string) {
+    if (!window.confirm(`确认将订单 ${orderNo} 移入回收站吗？\n\n订单和发卡记录会保留，可在回收站恢复。`)) return;
+    setOrderMessage("");
+    setError("");
+    try {
+      const response = await fetch("/api/admin/orders", {
+        method: "DELETE",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ orderNos: [orderNo] }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "移入回收站失败");
+      setOrderMessage(`订单 ${orderNo} 已移入回收站`);
+      await Promise.all([loadOverview(token, false), loadRecycledOrders(token)]);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "移入回收站失败");
+    }
+  }
+
+  async function restoreOrder(orderNo: string) {
+    setOrderMessage("");
+    setError("");
+    try {
+      const response = await fetch("/api/admin/orders", {
+        method: "PATCH",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ action: "restore", orderNos: [orderNo] }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "恢复订单失败");
+      setOrderMessage(`订单 ${orderNo} 已恢复`);
+      await Promise.all([loadOverview(token, false), loadRecycledOrders(token)]);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "恢复订单失败");
+    }
+  }
+
+  async function permanentlyDeleteOrder(orderNo: string) {
+    if (!window.confirm(`确认永久删除订单 ${orderNo} 吗？\n\n订单、支付流水和发卡关联都会被删除，无法恢复。`)) return;
+    setOrderMessage("");
+    setError("");
+    try {
+      const response = await fetch("/api/admin/orders", {
+        method: "PATCH",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ action: "purge", orderNos: [orderNo] }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "永久删除订单失败");
+      setOrderMessage(`订单 ${orderNo} 已永久删除`);
+      await loadRecycledOrders(token);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "永久删除订单失败");
+    }
+  }
+
   const inventoryPending = inventoryBusy || inventoryRefreshing;
 
   return (
@@ -468,7 +542,7 @@ export function AdminDashboard() {
         </section>
 
         <section className="admin-section" id="orders">
-          <div className="section-heading"><div><span className="section-index">ORDERS</span><h2>最近订单</h2></div></div>
+          <div className="section-heading"><div><span className="section-index">ORDERS</span><h2>最近订单</h2></div><button className="secondary-command order-trash-jump" type="button" onClick={() => document.getElementById("order-recycle-bin")?.scrollIntoView({ behavior: "smooth", block: "center" })}><Trash2 size={16} />回收站{recycledOrders.length ? ` · ${recycledOrders.length}` : ""}</button></div>
           {orderMessage && <p className="success-message order-message"><MailCheck size={16} />{orderMessage}</p>}
           <div className="table-shell orders-table"><table><thead><tr><th>订单号</th><th>客户</th><th>规格</th><th>金额</th><th>订单状态</th><th>邮件状态</th><th>时间</th><th>操作</th></tr></thead><tbody>
             {overview.recentOrders.length ? overview.recentOrders.map((order) => {
@@ -482,10 +556,16 @@ export function AdminDashboard() {
                 <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
                 <td><span className={`email-status email-status-${emailStatus}`} title={order.emailLastError ?? undefined}>{emailLabel}{order.emailAttempts ? ` · ${order.emailAttempts}次` : ""}</span></td>
                 <td>{new Date(order.createdAt.replace(" ", "T") + "Z").toLocaleString("zh-CN")}</td>
-                <td className="order-action-cell">{order.status === "delivered" && <button className="resend-email-button" type="button" disabled={resendingOrderNo === order.orderNo} onClick={() => void resendDeliveryEmail(order.orderNo, order.email)} title="重新发送卡密邮件">{resendingOrderNo === order.orderNo ? <LoaderCircle className="spin" size={15} /> : <Send size={15} />}<span>{resendingOrderNo === order.orderNo ? "发送中" : "重新发送"}</span></button>}</td>
+                <td className="order-action-cell"><div className="order-action-buttons">{order.status === "delivered" && <button className="resend-email-button" type="button" disabled={resendingOrderNo === order.orderNo} onClick={() => void resendDeliveryEmail(order.orderNo, order.email)} title="重新发送卡密邮件">{resendingOrderNo === order.orderNo ? <LoaderCircle className="spin" size={15} /> : <Send size={15} />}<span>{resendingOrderNo === order.orderNo ? "发送中" : "重新发送"}</span></button>}<button className="order-recycle-button" type="button" onClick={() => void recycleOrder(order.orderNo)} title="移入回收站"><Trash2 size={15} /><span>删除</span></button></div></td>
               </tr>;
             }) : <tr><td colSpan={8} className="empty-cell">暂无订单</td></tr>}
           </tbody></table></div>
+          <div className="order-recycle-bin table-shell" id="order-recycle-bin">
+            <div className="order-recycle-heading"><div><h3><Trash2 size={18} />订单回收站</h3><p>移入回收站的订单仍会保留支付和发卡记录，可恢复或永久删除。</p></div><button className="icon-action" type="button" onClick={() => void loadRecycledOrders()} title="刷新回收站" aria-label="刷新回收站" disabled={recycleLoading}><RefreshCw className={recycleLoading ? "spin" : ""} size={17} /></button></div>
+            <div className="order-recycle-table"><table><thead><tr><th>订单号</th><th>客户</th><th>金额</th><th>订单状态</th><th>移入时间</th><th>操作</th></tr></thead><tbody>
+              {recycledOrders.length ? recycledOrders.map((order) => <tr key={order.orderNo}><td><code>{order.orderNo}</code></td><td>{order.email}</td><td>{money(order.amountCents)}</td><td><span className={`status-badge status-${order.status}`}>{order.status}</span></td><td>{new Date(order.deletedAt.replace(" ", "T") + "Z").toLocaleString("zh-CN")}</td><td className="order-action-cell"><div className="order-action-buttons"><button className="resend-email-button" type="button" onClick={() => void restoreOrder(order.orderNo)} title="恢复订单"><Undo2 size={15} /><span>恢复</span></button><button className="order-purge-button" type="button" onClick={() => void permanentlyDeleteOrder(order.orderNo)} title="永久删除"><Trash2 size={15} /><span>永久删除</span></button></div></td></tr>) : <tr><td colSpan={6} className="empty-cell">回收站为空</td></tr>}
+            </tbody></table></div>
+          </div>
         </section>
       </div>
       </main>
