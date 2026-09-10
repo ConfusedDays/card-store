@@ -213,7 +213,8 @@ export function AdminDashboard() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "导入失败");
-      setMessage(`已导入 ${data.imported} 条，跳过 ${data.skipped} 条`);
+      const targetLabel = data.variant ? `${data.variant.productName} · ${data.variant.label}` : "当前规格";
+      setMessage(`已导入到 ${targetLabel}：${data.imported} 条，跳过 ${data.skipped} 条`);
       setKeys("");
       await Promise.all([loadOverview(token, false), loadInventory(token, false, selectedVariantId)]);
     } catch (reason) {

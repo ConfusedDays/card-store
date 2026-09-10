@@ -140,7 +140,11 @@ export function permanentlyDeleteOrders(orderNos: string[]) {
 }
 
 export function importLicenseKeys(variantId: string, rawKeys: string[]) {
-  const variant = db.prepare("SELECT id FROM variants WHERE id = ?").get(variantId);
+  const variant = db.prepare(`
+    SELECT v.id as variantId, v.label, p.name as productName
+    FROM variants v JOIN products p ON p.id = v.product_id
+    WHERE v.id = ?
+  `).get(variantId) as { variantId: string; label: string; productName: string } | undefined;
   if (!variant) throw new Error("商品规格不存在");
   const keys = [...new Set(rawKeys.map((key) => key.trim()).filter(Boolean))];
   if (keys.length === 0) throw new Error("没有可导入的卡密");
@@ -159,7 +163,7 @@ export function importLicenseKeys(variantId: string, rawKeys: string[]) {
       .run("inventory.imported", "variant", variantId, JSON.stringify({ imported, submitted: keys.length }));
   });
   tx();
-  return { imported, skipped: keys.length - imported };
+  return { imported, skipped: keys.length - imported, variant };
 }
 
 export type AdminInventoryKey = {
