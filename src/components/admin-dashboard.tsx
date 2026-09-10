@@ -175,7 +175,7 @@ export function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/admin/overview", { headers: { authorization: `Bearer ${authToken}` } });
+      const response = await fetch("/api/admin/overview", { cache: "no-store", headers: { authorization: `Bearer ${authToken}` } });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "加载失败");
       sessionStorage.setItem("card-store-admin-token", authToken);
@@ -189,7 +189,7 @@ export function AdminDashboard() {
         : data.inventory[0]?.variantId || "";
       variantIdRef.current = nextVariantId;
       setVariantId(nextVariantId);
-      if (refreshInventory) void loadInventory(authToken, false, nextVariantId);
+      if (refreshInventory) void loadInventory(authToken);
       void loadRecycledOrders(authToken);
     } catch (reason) {
       setOverview(null);
@@ -205,6 +205,10 @@ export function AdminDashboard() {
     setError("");
     const selectedVariantId = variantIdRef.current || variantId;
     const lines = keys.split(/\r?\n|,/).map((line) => line.trim()).filter(Boolean);
+    if (!selectedVariantId) {
+      setError("请先选择要导入的商品规格");
+      return;
+    }
     try {
       const response = await fetch("/api/admin/inventory", {
         method: "POST",
@@ -216,21 +220,20 @@ export function AdminDashboard() {
       const targetLabel = data.variant ? `${data.variant.productName} · ${data.variant.label}` : "当前规格";
       setMessage(`已导入到 ${targetLabel}：${data.imported} 条，跳过 ${data.skipped} 条`);
       setKeys("");
-      await Promise.all([loadOverview(token, false), loadInventory(token, false, selectedVariantId)]);
+      await Promise.all([loadOverview(token, false), loadInventory(token)]);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "导入失败");
     }
   }
 
-  async function loadInventory(authToken = token, showProgress = false, selectedVariantId = variantIdRef.current || variantId) {
+  async function loadInventory(authToken = token, showProgress = false) {
     const requestId = ++inventoryRequestRef.current;
     if (showProgress) setInventoryRefreshing(true);
     try {
       const params = new URLSearchParams();
-      if (selectedVariantId) params.set("variantId", selectedVariantId);
       if (inventoryStatus !== "all") params.set("status", inventoryStatus);
       if (inventorySearch.trim()) params.set("search", inventorySearch.trim());
-      const response = await fetch(`/api/admin/inventory?${params}`, { headers: { authorization: `Bearer ${authToken}` } });
+      const response = await fetch(`/api/admin/inventory?${params}`, { cache: "no-store", headers: { authorization: `Bearer ${authToken}` } });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "加载卡密失败");
       if (requestId !== inventoryRequestRef.current) return;
@@ -246,9 +249,6 @@ export function AdminDashboard() {
   function selectInventoryVariant(nextVariantId: string) {
     variantIdRef.current = nextVariantId;
     setVariantId(nextVariantId);
-    // Fetch the selected variant immediately so the management table and the
-    // import target always describe the same product.
-    void loadInventory(token, true, nextVariantId);
   }
 
   async function loadRecycledOrders(authToken = token) {
@@ -531,7 +531,7 @@ export function AdminDashboard() {
           </div>
           <div className="inventory-manager table-shell">
             <div className="inventory-manager-toolbar">
-              <div><h3><KeyRound size={18} />卡密管理</h3><p>全部状态均可批量启用、停用或删除；删除已售卡密会移除该订单的发卡关联。</p></div>
+              <div><h3><KeyRound size={18} />卡密管理</h3><p>这里显示全部商品规格的卡密；上方“商品规格”只决定新导入卡密的归属。全部状态均可批量启用、停用或删除；删除已售卡密会移除该订单的发卡关联。</p></div>
               <div className="inventory-filters"><label><Search size={15} /><input value={inventorySearch} onChange={(event) => setInventorySearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void loadInventory(token, true); }} placeholder="尾号或订单号" disabled={inventoryPending} /></label><DropdownSelect className="inventory-status-select" value={inventoryStatus} onValueChange={setInventoryStatus} ariaLabel="筛选卡密状态" disabled={inventoryPending} options={[{ value: "all", label: "全部状态" }, { value: "available", label: "可售" }, { value: "disabled", label: "已停用" }, { value: "sold", label: "已售" }, { value: "reserved", label: "预留" }]} /><button type="button" className="icon-action inventory-refresh-button" onClick={() => void loadInventory(token, true)} title={inventoryRefreshing ? "正在刷新卡密" : "刷新卡密"} aria-label={inventoryRefreshing ? "正在刷新卡密" : "刷新卡密"} disabled={inventoryPending}><RefreshCw className={inventoryPending ? "spin" : ""} size={17} /></button></div>
             </div>
             {inventoryMessage && <p className="inventory-operation-message success-message" role="status"><CheckCircle2 size={16} />{inventoryMessage}</p>}
