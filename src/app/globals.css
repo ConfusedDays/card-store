@@ -187,8 +187,8 @@ html.dark-mode[data-accent="rose"] { --teal: #ffa1cf; --teal-dark: #ef75ae; --mi
 .nav-items a:hover, .nav-items a:focus-visible, .nav-items a[aria-current="page"] { color: var(--ink); }
 .nav-items a:hover::after, .nav-items a:focus-visible::after, .nav-items a[aria-current="page"]::after { transform: scaleX(1); transform-origin: left center; }
 .nav-items a:focus-visible { outline: 2px solid color-mix(in srgb, var(--teal) 60%, transparent); outline-offset: -2px; }
-.text-effect-char { opacity: 0; animation: text-effect-character-in .72s cubic-bezier(.16,1,.3,1) both; animation-delay: var(--text-effect-delay, 0s); }
-@keyframes text-effect-character-in { from { opacity: 0; transform: translateY(.55em) rotateX(72deg); filter: blur(8px); } to { opacity: 1; transform: translateY(0) rotateX(0); filter: blur(0); } }
+.text-effect-char { opacity: 0; transform-origin: center bottom; animation: text-effect-character-in 1.1s cubic-bezier(.16,1,.3,1) both; animation-delay: var(--text-effect-delay, 0s); }
+@keyframes text-effect-character-in { from { opacity: 0; transform: translateY(.9em) rotateX(90deg) scale(.88); filter: blur(12px); } to { opacity: 1; transform: translateY(0) rotateX(0) scale(1); filter: blur(0); } }
 @media (prefers-reduced-motion: reduce) { .text-effect-char { animation: none; opacity: 1; transform: none; filter: none; } }
 .dropdown-menu { position: relative; width: max-content; }
 .dropdown-menu-trigger { min-height: 36px; padding: 0 11px; border: 1px solid color-mix(in srgb, var(--line) 86%, transparent); border-radius: 9px; color: #53615c; background: color-mix(in srgb, var(--surface) 72%, transparent); box-shadow: 0 8px 20px rgba(13,31,25,.08); -webkit-backdrop-filter: blur(10px) saturate(130%); backdrop-filter: blur(10px) saturate(130%); display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 750; transition: border-color .18s ease, color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease; }

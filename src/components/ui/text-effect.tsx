@@ -23,10 +23,10 @@ export function TextEffect({ children, className, delay = 0, per = "char", hover
 
   if (reducedMotion) return <span className={className}>{children}</span>;
 
-  const stagger = per === "word" ? 0.09 : 0.075;
+  const stagger = per === "word" ? 0.13 : 0.11;
 
   return (
-    <motion.span aria-label={children} className={cn("inline-flex whitespace-pre text-effect", className)} whileHover={hover ? "hover" : undefined}>
+    <motion.span aria-label={children} className={cn("inline-flex whitespace-pre text-effect", className)} whileHover={hover ? "hover" : undefined} whileFocus={hover ? "hover" : undefined}>
       {segments.map((segment, index) => (
         <motion.span
           key={`${segment}-${index}`}
