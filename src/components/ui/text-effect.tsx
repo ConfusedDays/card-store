@@ -21,7 +21,7 @@ const character: Variants = {
     rotateX: 0,
     scale: 1,
     filter: "blur(0px)",
-    transition: { delay, duration: 0.82, ease: [0.16, 1, 0.3, 1] },
+    transition: { delay, duration: 1.3, ease: [0.16, 1, 0.3, 1] },
   }),
   hover: { y: -3, filter: "blur(0px)", transition: { duration: 0.24, ease: [0.16, 1, 0.3, 1] } },
 };
@@ -32,7 +32,7 @@ export function TextEffect({ children, className, delay = 0, per = "char", hover
 
   if (reducedMotion) return <span className={className}>{children}</span>;
 
-  const stagger = per === "word" ? 0.13 : 0.11;
+  const stagger = per === "word" ? 0.2 : 0.17;
 
   return (
     <motion.span aria-label={children} className={cn("inline-flex whitespace-pre text-effect", className)} whileHover={hover ? "hover" : undefined} whileFocus={hover ? "hover" : undefined}>
