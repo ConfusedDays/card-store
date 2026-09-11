@@ -8,13 +8,13 @@ const VIEWBOX_WIDTH = 1271;
 const VIEWBOX_HEIGHT = 599;
 
 const DEFAULT_STOPS: GradientStop[] = [
-  { offset: 0, color: "#09231e" },
-  { offset: 0.2, color: "#0c7769" },
-  { offset: 0.38, color: "#38c4aa" },
-  { offset: 0.55, color: "#b0eddd" },
-  { offset: 0.69, color: "#f3c36d" },
-  { offset: 0.82, color: "#ed7543" },
-  { offset: 1, color: "#f3b19300" },
+  { offset: 0, color: "var(--charcoal)" },
+  { offset: 0.2, color: "var(--teal-dark)" },
+  { offset: 0.38, color: "var(--teal)" },
+  { offset: 0.55, color: "color-mix(in srgb, var(--teal) 35%, white)" },
+  { offset: 0.69, color: "var(--amber)" },
+  { offset: 0.82, color: "color-mix(in srgb, var(--amber) 72%, var(--teal))" },
+  { offset: 1, color: "color-mix(in srgb, var(--amber) 28%, transparent)" },
 ];
 
 function bellHeights(count: number, peak: number, valley: number) {
@@ -62,12 +62,14 @@ export function RuixenGradientFooter({
   const footerRef = useRef<HTMLElement>(null);
   const bandRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(minReveal);
+  const [footerInView, setFooterInView] = useState(false);
 
   useEffect(() => {
     const footer = footerRef.current;
     if (!footer) return;
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) footer.classList.add("is-visible");
+      setFooterInView(entry.isIntersecting);
     }, { threshold: 0.14 });
     observer.observe(footer);
     return () => observer.disconnect();
@@ -110,7 +112,7 @@ export function RuixenGradientFooter({
         ref={bandRef}
         className="ruixen-gradient-footer-band"
         aria-hidden="true"
-        style={{ height: gradientHeight, transform: `scaleY(${progress})` }}
+        style={{ height: gradientHeight, transform: `scaleY(${progress})`, opacity: footerInView ? undefined : 0 }}
       >
         <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>

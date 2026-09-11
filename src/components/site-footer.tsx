@@ -24,7 +24,7 @@ export function SiteFooter() {
     <RuixenGradientFooter className="ruixen-footer" gradientHeight="44vh" minReveal={0.035} bars={10} blur={18} peak={0.94} valley={0.42} ariaLabelledBy="site-footer-title">
       <div className="ruixen-footer-inner">
         <div className="ruixen-footer-top" data-footer-reveal>
-          <span className="ruixen-footer-kicker">DIGITAL GOODS / STUDIO</span>
+          <span className="ruixen-footer-kicker">REII SHOP / DIGITAL GOODS</span>
           <span className="ruixen-footer-status"><i /> 服务正常运行</span>
           <span className="ruixen-footer-coordinate">ONLINE · 2026</span>
         </div>
@@ -54,11 +54,11 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <div className="ruixen-footer-wordmark" aria-hidden="true" data-footer-reveal>
-          <span>Blank</span><em> / </em><span>Canvas</span>
-        </div>
+        <Link className="ruixen-footer-wordmark" href="/" aria-label="Reii Shop 首页" data-footer-reveal>
+          <span>Reii</span><em>Shop</em><sup>®</sup>
+        </Link>
         <div className="ruixen-footer-bottom" data-footer-reveal>
-          <span>© 2026 DIGITAL GOODS</span>
+          <span>© 2026 REII SHOP</span>
           <span>Made with intent <b>↗</b></span>
           <span>Online · Always</span>
         </div>
