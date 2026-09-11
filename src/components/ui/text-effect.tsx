@@ -14,6 +14,15 @@ type TextEffectProps = {
 };
 
 const character: Variants = {
+  hidden: { opacity: 0, y: "0.9em", rotateX: 90, scale: 0.88, filter: "blur(12px)" },
+  visible: ({ delay }: { delay: number }) => ({
+    opacity: 1,
+    y: 0,
+    rotateX: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: { delay, duration: 0.82, ease: [0.16, 1, 0.3, 1] },
+  }),
   hover: { y: -3, filter: "blur(0px)", transition: { duration: 0.24, ease: [0.16, 1, 0.3, 1] } },
 };
 
@@ -32,8 +41,10 @@ export function TextEffect({ children, className, delay = 0, per = "char", hover
           key={`${segment}-${index}`}
           aria-hidden="true"
           className="inline-block whitespace-pre text-effect-char"
+          initial="hidden"
+          animate="visible"
+          custom={{ delay: delay + index * stagger }}
           variants={character}
-          style={{ "--text-effect-delay": `${delay + index * stagger}s` } as React.CSSProperties}
         >
           {segment}
         </motion.span>
