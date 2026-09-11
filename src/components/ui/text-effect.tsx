@@ -13,14 +13,7 @@ type TextEffectProps = {
   hover?: boolean;
 };
 
-const container: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
-};
-
 const character: Variants = {
-  hidden: { opacity: 0, y: 5, filter: "blur(3px)" },
-  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
   hover: { y: -3, filter: "blur(0px)", transition: { duration: 0.24, ease: [0.16, 1, 0.3, 1] } },
 };
 
@@ -30,23 +23,17 @@ export function TextEffect({ children, className, delay = 0, per = "char", hover
 
   if (reducedMotion) return <span className={className}>{children}</span>;
 
+  const stagger = per === "word" ? 0.09 : 0.075;
+
   return (
-    <motion.span
-      aria-label={children}
-      className={cn("inline-flex whitespace-pre", className)}
-      variants={container}
-      initial="hidden"
-      animate="visible"
-      whileHover={hover ? "hover" : undefined}
-      transition={{ delay, staggerChildren: per === "word" ? 0.09 : 0.075 }}
-    >
+    <motion.span aria-label={children} className={cn("inline-flex whitespace-pre text-effect", className)} whileHover={hover ? "hover" : undefined}>
       {segments.map((segment, index) => (
         <motion.span
           key={`${segment}-${index}`}
           aria-hidden="true"
-          className="inline-block whitespace-pre"
+          className="inline-block whitespace-pre text-effect-char"
           variants={character}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          style={{ "--text-effect-delay": `${delay + index * stagger}s` } as React.CSSProperties}
         >
           {segment}
         </motion.span>
