@@ -277,10 +277,9 @@ html.dark-mode[data-accent="rose"] { --teal: #ffa1cf; --teal-dark: #ef75ae; --mi
 .store-hero-title-spacer, .store-hero-title-current { grid-area: 1 / 1; }
 .store-hero-title-spacer { visibility: hidden; }
 .store-hero-title-current { display: inline-flex; align-items: baseline; justify-content: center; gap: .16em; }
-.store-hero-name { color: transparent; background: linear-gradient(100deg, var(--hero-gradient-start, #56d7b7) 5%, var(--hero-gradient-mid, #9de8d5) 48%, var(--hero-gradient-end, #31ae91) 100%); -webkit-background-clip: text; background-clip: text; animation: store-hero-name-in .42s cubic-bezier(.16, 1, .3, 1); }
-@keyframes store-hero-name-in { from { opacity: .25; transform: translateY(.16em); filter: blur(3px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+.store-hero-name { color: transparent; background: linear-gradient(100deg, var(--hero-gradient-start, #56d7b7) 5%, var(--hero-gradient-mid, #9de8d5) 48%, var(--hero-gradient-end, #31ae91) 100%); -webkit-background-clip: text; background-clip: text; }
+.store-hero-name-effect .text-effect-char { color: transparent; background: linear-gradient(100deg, var(--hero-gradient-start, #56d7b7) 5%, var(--hero-gradient-mid, #9de8d5) 48%, var(--hero-gradient-end, #31ae91) 100%); -webkit-background-clip: text; background-clip: text; }
 @media (max-width: 720px) { .store-hero-title-line { font-size: clamp(28px, 9vw, 64px); } }
-@media (prefers-reduced-motion: reduce) { .store-hero-name { animation: none; } }
 .store-hero-copy > p { max-width: 680px; margin: 0 auto; color: var(--hero-muted, #92a9a3); font-size: clamp(15px, 1.5vw, 19px); line-height: 1.75; }
 .store-hero-actions { display: flex; justify-content: center; gap: 12px; margin-top: 34px; }
 .store-hero-primary, .store-hero-secondary { min-height: 49px; padding: 0 21px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-size: 14px; font-weight: 780; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background-color .2s ease; }

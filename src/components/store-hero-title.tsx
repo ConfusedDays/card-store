@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { TextEffect } from "@/components/ui/text-effect";
 
 const names = ["Volt", "Potassium", "Matcha", "Wave", "Real"] as const;
 
@@ -35,11 +36,11 @@ export function StoreHeroTitle() {
 
   return (
     <h1 id="store-hero-title" ref={headingRef} aria-label={`更简单地购买 ${names.join("、")} 卡密`}>
-      更简单地购买<br />
+      <TextEffect className="store-hero-heading-effect" delay={0.08} hover>更简单地购买</TextEffect><br />
       <span className="store-hero-title-line" aria-hidden="true">
         <span className="store-hero-title-spacer">Potassium 卡密</span>
         <span className="store-hero-title-current">
-          <span key={index} className="store-hero-name">{names[index]}</span>
+          <TextEffect key={index} className="store-hero-name store-hero-name-effect" delay={0.42} hover>{names[index]}</TextEffect>
           卡密
         </span>
       </span>
