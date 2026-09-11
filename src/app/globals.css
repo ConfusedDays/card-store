@@ -1845,7 +1845,7 @@ html.dark-mode .product-table tbody tr.dragging { background: #263630; box-shado
 .ruixen-footer {
   --ruixen-pointer-x: 0;
   --ruixen-pointer-y: 0;
-  --ruixen-footer-warm: color-mix(in srgb, var(--amber) 72%, var(--teal));
+  --ruixen-footer-warm: var(--teal);
   position: relative;
   width: 100%;
   min-height: min(720px, 82svh);
