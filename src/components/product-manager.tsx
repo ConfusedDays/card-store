@@ -5,8 +5,9 @@ import Image from "next/image";
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, Eye, EyeOff, GripVertical, ImagePlus, LoaderCircle, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import { Check, Eye, EyeOff, GripVertical, ImagePlus, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import { DropdownSelect } from "@/components/ui/dropdown-menu";
+import { AnimatedButtonIcon } from "@/components/ui/animated-state-icons";
 import type { AdminProduct } from "@/lib/product-admin";
 
 type DraftVariant = {
@@ -278,7 +279,7 @@ export function ProductManager({ products, token, onSaved }: {
           type="button"
           aria-pressed={Boolean(draft && !draft.id)}
           onClick={toggleNewProduct}
-        >          <Plus size={17} /> 新增商品
+        >          <AnimatedButtonIcon idle={<Plus size={17} />} /> 新增商品
         </button>
       </div>
       {message && <p className="product-manager-message success-message" role="status">{message}</p>}
@@ -302,7 +303,7 @@ export function ProductManager({ products, token, onSaved }: {
           <form key={draft.id ?? "new-product"} className="product-editor" onSubmit={saveProduct}>
             <div className="editor-heading">
               <div><span className="section-index">{draft.id ? "EDIT PRODUCT" : "NEW PRODUCT"}</span><h3>{draft.id ? "编辑商品" : "新增商品"}</h3></div>
-              <button className="icon-action" type="button" onClick={() => setDraft(null)} title="关闭编辑"><X size={17} /></button>
+              <button className="icon-action" type="button" onClick={() => setDraft(null)} title="关闭编辑"><AnimatedButtonIcon idle={<X size={17} />} /></button>
             </div>
             <div className="editor-grid">
               <label>商品名称<input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} required /></label>
@@ -323,12 +324,12 @@ export function ProductManager({ products, token, onSaved }: {
                   <div className="product-image-actions">
                     <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadProductImage} />
                     <button type="button" onClick={() => imageInputRef.current?.click()} disabled={uploadingImage}>
-                      {uploadingImage ? <LoaderCircle className="spinning" size={16} /> : <Upload size={16} />}
+                      <AnimatedButtonIcon loading={uploadingImage} idle={<Upload size={16} />} size={16} />
                       {uploadingImage ? "正在上传" : draft.imageUrl ? "更换图片" : "上传图片"}
                     </button>
                     {draft.imageUrl && (
                       <button className="remove-image" type="button" onClick={() => setDraft({ ...draft, imageUrl: null })} disabled={uploadingImage}>
-                        <Trash2 size={16} /> 移除
+                        <AnimatedButtonIcon idle={<Trash2 size={16} />} size={16} /> 移除
                       </button>
                     )}
                   </div>
@@ -339,21 +340,21 @@ export function ProductManager({ products, token, onSaved }: {
               <label className="toggle-field"><input type="checkbox" checked={draft.active} onChange={(event) => setDraft({ ...draft, active: event.target.checked })} /><span><Check size={14} /></span>上架销售</label>
             </div>
 
-            <div className="variant-editor-heading"><strong>价格规格</strong><button type="button" onClick={() => setDraft({ ...draft, variants: [...draft.variants, emptyVariant()] })}><Plus size={15} /> 添加规格</button></div>
+            <div className="variant-editor-heading"><strong>价格规格</strong><button type="button" onClick={() => setDraft({ ...draft, variants: [...draft.variants, emptyVariant()] })}><AnimatedButtonIcon idle={<Plus size={15} />} size={15} /> 添加规格</button></div>
             <div className="variant-editor-list">
               {draft.variants.map((variant, index) => (
                 <div className={`variant-editor-row ${variant.active ? "" : "inactive"}`} key={variant.id ?? `new-${index}`}>
                   <input aria-label="规格名称" value={variant.label} onChange={(event) => editVariant(index, { label: event.target.value })} placeholder="月卡" required />
                   <label className="price-input"><span>¥</span><input aria-label="价格" type="number" min="0.01" step="0.01" value={variant.priceYuan} onChange={(event) => editVariant(index, { priceYuan: event.target.value })} placeholder="89.90" required /></label>
                   <label className="mini-toggle" title={variant.active ? "停用规格" : "启用规格"}><input type="checkbox" checked={variant.active} onChange={(event) => editVariant(index, { active: event.target.checked })} /><span><Check size={12} /></span></label>
-                  <button className="remove-variant" type="button" onClick={() => removeVariant(index)} title={variant.id ? "移除规格（保存后停用）" : "删除规格"}><Trash2 size={15} /></button>
+                  <button className="remove-variant" type="button" onClick={() => removeVariant(index)} title={variant.id ? "移除规格（保存后停用）" : "删除规格"}><AnimatedButtonIcon idle={<Trash2 size={15} />} size={15} /></button>
                 </div>
               ))}
             </div>
             <div className="product-editor-actions">
-              {draft.id && <button className="product-availability-button" type="button" onClick={() => void toggleProductAvailability()} disabled={saving || deleting || uploadingImage}>{draft.active ? <EyeOff size={17} /> : <Eye size={17} />} {draft.active ? "下架商品" : "重新上架"}</button>}
-              {draft.id && <button className="product-delete-button" type="button" onClick={() => void deleteCurrentProduct()} disabled={saving || deleting || uploadingImage}><Trash2 size={17} /> {deleting ? "正在删除..." : "删除商品"}</button>}
-              <button className="primary-button" disabled={saving || deleting || uploadingImage}><Save size={18} /> {saving ? "正在保存..." : "保存商品"}</button>
+              {draft.id && <button className="product-availability-button" type="button" onClick={() => void toggleProductAvailability()} disabled={saving || deleting || uploadingImage}><AnimatedButtonIcon loading={saving} idle={draft.active ? <EyeOff size={17} /> : <Eye size={17} />} size={17} /> {draft.active ? "下架商品" : "重新上架"}</button>}
+              {draft.id && <button className="product-delete-button" type="button" onClick={() => void deleteCurrentProduct()} disabled={saving || deleting || uploadingImage}><AnimatedButtonIcon loading={deleting} idle={<Trash2 size={17} />} size={17} /> {deleting ? "正在删除..." : "删除商品"}</button>}
+              <button className="primary-button" disabled={saving || deleting || uploadingImage}><AnimatedButtonIcon loading={saving} idle={<Save size={18} />} /> {saving ? "正在保存..." : "保存商品"}</button>
             </div>
           </form>
         ) : (
@@ -362,7 +363,7 @@ export function ProductManager({ products, token, onSaved }: {
             type="button"
             onClick={toggleNewProduct}
           >
-            <Plus size={24} />
+            <AnimatedButtonIcon idle={<Plus size={24} />} size={24} />
             <span>选择商品编辑，或新增一个商品</span>
           </button>
         )}
@@ -374,7 +375,7 @@ function SortableProductRow({ product, selected, onEdit }: { product: AdminProdu
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: product.id });
   return (
     <tr ref={setNodeRef} className={isDragging ? "dragging" : ""} style={{ transform: CSS.Transform.toString(transform), transition }}>
-      <td><button className="drag-handle" type="button" aria-label={`长按拖动 ${product.name}`} title="长按拖动排序" {...attributes} {...listeners}><GripVertical size={17} /></button></td>
+      <td><button className="drag-handle" type="button" aria-label={`长按拖动 ${product.name}`} title="长按拖动排序" {...attributes} {...listeners}><AnimatedButtonIcon idle={<GripVertical size={17} />} size={17} /></button></td>
       <td><div className="product-table-name">
         <span className={`product-table-thumb ${product.imageUrl ? "has-image" : ""}`}>
           {product.imageUrl ? <Image src={product.imageUrl} alt="" fill sizes="38px" unoptimized /> : <ImagePlus size={15} />}
@@ -384,7 +385,7 @@ function SortableProductRow({ product, selected, onEdit }: { product: AdminProdu
       <td><code>{product.slug}</code></td>
       <td>{product.variants.filter((variant) => variant.active).length}</td>
       <td><span className={`status-badge ${product.active ? "status-delivered" : ""}`}>{product.active ? "上架" : "下架"}</span></td>
-      <td><button className={`table-action ${selected ? "selected" : ""}`} type="button" aria-pressed={selected} onClick={onEdit} title={selected ? `关闭 ${product.name} 编辑` : `编辑 ${product.name}`}><Pencil size={16} /></button></td>
+      <td><button className={`table-action ${selected ? "selected" : ""}`} type="button" aria-pressed={selected} onClick={onEdit} title={selected ? `关闭 ${product.name} 编辑` : `编辑 ${product.name}`}><AnimatedButtonIcon idle={<Pencil size={16} />} size={16} /></button></td>
     </tr>
   );
 }

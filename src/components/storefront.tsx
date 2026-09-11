@@ -15,6 +15,7 @@ import { StoreHeroTitle } from "@/components/store-hero-title";
 import { ProductThumbnail } from "@/components/product-thumbnail";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { AnimatedButtonIcon } from "@/components/ui/animated-state-icons";
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
@@ -140,8 +141,8 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                 <StoreHeroTitle />
                 <p>从选择规格到安全付款，再到卡密自动发放，每一步都清晰、快速且可追溯。</p>
                 <div className="store-hero-actions">
-                  <button type="button" className="store-hero-primary" onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })}>立即选购 <ArrowRight size={18} /></button>
-                  <Link className="store-hero-secondary" href="/orders"><Search size={17} /> 查询订单</Link>
+                  <button type="button" className="store-hero-primary" onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })}>立即选购 <AnimatedButtonIcon idle={<ArrowRight size={18} />} /></button>
+                  <Link className="store-hero-secondary" href="/orders"><AnimatedButtonIcon idle={<Search size={17} />} /> 查询订单</Link>
                 </div>
               </div>
               <div className="store-hero-stats scroll-reveal" data-scroll-reveal>
@@ -190,16 +191,6 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                 <span className="category-label">{product.category}</span>
                 <h1>{product.name}</h1>
                 <p className="product-description">{product.description}</p>
-                {product.contactEnabled && (
-                  <div className="product-contact" aria-label="商品联系方式">
-                    <span className="product-contact-title">需要联系我</span>
-                    <div className="product-contact-links">
-                      <a href="mailto:support@reiishop.cn"><Mail size={14} aria-hidden="true" /> support@reiishop.cn</a>
-                      <a href="https://discord.gg/MmXRuWnrQT" target="_blank" rel="noreferrer"><MessageCircle size={14} aria-hidden="true" /> Discord 频道</a>
-                      <span><Users size={14} aria-hidden="true" /> QQ 群 1107140300</span>
-                    </div>
-                  </div>
-                )}
               </div>
               <div className="trust-row">
                 <span><PackageCheck size={17} /> 支付后自动发货</span>
@@ -226,6 +217,16 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                 { value: "wechat", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/wechat-pay.svg" alt="" width={22} height={22} />微信支付</span>, accessibleLabel: "微信支付", disabled: !wechatEnabled },
                 { value: "alipay", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/alipay.svg" alt="" width={22} height={22} />支付宝</span>, accessibleLabel: "支付宝" },
               ]} />
+              {product.contactEnabled && (
+                <div className="product-contact product-contact-payment" aria-label="商品联系方式">
+                  <span className="product-contact-title">需要联系我</span>
+                  <div className="product-contact-links">
+                    <a href="mailto:support@reiishop.cn"><Mail size={14} aria-hidden="true" /> support@reiishop.cn</a>
+                    <a href="https://discord.gg/MmXRuWnrQT" target="_blank" rel="noreferrer"><MessageCircle size={14} aria-hidden="true" /> Discord 频道</a>
+                    <span><Users size={14} aria-hidden="true" /> QQ 群 1107140300</span>
+                  </div>
+                </div>
+              )}
               <div className="order-total"><span>应付金额</span><strong>{selected ? money(selected.priceCents) : "--"}</strong></div>
               <label className="digital-terms-confirmation">
                 <input
@@ -248,7 +249,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
               )}
               {error && <p className="form-error">{error}</p>}
               <button className="primary-button" disabled={submitting || !selected || selected.availableCount < 1 || !acceptedDigitalTerms || Boolean(turnstileSiteKey && !turnstileToken)}>
-                <ShoppingBag size={18} /> {submitting ? "正在创建订单..." : "提交订单"} <ArrowRight size={18} />
+                <AnimatedButtonIcon loading={submitting} idle={<ShoppingBag size={18} />} /> {submitting ? "正在创建订单..." : "提交订单"} <AnimatedButtonIcon className="button-trailing-icon" idle={<ArrowRight size={18} />} />
               </button>
               <p className="purchase-note">支付成功并通过平台确认后自动发卡，请确认接收邮箱填写正确。</p>
             </form>
@@ -283,7 +284,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                     <span>下单邮箱</span>
                     <input type="email" value={lookup.email} onChange={(event) => setLookup({ ...lookup, email: event.target.value })} placeholder="name@example.com" autoComplete="email" required />
                   </label>
-                  <button type="submit"><Search size={18} /> 查询订单</button>
+                  <button type="submit"><AnimatedButtonIcon idle={<Search size={18} />} /> 查询订单</button>
                 </div>
                 <div className="lookup-feedback" aria-live="polite">
                   {lookupError && <p className="form-error" role="alert">{lookupError}</p>}
@@ -323,7 +324,7 @@ function OrderResultView({ order }: { order: OrderResult }) {
       <div><span>订单号</span><strong>{order.orderNo}</strong></div>
       <div><span>状态</span><strong>{statusText(order.status)}</strong></div>
       {order.licenseKey && (
-        <div className="delivered-key"><span>已交付卡密</span><code>{order.licenseKey}</code><button type="button" onClick={copyKey}><Copy size={16} /> {copied ? "已复制" : "复制"}</button></div>
+        <div className="delivered-key"><span>已交付卡密</span><code>{order.licenseKey}</code><button type="button" onClick={copyKey}><AnimatedButtonIcon success={copied} idle={<Copy size={16} />} /> {copied ? "已复制" : "复制"}</button></div>
       )}
     </div>
   );
