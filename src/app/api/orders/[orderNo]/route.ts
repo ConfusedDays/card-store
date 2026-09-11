@@ -37,7 +37,9 @@ export async function GET(request: Request, context: { params: Promise<{ orderNo
         }
       }
     } catch {
-      return NextResponse.json({ error: "支付结果暂未确认，请稍后重试" }, { status: 503 });
+      // A provider timeout must not hide a valid pending order. Return the
+      // current order so checkout and order lookup can keep showing its state
+      // and retry reconciliation on the next request.
     }
   }
 

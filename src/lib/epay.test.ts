@@ -241,6 +241,17 @@ describe("verified callback + active query + transactional fulfillment", () => {
     expect((await response.json()).status).toBe("delivered");
   });
 
+  it("keeps a pending order viewable when the payment query is temporarily unavailable", async () => {
+    const order = newOrder();
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("temporary gateway timeout")));
+    const { GET } = await import("@/app/api/orders/[orderNo]/route");
+    const response = await GET(new Request(`https://shop.example/api/orders/${order.orderNo}?email=epay-test@example.com&reconcile=payment`), {
+      params: Promise.resolve({ orderNo: order.orderNo }),
+    });
+    expect(response.status).toBe(200);
+    expect((await response.json()).status).toBe("pending");
+  });
+
   it("fulfills the wxpay channel as wechat", async () => {
     const order = newOrder("wechat");
     mockQuery(query(order, { type: "wxpay" }));
