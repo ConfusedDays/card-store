@@ -50,6 +50,7 @@ export function AdminDashboard() {
   const [copiedKeyId, setCopiedKeyId] = useState<number | null>(null);
   const [orderMessage, setOrderMessage] = useState("");
   const [resendingOrderNo, setResendingOrderNo] = useState("");
+  const [manualDeliveryOrderNo, setManualDeliveryOrderNo] = useState("");
   const [recycledOrders, setRecycledOrders] = useState<RecycledOrder[]>([]);
   const [recycleLoading, setRecycleLoading] = useState(false);
   const [backupPassphrase, setBackupPassphrase] = useState("");
@@ -410,6 +411,34 @@ export function AdminDashboard() {
     );
   }
 
+  async function manuallyDeliverOrder(orderNo: string, email: string) {
+    if (!window.confirm(`确认已收到订单 ${orderNo} 的款项，并向 ${email} 手动发卡吗？\n\n此操作会直接消耗该商品规格的一张可用卡密。`)) return;
+    setManualDeliveryOrderNo(orderNo);
+    setOrderMessage("");
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/orders/${encodeURIComponent(orderNo)}/manual-delivery`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "手动发卡失败");
+      const emailMessage = data.emailStatus === "sent"
+        ? "卡密邮件已发送"
+        : data.emailStatus === "failed"
+          ? "卡密已发放，但邮件发送失败，请稍后重试"
+          : data.emailStatus === "disabled"
+            ? "卡密已发放，但邮件服务尚未配置"
+            : "卡密已发放，邮件等待发送";
+      setOrderMessage(`订单 ${orderNo} 已手动发卡，${emailMessage}`);
+      await loadOverview();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "手动发卡失败");
+    } finally {
+      setManualDeliveryOrderNo("");
+    }
+  }
+
   async function recycleOrder(orderNo: string) {
     if (!window.confirm(`确认将订单 ${orderNo} 移入回收站吗？\n\n订单和发卡记录会保留，可在回收站恢复。`)) return;
     setOrderMessage("");
@@ -586,7 +615,7 @@ export function AdminDashboard() {
                 <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
                 <td><span className={`email-status email-status-${emailStatus}`} title={order.emailLastError ?? undefined}>{emailLabel}{order.emailAttempts ? ` · ${order.emailAttempts}次` : ""}</span></td>
                 <td>{new Date(order.createdAt.replace(" ", "T") + "Z").toLocaleString("zh-CN")}</td>
-                <td className="order-action-cell"><div className="order-action-buttons">{order.status === "delivered" && <button className="resend-email-button" type="button" disabled={resendingOrderNo === order.orderNo} onClick={() => void resendDeliveryEmail(order.orderNo, order.email)} title="重新发送卡密邮件">{resendingOrderNo === order.orderNo ? <LoaderCircle className="spin" size={15} /> : <Send size={15} />}<span>{resendingOrderNo === order.orderNo ? "发送中" : "重新发送"}</span></button>}<button className="order-recycle-button" type="button" onClick={() => void recycleOrder(order.orderNo)} title="移入回收站"><Trash2 size={15} /><span>删除</span></button></div></td>
+                <td className="order-action-cell"><div className="order-action-buttons">{order.status === "pending" && <button className="manual-delivery-button" type="button" disabled={manualDeliveryOrderNo === order.orderNo} onClick={() => void manuallyDeliverOrder(order.orderNo, order.email)} title="确认收款后手动发卡">{manualDeliveryOrderNo === order.orderNo ? <LoaderCircle className="spin" size={15} /> : <PackagePlus size={15} />}<span>{manualDeliveryOrderNo === order.orderNo ? "发卡中" : "手动发卡"}</span></button>}{order.status === "delivered" && <button className="resend-email-button" type="button" disabled={resendingOrderNo === order.orderNo} onClick={() => void resendDeliveryEmail(order.orderNo, order.email)} title="重新发送卡密邮件">{resendingOrderNo === order.orderNo ? <LoaderCircle className="spin" size={15} /> : <Send size={15} />}<span>{resendingOrderNo === order.orderNo ? "发送中" : "重新发送"}</span></button>}<button className="order-recycle-button" type="button" onClick={() => void recycleOrder(order.orderNo)} title="移入回收站"><Trash2 size={15} /><span>删除</span></button></div></td>
               </tr>;
             }) : <tr><td colSpan={8} className="empty-cell">暂无订单</td></tr>}
           </tbody></table></div>

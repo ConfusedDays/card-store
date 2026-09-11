@@ -868,6 +868,11 @@ tbody tr:last-child td { border-bottom: 0; }
 .resend-email-button:active:not(:disabled) { transform: scale(.92); box-shadow: none; }
 .resend-email-button:disabled { cursor: wait; opacity: .58; }
 .resend-email-button:focus-visible { outline: 2px solid color-mix(in srgb, var(--teal) 45%, transparent); outline-offset: 2px; }
+.manual-delivery-button { height: 32px; padding: 0 10px; border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line)); border-radius: 5px; color: #735514; background: color-mix(in srgb, var(--accent) 14%, #fff); display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 720; cursor: pointer; transition: color .22s ease, border-color .22s ease, background-color .22s ease, transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s ease; }
+.manual-delivery-button:hover:not(:disabled) { color: #513a0a; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 28%, #fff); transform: translateY(-2px); box-shadow: 0 6px 14px rgba(29,47,42,.1); }
+.manual-delivery-button:active:not(:disabled) { transform: scale(.92); box-shadow: none; }
+.manual-delivery-button:disabled { cursor: wait; opacity: .58; }
+.manual-delivery-button:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
 .order-recycle-button, .order-purge-button { height: 32px; padding: 0 9px; border: 1px solid color-mix(in srgb, var(--danger) 48%, var(--line)); border-radius: 5px; color: var(--danger); background: transparent; display: inline-flex; align-items: center; justify-content: center; gap: 5px; font-size: 11px; font-weight: 720; transition: color .2s ease, border-color .2s ease, background-color .2s ease, transform .2s ease; }
 .order-recycle-button:hover, .order-purge-button:hover { color: #fff; border-color: var(--danger); background: var(--danger); transform: translateY(-1px); }
 .order-recycle-bin { margin-top: 18px; padding: 18px; }

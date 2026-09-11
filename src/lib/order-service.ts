@@ -145,6 +145,47 @@ export function completePaidOrder(input: {
   return tx() as OrderResult;
 }
 
+/**
+ * Issue one card for an order whose payment needs to be confirmed manually.
+ * This deliberately does not create a payment record: the admin is only
+ * confirming fulfillment, not fabricating a provider transaction.
+ */
+export function manuallyDeliverPendingOrder(orderNo: string): OrderResult {
+  const tx = db.transaction(() => {
+    const order = db.prepare(`
+      SELECT o.*, v.label as variantLabel
+      FROM orders o JOIN variants v ON v.id = o.variant_id
+      WHERE o.order_no = ? AND o.deleted_at IS NULL
+    `).get(orderNo) as StoredOrder | undefined;
+    if (!order) throw new Error("订单不存在");
+    if (order.status !== "pending") {
+      throw new Error(`订单当前状态为 ${order.status}，仅 pending 订单可手动发卡`);
+    }
+
+    const key = db.prepare(`
+      SELECT id, key_ciphertext FROM license_keys
+      WHERE variant_id = ? AND status = 'available' ORDER BY id LIMIT 1
+    `).get(order.variant_id) as { id: number; key_ciphertext: string } | undefined;
+    if (!key) throw new Error("该规格暂无可用卡密，无法手动发卡");
+
+    const claimed = db.prepare(`
+      UPDATE license_keys SET status = 'sold', order_no = ?, sold_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND status = 'available'
+    `).run(orderNo, key.id);
+    if (claimed.changes !== 1) throw new Error("库存分配冲突，请刷新后重试");
+
+    db.prepare("INSERT INTO deliveries (order_no, license_key_id, key_ciphertext) VALUES (?, ?, ?)")
+      .run(orderNo, key.id, key.key_ciphertext);
+    db.prepare("UPDATE orders SET status = 'delivered' WHERE order_no = ? AND status = 'pending'")
+      .run(orderNo);
+    db.prepare("INSERT OR IGNORE INTO delivery_emails (order_no) VALUES (?)").run(orderNo);
+    db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
+      .run("order.manually_delivered", "order", orderNo, JSON.stringify({ keyId: key.id }));
+    return toOrderResult({ ...order, status: "delivered" });
+  });
+  return tx() as OrderResult;
+}
+
 function getDeliveryKey(orderNo: string) {
   const delivery = db.prepare(`SELECT key_ciphertext FROM deliveries WHERE order_no = ?`).get(orderNo) as { key_ciphertext: string } | undefined;
   return delivery ? decryptLicenseKey(delivery.key_ciphertext) : undefined;
