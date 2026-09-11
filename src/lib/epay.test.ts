@@ -114,6 +114,20 @@ describe("V2 RSA protocol", () => {
     expect(() => parseEpayQuery(query(order, { money: "1e2" }), order.orderNo)).toThrow();
   });
 
+  it("accepts a signed query response when the platform omits the optional pid", () => {
+    const order = newOrder();
+    const result = platformSigned({ code: 0, status: 2, trade_no: `T${order.orderNo}`, out_trade_no: order.orderNo,
+      type: "alipay", money: (order.amountCents / 100).toFixed(2), timestamp: String(Math.floor(Date.now() / 1000)) });
+    expect(parseEpayQuery(result, order.orderNo)?.providerRef).toBe(`T${order.orderNo}`);
+  });
+
+  it("accepts a signed query response with only the requested platform reference", () => {
+    const order = newOrder();
+    const result = platformSigned({ code: 0, status: 2, trade_no: `T${order.orderNo}`,
+      type: "alipay", money: (order.amountCents / 100).toFixed(2), timestamp: String(Math.floor(Date.now() / 1000)) });
+    expect(parseEpayQuery(result, order.orderNo, `T${order.orderNo}`)?.merchantOrderNo).toBe(order.orderNo);
+  });
+
   it("accepts the alternate platform trade number field", () => {
     const order = newOrder();
     const trade = parseEpayQuery(query(order, { trade_no: "", api_trade_no: `API${order.orderNo}` }), order.orderNo);
@@ -170,7 +184,7 @@ describe("verified callback + active query + transactional fulfillment", () => {
     expect(url.href).toBe("https://gateway.example/xpay/epayn/api/pay/query");
     expect(options.redirect).toBe("error");
     const fields = Object.fromEntries(new URLSearchParams(String(options.body)));
-    expect(fields.out_trade_no).toBe(order.orderNo);
+    expect(fields.trade_no).toBe(`T${order.orderNo}`);
     expect(verify("sha256", Buffer.from(canonicalEpayParameters(fields)), merchant.publicKey, Buffer.from(fields.sign, "base64"))).toBe(true);
   });
 

@@ -131,10 +131,17 @@ export function parseEpayNotification(params: Record<string, string>) {
     amountCents: cnyToCents(params.money), paymentMethod: paymentMethod(params.type) };
 }
 
-export function parseEpayQuery(result: Parameters, expectedOrderNo: string): EpayTrade | null {
+export function parseEpayQuery(result: Parameters, expectedOrderNo: string, expectedProviderRef?: string): EpayTrade | null {
   if (!verifyEpayParameters(result)) throw new Error("聚合支付查单验签失败");
   if (String(result.code) !== "0") throw new Error("聚合支付查单失败");
-  if (String(result.pid) !== getEpayConfig().pid || result.out_trade_no !== expectedOrderNo) {
+  const configuredPid = getEpayConfig().pid;
+  const merchantOrderNo = typeof result.out_trade_no === "string" && result.out_trade_no ? result.out_trade_no : undefined;
+  const providerRefs = [result.trade_no, result.api_trade_no]
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+  const providerRefMatches = Boolean(expectedProviderRef && providerRefs.includes(expectedProviderRef));
+  if ((result.pid !== undefined && result.pid !== null && String(result.pid) !== configuredPid)
+    || (merchantOrderNo !== undefined && merchantOrderNo !== expectedOrderNo)
+    || (merchantOrderNo === undefined && !providerRefMatches)) {
     throw new Error("聚合支付查单商户或订单号不匹配");
   }
   const timestamp = String(result.timestamp ?? "");
@@ -144,26 +151,23 @@ export function parseEpayQuery(result: Parameters, expectedOrderNo: string): Epa
   // Epay V2 uses 1 for pending and 2 for paid. Do not fulfill while pending.
   if (String(result.status) === "1") return null;
   if (String(result.status) !== "2") throw new Error("聚合支付查单状态无效");
-  const providerRef = typeof result.trade_no === "string" && result.trade_no
-    ? result.trade_no
-    : typeof result.api_trade_no === "string" && result.api_trade_no
-      ? result.api_trade_no
-      : typeof result.out_trade_no === "string" && result.out_trade_no
-        ? result.out_trade_no
-        : "";
+  const providerRef = providerRefs[0] ?? merchantOrderNo ?? "";
   if (!providerRef) throw new Error("聚合支付查单流水缺失");
-  return { providerRef, providerRefs: [result.trade_no, result.api_trade_no].filter((value): value is string => typeof value === "string" && value.length > 0), merchantOrderNo: typeof result.out_trade_no === "string" ? result.out_trade_no : undefined, amountCents: cnyToCents(String(result.money)), paymentMethod: paymentMethod(result.type) };
+  return { providerRef, providerRefs, merchantOrderNo: merchantOrderNo ?? expectedOrderNo, amountCents: cnyToCents(String(result.money)), paymentMethod: paymentMethod(result.type) };
 }
 
-export async function queryEpayTrade(orderNo: string) {
+export async function queryEpayTrade(orderNo: string, providerRef?: string) {
   const { gateway, pid } = getEpayConfig();
   try {
     let response: Response;
     try {
+      const query: Record<string, string> = { pid, timestamp: String(Math.floor(Date.now() / 1000)) };
+      if (providerRef) query.trade_no = providerRef;
+      else query.out_trade_no = orderNo;
       response = await fetch(new URL("api/pay/query", gateway), {
         method: "POST", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(10_000),
         headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(signEpayParameters({ pid, out_trade_no: orderNo, timestamp: String(Math.floor(Date.now() / 1000)) })),
+        body: new URLSearchParams(signEpayParameters(query)),
       });
     } catch {
       throw new EpayQueryUnavailable();
@@ -176,10 +180,10 @@ export async function queryEpayTrade(orderNo: string) {
       throw new EpayQueryUnavailable();
     }
     if (!result || typeof result !== "object" || Array.isArray(result)) throw new EpayQueryUnavailable();
-    return parseEpayQuery(result as Parameters, orderNo);
+    return parseEpayQuery(result as Parameters, orderNo, providerRef);
   } catch (error) {
     // Keep enough observability for live integration issues without logging credentials or response payloads.
     console.error("Epay V2 order query failed", error instanceof Error ? error.message : "Unknown error");
-    throw error instanceof EpayQueryUnavailable ? error : new Error("聚合支付查单未通过，请稍后重试");
+    throw error instanceof Error ? error : new Error("聚合支付查单未通过，请稍后重试");
   }
 }

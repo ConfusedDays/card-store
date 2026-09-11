@@ -10,7 +10,7 @@ export async function reconcileEpayOrder(orderNo: string, notification?: EpayTra
   }
   let trade: EpayTrade | null;
   try {
-    trade = await queryEpayTrade(orderNo);
+    trade = await queryEpayTrade(orderNo, notification?.providerRefs?.[0]);
   } catch (error) {
     if (!notification || !(error instanceof EpayQueryUnavailable)) throw error;
     // The callback itself is already authenticated with the platform public
