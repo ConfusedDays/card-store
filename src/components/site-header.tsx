@@ -88,7 +88,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         onClick={refreshPage}
       >
         <span className="brand-mark brand-photo"><Image src="/reii-bear.jpg" alt="" width={34} height={34} priority /></span>
-        <span>Reii小店</span>
+        <span>{active === "catalog" ? <TextEffect className="brand-title-effect" delay={0.04}>Reii小店</TextEffect> : "Reii小店"}</span>
       </Link>
       <nav className="nav-links" aria-label="主导航">
         <div className="nav-items">
