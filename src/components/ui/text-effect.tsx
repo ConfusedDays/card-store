@@ -11,6 +11,7 @@ type TextEffectProps = {
   delay?: number;
   per?: "word" | "char";
   hover?: boolean;
+  forceMotion?: boolean;
 };
 
 const character: Variants = {
@@ -26,11 +27,11 @@ const character: Variants = {
   hover: { y: -3, filter: "blur(0px)", transition: { duration: 0.24, ease: [0.16, 1, 0.3, 1] } },
 };
 
-export function TextEffect({ children, className, delay = 0, per = "char", hover = false }: TextEffectProps) {
+export function TextEffect({ children, className, delay = 0, per = "char", hover = false, forceMotion = false }: TextEffectProps) {
   const reducedMotion = useReducedMotion();
   const segments = per === "word" ? children.split(/(\s+)/) : Array.from(children);
 
-  if (reducedMotion) return <span className={className}>{children}</span>;
+  if (reducedMotion && !forceMotion) return <span className={className}>{children}</span>;
 
   const stagger = per === "word" ? 0.2 : 0.17;
 
