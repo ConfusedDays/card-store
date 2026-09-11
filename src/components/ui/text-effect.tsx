@@ -12,6 +12,8 @@ type TextEffectProps = {
   per?: "word" | "char";
   hover?: boolean;
   forceMotion?: boolean;
+  duration?: number;
+  stagger?: number;
 };
 
 const character: Variants = {
@@ -27,13 +29,13 @@ const character: Variants = {
   hover: { y: -3, filter: "blur(0px)", transition: { duration: 0.24, ease: [0.16, 1, 0.3, 1] } },
 };
 
-export function TextEffect({ children, className, delay = 0, per = "char", hover = false, forceMotion = false }: TextEffectProps) {
+export function TextEffect({ children, className, delay = 0, per = "char", hover = false, forceMotion = false, duration = 1.3, stagger: staggerProp }: TextEffectProps) {
   const reducedMotion = useReducedMotion();
   const segments = per === "word" ? children.split(/(\s+)/) : Array.from(children);
 
   if (reducedMotion && !forceMotion) return <span className={className}>{children}</span>;
 
-  const stagger = per === "word" ? 0.2 : 0.17;
+  const stagger = staggerProp ?? (per === "word" ? 0.2 : 0.17);
 
   return (
     <motion.span aria-label={children} className={cn("inline-flex whitespace-pre text-effect", className)} whileHover={hover ? "hover" : undefined} whileFocus={hover ? "hover" : undefined}>
@@ -44,7 +46,7 @@ export function TextEffect({ children, className, delay = 0, per = "char", hover
           className="inline-block whitespace-pre text-effect-char"
           initial="hidden"
           animate="visible"
-          custom={{ delay: delay + index * stagger }}
+          custom={{ delay: delay + index * stagger, duration }}
           variants={character}
         >
           {segment}

@@ -16,6 +16,7 @@ import { ProductThumbnail } from "@/components/product-thumbnail";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { AnimatedButtonIcon } from "@/components/ui/animated-state-icons";
+import { TextEffect } from "@/components/ui/text-effect";
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
@@ -139,7 +140,11 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
               <div className="store-hero-copy scroll-reveal" data-scroll-reveal>
                 <span className="store-hero-badge"><Sparkles size={15} /> 数字商品，即时交付</span>
                 <StoreHeroTitle />
-                <p>从选择规格到安全付款，再到卡密自动发放，每一步都清晰、快速且可追溯。</p>
+                <p>
+                  <TextEffect className="store-hero-description-effect" delay={1.05} duration={0.9} stagger={0.04} hover forceMotion>
+                    从选择规格到安全付款，再到卡密自动发放，每一步都清晰、快速且可追溯。
+                  </TextEffect>
+                </p>
                 <div className="store-hero-actions">
                   <button type="button" className="store-hero-primary" onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })}>立即选购 <AnimatedButtonIcon idle={<ArrowRight size={18} />} /></button>
                   <Link className="store-hero-secondary" href="/orders"><AnimatedButtonIcon idle={<Search size={17} />} /> 查询订单</Link>
