@@ -11,10 +11,13 @@ export async function reconcileEpayOrder(orderNo: string, notification?: EpayTra
   const trade = await queryEpayTrade(orderNo);
   if (!trade) return null;
   if (notification) {
-    const notificationRefs = notification.providerRefs ?? [notification.providerRef];
-    const tradeRefs = trade.providerRefs ?? [trade.providerRef];
+    const notificationRefs = notification.providerRefs?.length ? notification.providerRefs : [];
+    const tradeRefs = trade.providerRefs?.length ? trade.providerRefs : [];
+    const referenceMatches = notificationRefs.length > 0 && tradeRefs.length > 0
+      ? tradeRefs.some((reference) => notificationRefs.includes(reference))
+      : notification.merchantOrderNo === trade.merchantOrderNo;
     if (trade.amountCents !== notification.amountCents || trade.paymentMethod !== notification.paymentMethod
-      || !tradeRefs.some((reference) => notificationRefs.includes(reference))) throw new Error("通知与查单结果不匹配");
+      || !referenceMatches) throw new Error("通知与查单结果不匹配");
   }
   return completePaidOrder({ orderNo, provider: "epay", ...trade });
 }

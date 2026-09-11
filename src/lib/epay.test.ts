@@ -120,6 +120,8 @@ describe("V2 RSA protocol", () => {
     expect(trade?.providerRef).toBe(`API${order.orderNo}`);
     const callback = parseEpayNotification(notification(order, { trade_no: "", api_trade_no: `API${order.orderNo}` }));
     expect(callback?.providerRef).toBe(`API${order.orderNo}`);
+    const merchantRef = parseEpayQuery(query(order, { trade_no: "", api_trade_no: "" }), order.orderNo);
+    expect(merchantRef?.providerRef).toBe(order.orderNo);
   });
 });
 
