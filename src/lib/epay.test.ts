@@ -3,7 +3,7 @@ import { generateKeyPairSync, sign, verify } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { canonicalEpayParameters, createEpayCheckoutToken, createEpayPagePayment, getEpayConfig, parseEpayQuery, readEpayCheckoutToken, signEpayParameters, verifyEpayParameters } from "./epay";
+import { canonicalEpayParameters, createEpayCheckoutToken, createEpayPagePayment, getEpayConfig, parseEpayNotification, parseEpayQuery, readEpayCheckoutToken, signEpayParameters, verifyEpayParameters } from "./epay";
 import { createPaymentCheckout } from "./payment-provider";
 
 const merchant = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -112,6 +112,14 @@ describe("V2 RSA protocol", () => {
     expect(() => parseEpayQuery(query(order, { out_trade_no: "OTHER" }), order.orderNo)).toThrow("不匹配");
     expect(() => parseEpayQuery(query(order, { status: 3 }), order.orderNo)).toThrow("状态无效");
     expect(() => parseEpayQuery(query(order, { money: "1e2" }), order.orderNo)).toThrow();
+  });
+
+  it("accepts the alternate platform trade number field", () => {
+    const order = newOrder();
+    const trade = parseEpayQuery(query(order, { trade_no: "", api_trade_no: `API${order.orderNo}` }), order.orderNo);
+    expect(trade?.providerRef).toBe(`API${order.orderNo}`);
+    const callback = parseEpayNotification(notification(order, { trade_no: "", api_trade_no: `API${order.orderNo}` }));
+    expect(callback?.providerRef).toBe(`API${order.orderNo}`);
   });
 });
 

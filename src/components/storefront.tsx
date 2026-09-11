@@ -113,7 +113,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
     setLookupError("");
     setLookupResult(null);
     try {
-      const response = await fetch(`/api/orders/${encodeURIComponent(lookup.orderNo.trim())}?email=${encodeURIComponent(lookup.email.trim())}`);
+      const response = await fetch(`/api/orders/${encodeURIComponent(lookup.orderNo.trim())}?email=${encodeURIComponent(lookup.email.trim())}&reconcile=payment`, { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "查询失败");
       setLookupResult(data);

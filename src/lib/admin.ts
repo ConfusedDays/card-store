@@ -199,10 +199,12 @@ export function getAdminInventoryKeys(options: { variantId?: string; status?: st
   });
 }
 
-export function updateInventoryKeys(ids: number[], status: "available" | "disabled") {
+export function updateInventoryKeys(ids: number[], status: "available" | "disabled" | "sold") {
   if (!ids.length) throw new Error("请选择至少一条卡密");
   const placeholders = ids.map(() => "?").join(",");
-  const result = db.prepare(`UPDATE license_keys SET status = ? WHERE id IN (${placeholders})`).run(status, ...ids);
+  const result = status === "sold"
+    ? db.prepare(`UPDATE license_keys SET status = 'sold', sold_at = COALESCE(sold_at, CURRENT_TIMESTAMP) WHERE id IN (${placeholders})`).run(...ids)
+    : db.prepare(`UPDATE license_keys SET status = ? WHERE id IN (${placeholders})`).run(status, ...ids);
   db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
     .run("inventory.status_updated", "license_key", ids.join(","), JSON.stringify({ status, updated: result.changes }));
   return { updated: result.changes };

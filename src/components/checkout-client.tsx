@@ -47,7 +47,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
       attempts += 1;
       try {
         const returnedFromPayment = new URLSearchParams(window.location.search).get("payment") === "returned";
-        const reconcile = returnedFromPayment && (attempts === 1 || attempts % 10 === 0) ? "&reconcile=payment" : "";
+        const reconcile = returnedFromPayment && (attempts <= 3 || attempts % 5 === 0) ? "&reconcile=payment" : "";
         const response = await fetch(`/api/orders/${encodeURIComponent(order.orderNo)}?email=${encodeURIComponent(email ?? "")}${reconcile}`, {
           cache: "no-store",
         });

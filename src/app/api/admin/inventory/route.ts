@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   if (!(await isAdminRequest(request))) return NextResponse.json({ error: "管理员凭证无效" }, { status: 401 });
-  try { const input = selectedSchema.extend({ status: z.enum(["available", "disabled"]) }).parse(await request.json()); return NextResponse.json(updateInventoryKeys(input.ids, input.status)); }
+  try { const input = selectedSchema.extend({ status: z.enum(["available", "disabled", "sold"]) }).parse(await request.json()); return NextResponse.json(updateInventoryKeys(input.ids, input.status)); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "更新失败" }, { status: 400 }); }
 }
 

@@ -3,7 +3,7 @@ import { centsToCny, cnyToCents } from "@/lib/payment-money";
 
 type Parameters = Record<string, string | number | null>;
 export type EpayMethod = "alipay" | "wechat";
-export type EpayTrade = { providerRef: string; amountCents: number; paymentMethod: EpayMethod };
+export type EpayTrade = { providerRef: string; providerRefs?: string[]; amountCents: number; paymentMethod: EpayMethod };
 
 function required(name: string) {
   const value = process.env[name]?.trim();
@@ -118,8 +118,9 @@ export function parseEpayNotification(params: Record<string, string>) {
   if (!verifyEpayParameters(params)) throw new Error("聚合支付通知验签失败");
   if (params.pid !== getEpayConfig().pid) throw new Error("聚合支付商户不匹配");
   if (params.trade_status !== "TRADE_SUCCESS") return null;
-  if (!params.out_trade_no || !params.trade_no) throw new Error("聚合支付通知字段缺失");
-  return { orderNo: params.out_trade_no, providerRef: params.trade_no,
+  const providerRef = params.trade_no || params.api_trade_no;
+  if (!params.out_trade_no || !providerRef) throw new Error("聚合支付通知字段缺失");
+  return { orderNo: params.out_trade_no, providerRef, providerRefs: [params.trade_no, params.api_trade_no].filter(Boolean),
     amountCents: cnyToCents(params.money), paymentMethod: paymentMethod(params.type) };
 }
 
@@ -136,8 +137,13 @@ export function parseEpayQuery(result: Parameters, expectedOrderNo: string): Epa
   // Epay V2 uses 1 for pending and 2 for paid. Do not fulfill while pending.
   if (String(result.status) === "1") return null;
   if (String(result.status) !== "2") throw new Error("聚合支付查单状态无效");
-  if (typeof result.trade_no !== "string" || !result.trade_no) throw new Error("聚合支付查单流水缺失");
-  return { providerRef: result.trade_no, amountCents: cnyToCents(String(result.money)), paymentMethod: paymentMethod(result.type) };
+  const providerRef = typeof result.trade_no === "string" && result.trade_no
+    ? result.trade_no
+    : typeof result.api_trade_no === "string" && result.api_trade_no
+      ? result.api_trade_no
+      : "";
+  if (!providerRef) throw new Error("聚合支付查单流水缺失");
+  return { providerRef, providerRefs: [result.trade_no, result.api_trade_no].filter((value): value is string => typeof value === "string" && value.length > 0), amountCents: cnyToCents(String(result.money)), paymentMethod: paymentMethod(result.type) };
 }
 
 export async function queryEpayTrade(orderNo: string) {

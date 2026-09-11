@@ -10,7 +10,11 @@ export async function reconcileEpayOrder(orderNo: string, notification?: EpayTra
   }
   const trade = await queryEpayTrade(orderNo);
   if (!trade) return null;
-  if (notification && (trade.providerRef !== notification.providerRef || trade.amountCents !== notification.amountCents
-    || trade.paymentMethod !== notification.paymentMethod)) throw new Error("通知与查单结果不匹配");
+  if (notification) {
+    const notificationRefs = notification.providerRefs ?? [notification.providerRef];
+    const tradeRefs = trade.providerRefs ?? [trade.providerRef];
+    if (trade.amountCents !== notification.amountCents || trade.paymentMethod !== notification.paymentMethod
+      || !tradeRefs.some((reference) => notificationRefs.includes(reference))) throw new Error("通知与查单结果不匹配");
+  }
   return completePaidOrder({ orderNo, provider: "epay", ...trade });
 }

@@ -14,6 +14,7 @@ let getRecycledOrders: typeof import("./admin").getRecycledOrders;
 let recycleOrders: typeof import("./admin").recycleOrders;
 let restoreOrders: typeof import("./admin").restoreOrders;
 let permanentlyDeleteOrders: typeof import("./admin").permanentlyDeleteOrders;
+let updateInventoryKeys: typeof import("./admin").updateInventoryKeys;
 let seed: () => void;
 
 beforeAll(async () => {
@@ -22,7 +23,7 @@ beforeAll(async () => {
   ({ db: database, seedCatalog: seed } = await import("./db"));
   seed();
   ({ createPendingOrder, completePaidOrder, manuallyDeliverPendingOrder, getOrderForCustomer } = await import("./order-service"));
-  ({ getAdminOverview, getRecycledOrders, recycleOrders, restoreOrders, permanentlyDeleteOrders } = await import("./admin"));
+  ({ getAdminOverview, getRecycledOrders, recycleOrders, restoreOrders, permanentlyDeleteOrders, updateInventoryKeys } = await import("./admin"));
 });
 
 afterAll(() => {
@@ -43,6 +44,16 @@ describe("admin order recycle bin", () => {
     expect(() => manuallyDeliverPendingOrder(order.orderNo)).toThrow("仅 pending 订单可手动发卡");
     recycleOrders([order.orderNo]);
     permanentlyDeleteOrders([order.orderNo]);
+  });
+
+  it("marks selected inventory keys as used", () => {
+    const key = database.prepare("SELECT id FROM license_keys WHERE variant_id = ? AND status = 'available' ORDER BY id LIMIT 1")
+      .get("variant-license-30d") as { id: number };
+    expect(updateInventoryKeys([key.id], "sold")).toEqual({ updated: 1 });
+    expect(database.prepare("SELECT status, order_no as orderNo, sold_at as soldAt FROM license_keys WHERE id = ?").get(key.id))
+      .toMatchObject({ status: "sold", orderNo: null });
+    expect(database.prepare("SELECT sold_at IS NOT NULL as hasSoldAt FROM license_keys WHERE id = ?").get(key.id))
+      .toEqual({ hasSoldAt: 1 });
   });
 
   it("hides recycled orders from overview and restores them", () => {

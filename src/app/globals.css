@@ -818,16 +818,18 @@ tbody tr:last-child td { border-bottom: 0; }
 .inventory-bulk-actions > span strong { color: var(--text); font-size: 1rem; }
 .inventory-bulk-actions > small { color: var(--muted); font-size: 12px; }
 .inventory-operation-message { display: inline-flex; align-items: center; gap: 7px; margin: 0 0 10px; }
-.inventory-bulk-buttons { display: grid; grid-template-columns: repeat(3, minmax(92px, 118px)); gap: 9px; margin-left: auto; }
+.inventory-bulk-buttons { display: grid; grid-template-columns: repeat(4, minmax(82px, 118px)); gap: 9px; margin-left: auto; }
 .inventory-bulk-button { width: 100%; min-height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: color-mix(in srgb, var(--surface) 88%, transparent); color: var(--text); font-weight: 720; transition: transform .18s ease, border-color .18s ease, background-color .18s ease, color .18s ease; }
 .inventory-bulk-button:hover:not(:disabled) { transform: translateY(-2px); }
 .inventory-bulk-button:active:not(:disabled) { transform: translateY(0) scale(.98); }
 .inventory-bulk-button:disabled { cursor: not-allowed; opacity: .42; }
+.inventory-used-button { color: #166653; border-color: color-mix(in srgb, var(--teal) 36%, var(--line)); background: color-mix(in srgb, var(--teal) 9%, var(--surface)); }
+.inventory-used-button:hover:not(:disabled) { color: #0b4f40; border-color: var(--teal); background: color-mix(in srgb, var(--teal) 16%, var(--surface)); }
 .inventory-enable-button:hover:not(:disabled) { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 65%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .inventory-disable-button:hover:not(:disabled) { color: #eab866; border-color: rgba(234,184,102,.58); background: rgba(234,184,102,.09); }
 .inventory-delete-button { color: #e9988e; border-color: color-mix(in srgb, var(--danger) 42%, var(--line)); }
 .inventory-delete-button:hover:not(:disabled) { color: #fff; border-color: var(--danger); background: color-mix(in srgb, var(--danger) 78%, transparent); }
-@media (max-width: 620px) { .inventory-bulk-actions { align-items: stretch; flex-direction: column; } .inventory-bulk-buttons { width: 100%; grid-template-columns: repeat(3, 1fr); margin-left: 0; } }
+@media (max-width: 620px) { .inventory-bulk-actions { align-items: stretch; flex-direction: column; } .inventory-bulk-buttons { width: 100%; grid-template-columns: repeat(2, 1fr); margin-left: 0; } }
 .inventory-key-table { overflow-x: auto; }
 .inventory-key-table small { display: block; margin-top: 3px; color: var(--muted); }
 .inventory-key-row { animation: inventory-row-in .42s cubic-bezier(.22,1,.36,1) both; transition: background-color .2s ease, transform .2s ease; }
