@@ -212,11 +212,11 @@ describe("verified callback + active query + transactional fulfillment", () => {
     assertPending(order.orderNo);
   });
 
-  it("fails closed on network errors and succeeds when the callback is retried", async () => {
+  it("fulfills from an authenticated callback when the query temporarily fails", async () => {
     const order = newOrder();
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("test network timeout")));
-    expect((await notify.POST(request(notification(order)))).status).toBe(503);
-    assertPending(order.orderNo);
+    expect(await (await notify.POST(request(notification(order)))).text()).toBe("success");
+    expect(db.prepare("SELECT status FROM orders WHERE order_no = ?").get(order.orderNo)).toEqual({ status: "delivered" });
     mockQuery(query(order));
     expect(await (await notify.POST(request(notification(order)))).text()).toBe("success");
   });

@@ -5,6 +5,13 @@ type Parameters = Record<string, string | number | null>;
 export type EpayMethod = "alipay" | "wechat";
 export type EpayTrade = { providerRef: string; providerRefs?: string[]; merchantOrderNo?: string; amountCents: number; paymentMethod: EpayMethod };
 
+export class EpayQueryUnavailable extends Error {
+  constructor() {
+    super("聚合支付查单暂时不可用");
+    this.name = "EpayQueryUnavailable";
+  }
+}
+
 function required(name: string) {
   const value = process.env[name]?.trim();
   if (!value) throw new Error(`聚合支付配置缺少 ${name}`);
@@ -151,18 +158,28 @@ export function parseEpayQuery(result: Parameters, expectedOrderNo: string): Epa
 export async function queryEpayTrade(orderNo: string) {
   const { gateway, pid } = getEpayConfig();
   try {
-    const response = await fetch(new URL("api/pay/query", gateway), {
-      method: "POST", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(10_000),
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams(signEpayParameters({ pid, out_trade_no: orderNo, timestamp: String(Math.floor(Date.now() / 1000)) })),
-    });
-    if (!response.ok) throw new Error("HTTP error");
-    const result: unknown = await response.json();
-    if (!result || typeof result !== "object" || Array.isArray(result)) throw new Error("Invalid response");
+    let response: Response;
+    try {
+      response = await fetch(new URL("api/pay/query", gateway), {
+        method: "POST", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(10_000),
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(signEpayParameters({ pid, out_trade_no: orderNo, timestamp: String(Math.floor(Date.now() / 1000)) })),
+      });
+    } catch {
+      throw new EpayQueryUnavailable();
+    }
+    if (!response.ok) throw new EpayQueryUnavailable();
+    let result: unknown;
+    try {
+      result = await response.json();
+    } catch {
+      throw new EpayQueryUnavailable();
+    }
+    if (!result || typeof result !== "object" || Array.isArray(result)) throw new EpayQueryUnavailable();
     return parseEpayQuery(result as Parameters, orderNo);
   } catch (error) {
     // Keep enough observability for live integration issues without logging credentials or response payloads.
     console.error("Epay V2 order query failed", error instanceof Error ? error.message : "Unknown error");
-    throw new Error("聚合支付查单未通过，请稍后重试");
+    throw error instanceof EpayQueryUnavailable ? error : new Error("聚合支付查单未通过，请稍后重试");
   }
 }

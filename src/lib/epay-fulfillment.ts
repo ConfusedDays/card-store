@@ -1,6 +1,6 @@
 import { getCheckoutOrder } from "@/lib/checkout";
 import { completePaidOrder } from "@/lib/order-service";
-import { queryEpayTrade, type EpayTrade } from "@/lib/epay";
+import { EpayQueryUnavailable, queryEpayTrade, type EpayTrade } from "@/lib/epay";
 
 export async function reconcileEpayOrder(orderNo: string, notification?: EpayTrade) {
   const stored = getCheckoutOrder(orderNo);
@@ -8,7 +8,16 @@ export async function reconcileEpayOrder(orderNo: string, notification?: EpayTra
   if (notification && (notification.amountCents !== stored.amountCents || notification.paymentMethod !== stored.paymentMethod)) {
     throw new Error("通知与订单不匹配");
   }
-  const trade = await queryEpayTrade(orderNo);
+  let trade: EpayTrade | null;
+  try {
+    trade = await queryEpayTrade(orderNo);
+  } catch (error) {
+    if (!notification || !(error instanceof EpayQueryUnavailable)) throw error;
+    // The callback itself is already authenticated with the platform public
+    // key and has passed order, amount, channel and success-state checks.
+    // A temporary query outage must not leave a paid order stuck in pending.
+    trade = notification;
+  }
   if (!trade) return null;
   if (notification) {
     const notificationRefs = notification.providerRefs?.length ? notification.providerRefs : [];

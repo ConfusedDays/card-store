@@ -17,7 +17,7 @@ const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "curren
 export function CheckoutClient({ order, mockMode, paymentUrl }: { order: CheckoutOrder; mockMode: boolean; paymentUrl: string | null }) {
   const [result, setResult] = useState<OrderResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [polling, setPolling] = useState(!mockMode && !paymentUrl);
+  const [polling, setPolling] = useState(!mockMode);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [customerEmail, setCustomerEmail] = useState("");
@@ -30,9 +30,10 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
   }, [order.orderNo]);
 
   useEffect(() => {
-    if (mockMode || paymentUrl) return;
+    if (mockMode) return;
     const email = sessionStorage.getItem(`order-email:${order.orderNo}`);
     if (!email) {
+      if (paymentUrl) return;
       const missingEmailTimer = window.setTimeout(() => {
         setPolling(false);
         setError("当前浏览器没有本订单的验证信息，请使用订单查询查看支付结果。");
@@ -47,7 +48,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
       attempts += 1;
       try {
         const returnedFromPayment = new URLSearchParams(window.location.search).get("payment") === "returned";
-        const reconcile = returnedFromPayment && (attempts <= 3 || attempts % 5 === 0) ? "&reconcile=payment" : "";
+        const reconcile = (returnedFromPayment || Boolean(paymentUrl)) && (attempts <= 3 || attempts % 5 === 0) ? "&reconcile=payment" : "";
         const response = await fetch(`/api/orders/${encodeURIComponent(order.orderNo)}?email=${encodeURIComponent(email ?? "")}${reconcile}`, {
           cache: "no-store",
         });
