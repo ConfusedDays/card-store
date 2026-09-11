@@ -27,8 +27,10 @@ async function handle(request: Request) {
     await trySendPaymentEmails(order);
     if (order.status === "delivered") await trySendDeliveryEmail(order.orderNo);
     return reply("success");
-  } catch {
-    // Do not log raw callbacks, upstream errors or configuration secrets.
+  } catch (error) {
+    // Log only the sanitized reason; never log callback fields or key material.
+    const reason = error instanceof Error ? error.message.replace(/[\r\n]/g, " ").slice(0, 160) : "Unknown error";
+    console.error("Epay notification rejected", reason);
     return reply("failure", 503);
   }
 }
