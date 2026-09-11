@@ -275,6 +275,7 @@ html.dark-mode[data-accent="rose"] { --teal: #ffa1cf; --teal-dark: #ef75ae; --mi
 .store-hero-title-spacer, .store-hero-title-current { grid-area: 1 / 1; }
 .store-hero-title-spacer { visibility: hidden; }
 .store-hero-title-current { display: inline-flex; align-items: baseline; justify-content: center; gap: .16em; }
+.store-hero-title-suffix { position: relative; z-index: 2; display: inline-block; color: var(--hero-strong, #fff); opacity: 1; visibility: visible; }
 .store-hero-name { color: transparent; background: linear-gradient(100deg, var(--hero-gradient-start, #56d7b7) 5%, var(--hero-gradient-mid, #9de8d5) 48%, var(--hero-gradient-end, #31ae91) 100%); background-size: 220% 100%; background-position: 0% 50%; animation: store-hero-name-sheen 5.4s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; }
 .store-hero-name-effect .text-effect-char { color: transparent; background: linear-gradient(100deg, var(--hero-gradient-start, #56d7b7) 5%, var(--hero-gradient-mid, #9de8d5) 48%, var(--hero-gradient-end, #31ae91) 100%); background-size: 220% 100%; background-position: 0% 50%; animation: store-hero-name-sheen 5.4s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; }
 @keyframes store-hero-name-sheen { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
