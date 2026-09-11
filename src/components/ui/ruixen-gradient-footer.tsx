@@ -8,13 +8,14 @@ const VIEWBOX_WIDTH = 1271;
 const VIEWBOX_HEIGHT = 599;
 
 const DEFAULT_STOPS: GradientStop[] = [
-  { offset: 0, color: "var(--charcoal)" },
-  { offset: 0.2, color: "var(--teal-dark)" },
-  { offset: 0.38, color: "var(--teal)" },
-  { offset: 0.55, color: "color-mix(in srgb, var(--teal) 35%, white)" },
-  { offset: 0.69, color: "var(--amber)" },
-  { offset: 0.82, color: "color-mix(in srgb, var(--amber) 72%, var(--teal))" },
-  { offset: 1, color: "color-mix(in srgb, var(--amber) 28%, transparent)" },
+  { offset: 0, color: "#340B05" },
+  { offset: 0.1827, color: "#0358F7" },
+  { offset: 0.2837, color: "#5092C7" },
+  { offset: 0.4135, color: "#E1ECFE" },
+  { offset: 0.5866, color: "#FFD400" },
+  { offset: 0.6827, color: "#FA3D1D" },
+  { offset: 0.8029, color: "#FD02F5" },
+  { offset: 1, color: "#FFC0FD00" },
 ];
 
 function bellHeights(count: number, peak: number, valley: number) {
