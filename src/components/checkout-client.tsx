@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Copy, KeyRound, LoaderCircle, QrCode, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Copy, KeyRound, LoaderCircle, QrCode, ShieldCheck } from "lucide-react";
 import type { OrderResult } from "@/lib/types";
 import { statusText } from "@/components/storefront";
 
@@ -14,15 +14,15 @@ type CheckoutOrder = {
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
 
-export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mockMode: boolean }) {
+export function CheckoutClient({ order, mockMode, paymentUrl }: { order: CheckoutOrder; mockMode: boolean; paymentUrl: string | null }) {
   const [result, setResult] = useState<OrderResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [polling, setPolling] = useState(!mockMode);
+  const [polling, setPolling] = useState(!mockMode && !paymentUrl);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (mockMode) return;
+    if (mockMode || paymentUrl) return;
     const email = sessionStorage.getItem(`order-email:${order.orderNo}`);
     if (!email) {
       const missingEmailTimer = window.setTimeout(() => {
@@ -66,7 +66,14 @@ export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mock
       cancelled = true;
       if (timer) window.clearTimeout(timer);
     };
-  }, [mockMode, order.orderNo]);
+  }, [mockMode, order.orderNo, paymentUrl]);
+
+  function continueToPayment() {
+    if (!paymentUrl) return;
+    setLoading(true);
+    const destination = new URL(paymentUrl, window.location.origin);
+    window.location.assign(destination.href);
+  }
 
   async function confirmPayment() {
     setLoading(true);
@@ -102,10 +109,23 @@ export function CheckoutClient({ order, mockMode }: { order: CheckoutOrder; mock
       </header>
       <div className="checkout-layout">
         <section className="payment-area">
-          <span className="section-index">{mockMode ? "DEVELOPMENT CHECKOUT" : "PAYMENT CHECKOUT"}</span>
-          <h1>{result?.status === "delivered" ? "卡密已交付" : "确认支付结果"}</h1>
+          <span className="section-index">{mockMode ? "DEVELOPMENT CHECKOUT" : paymentUrl ? "PAYMENT REVIEW" : "PAYMENT CHECKOUT"}</span>
+          <h1>{result?.status === "delivered" ? "卡密已交付" : paymentUrl ? "确认付款信息" : "确认支付结果"}</h1>
           {!result?.licenseKey ? (
-            mockMode ? (
+            paymentUrl ? (
+              <div className="payment-confirmation">
+                <div className="payment-confirmation-mark"><ShieldCheck size={28} /></div>
+                <div>
+                  <strong>请核对订单信息</strong>
+                  <p>确认无误后将前往支付平台完成付款。</p>
+                </div>
+                {error && <p className="form-error">{error}</p>}
+                <button className="primary-button" onClick={continueToPayment} disabled={loading}>
+                  {loading ? <LoaderCircle className="spin" size={18} /> : <ArrowRight size={18} />}
+                  {loading ? "正在前往支付..." : "前往支付"}
+                </button>
+              </div>
+            ) : mockMode ? (
               <>
                 <div className="qr-frame"><QrCode size={150} strokeWidth={1.25} /><span>开发环境二维码</span></div>
                 <p className="payment-hint">开发环境使用模拟支付，不会产生真实扣款。</p>
