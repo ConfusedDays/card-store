@@ -153,7 +153,7 @@ export function parseEpayQuery(result: Parameters, expectedOrderNo: string, expe
   const providerRefMatches = Boolean(expectedProviderRef && providerRefs.includes(expectedProviderRef));
   if ((result.pid !== undefined && result.pid !== null && String(result.pid) !== configuredPid)
     || (merchantOrderNo !== undefined && merchantOrderNo !== expectedOrderNo)
-    || (merchantOrderNo === undefined && !providerRefMatches)) {
+    || (merchantOrderNo === undefined && (expectedProviderRef ? !providerRefMatches : providerRefs.length === 0))) {
     throw new Error("聚合支付查单商户或订单号不匹配");
   }
   const timestamp = String(result.timestamp ?? "");
@@ -173,9 +173,12 @@ export async function queryEpayTrade(orderNo: string, providerRef?: string) {
   try {
     let response: Response;
     try {
-      const query: Record<string, string> = { pid, timestamp: String(Math.floor(Date.now() / 1000)) };
-      if (providerRef) query.trade_no = providerRef;
-      else query.out_trade_no = orderNo;
+      // Query by our merchant order number first. Some gateways include a
+      // third-party `api_trade_no` in the callback's first reference slot;
+      // sending that value as `trade_no` makes the query endpoint return an
+      // unsigned "order not found" error. The merchant order number is the
+      // stable V2 lookup key we created ourselves.
+      const query: Record<string, string> = { pid, out_trade_no: orderNo, timestamp: String(Math.floor(Date.now() / 1000)) };
       response = await fetch(new URL("api/pay/query", gateway), {
         method: "POST", cache: "no-store", redirect: "error", signal: AbortSignal.timeout(10_000),
         headers: { "content-type": "application/x-www-form-urlencoded" },

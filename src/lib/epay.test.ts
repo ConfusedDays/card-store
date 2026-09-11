@@ -190,7 +190,8 @@ describe("verified callback + active query + transactional fulfillment", () => {
     expect(url.href).toBe("https://gateway.example/xpay/epayn/api/pay/query");
     expect(options.redirect).toBe("error");
     const fields = Object.fromEntries(new URLSearchParams(String(options.body)));
-    expect(fields.trade_no).toBe(`T${order.orderNo}`);
+    expect(fields.out_trade_no).toBe(order.orderNo);
+    expect(fields.trade_no).toBeUndefined();
     expect(verify("sha256", Buffer.from(canonicalEpayParameters(fields)), merchant.publicKey, Buffer.from(fields.sign, "base64"))).toBe(true);
   });
 
