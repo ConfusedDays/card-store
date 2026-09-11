@@ -41,7 +41,7 @@ export function StoreHeroTitle() {
         <span className="store-hero-title-spacer">Potassium 卡密</span>
         <span className="store-hero-title-current">
           <TextEffect key={names[index]} className="store-hero-name store-hero-name-effect" delay={0.34} hover forceMotion>{names[index]}</TextEffect>
-          <span className="store-hero-title-suffix">卡密</span>
+          <TextEffect key={`${names[index]}-suffix`} className="store-hero-title-suffix" delay={0.95} hover forceMotion>卡密</TextEffect>
         </span>
       </span>
     </h1>
