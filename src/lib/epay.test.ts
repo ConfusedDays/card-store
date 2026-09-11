@@ -91,6 +91,12 @@ describe("V2 RSA protocol", () => {
     expect(verifyEpayParameters(signEpayParameters({ money: "1.00" }))).toBe(false);
   });
 
+  it("accepts transport-safe Base64 signature variants without bypassing RSA verification", () => {
+    const fields = platformSigned({ code: 0, money: "1.00" });
+    expect(verifyEpayParameters({ ...fields, sign: fields.sign.replace(/\+/g, " ") })).toBe(true);
+    expect(verifyEpayParameters({ ...fields, sign: fields.sign.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "") })).toBe(true);
+  });
+
   it("normalizes bare Base64 and escaped PEM keys", () => {
     const originalPrivate = process.env.EPAY_PRIVATE_KEY!;
     const originalPublic = process.env.EPAY_PUBLIC_KEY!;

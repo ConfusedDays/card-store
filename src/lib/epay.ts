@@ -64,11 +64,23 @@ export function signEpayParameters(params: Record<string, string>): Record<strin
   return { ...params, sign_type: "RSA", sign: sign("RSA-SHA256", Buffer.from(canonicalEpayParameters(params)), privateKey).toString("base64") };
 }
 
+function decodeEpaySignature(value: string) {
+  // Some gateways send Base64 in a URL-safe alphabet or fail to escape `+`
+  // in form/query data. Normalize those transport variants before verifying;
+  // the RSA signature itself is still required to match the platform key.
+  const normalized = value.replace(/[\r\n\t]/g, "").replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(normalized)) return null;
+  const unpadded = normalized.replace(/=+$/, "");
+  if (unpadded.length % 4 === 1) return null;
+  return Buffer.from(unpadded.padEnd(Math.ceil(unpadded.length / 4) * 4, "="), "base64");
+}
+
 export function verifyEpayParameters(params: Parameters) {
   if ((params.sign_type !== "RSA" && params.sign_type !== "RSA2") || typeof params.sign !== "string"
-    || !/^[A-Za-z0-9+/]+={0,2}$/.test(params.sign)) return false;
+    || !params.sign) return false;
   try {
-    return verify("RSA-SHA256", Buffer.from(canonicalEpayParameters(params)), getEpayConfig().publicKey, Buffer.from(params.sign, "base64"));
+    const signature = decodeEpaySignature(params.sign);
+    return signature !== null && verify("RSA-SHA256", Buffer.from(canonicalEpayParameters(params)), getEpayConfig().publicKey, signature);
   } catch {
     return false;
   }
