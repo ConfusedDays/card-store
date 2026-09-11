@@ -20,6 +20,14 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
   const [polling, setPolling] = useState(!mockMode && !paymentUrl);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [customerEmail, setCustomerEmail] = useState("");
+
+  useEffect(() => {
+    const storedEmail = sessionStorage.getItem(`order-email:${order.orderNo}`)?.trim();
+    if (!storedEmail) return;
+    const emailTimer = window.setTimeout(() => setCustomerEmail(storedEmail), 0);
+    return () => window.clearTimeout(emailTimer);
+  }, [order.orderNo]);
 
   useEffect(() => {
     if (mockMode || paymentUrl) return;
@@ -161,7 +169,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
           <div className="summary-product"><div className="mini-license"><KeyRound size={22} /></div><div><strong>{order.productName}</strong><span>{order.variantLabel}</span></div></div>
           <dl>
             <div><dt>订单号</dt><dd>{order.orderNo}</dd></div>
-            <div><dt>接收邮箱</dt><dd>{order.maskedEmail}</dd></div>
+            <div><dt>接收邮箱</dt><dd>{customerEmail || order.maskedEmail}</dd></div>
             <div><dt>订单状态</dt><dd>{statusText(currentStatus)}</dd></div>
             <div><dt>支付方式</dt><dd>{order.paymentMethod === "wechat" ? "微信支付" : "支付宝"}</dd></div>
           </dl>
