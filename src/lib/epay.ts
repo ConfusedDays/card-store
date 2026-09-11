@@ -12,6 +12,13 @@ export class EpayQueryUnavailable extends Error {
   }
 }
 
+export class EpayQueryVerificationFailed extends Error {
+  constructor() {
+    super("聚合支付查单验签失败");
+    this.name = "EpayQueryVerificationFailed";
+  }
+}
+
 function required(name: string) {
   const value = process.env[name]?.trim();
   if (!value) throw new Error(`聚合支付配置缺少 ${name}`);
@@ -144,7 +151,7 @@ export function parseEpayNotification(params: Record<string, string>) {
 }
 
 export function parseEpayQuery(result: Parameters, expectedOrderNo: string, expectedProviderRef?: string): EpayTrade | null {
-  if (!verifyEpayParameters(result)) throw new Error("聚合支付查单验签失败");
+  if (!verifyEpayParameters(result)) throw new EpayQueryVerificationFailed();
   if (String(result.code) !== "0") throw new Error("聚合支付查单失败");
   const configuredPid = getEpayConfig().pid;
   const merchantOrderNo = typeof result.out_trade_no === "string" && result.out_trade_no ? result.out_trade_no : undefined;

@@ -22,8 +22,8 @@ function platformSigned(fields: Fields) {
   return { ...fields, sign_type: "RSA", sign: sign("sha256", Buffer.from(content), platform.privateKey).toString("base64") };
 }
 
-function newOrder(method = "alipay", provider = "epay") {
-  return createPendingOrder({ variantId: "variant-license-1d", email: "epay-test@example.com", paymentMethod: method, paymentProvider: provider });
+function newOrder(method = "alipay", provider = "epay", variantId = "variant-license-1d") {
+  return createPendingOrder({ variantId, email: "epay-test@example.com", paymentMethod: method, paymentProvider: provider });
 }
 
 function notification(order: ReturnType<typeof newOrder>, extra: Fields = {}) {
@@ -223,14 +223,14 @@ describe("verified callback + active query + transactional fulfillment", () => {
     assertPending(order.orderNo);
   });
 
-  it("rejects duplicate callback fields and unsigned query responses", async () => {
-    const order = newOrder();
+  it("rejects duplicate callback fields but accepts an authenticated callback when the query is unsigned", async () => {
+    const order = newOrder("alipay", "epay", "variant-license-7d");
     const fields = query(order);
     mockQuery({ ...fields, sign: "invalid" });
-    expect(await (await notify.POST(request(notification(order)))).text()).toBe("failure");
+    expect(await (await notify.POST(request(notification(order)))).text()).toBe("success");
     const valid = request(notification(order), "GET");
     expect((await notify.GET(new Request(`${valid.url}&money=0.01`))).status).toBe(400);
-    assertPending(order.orderNo);
+    expect(db.prepare("SELECT status FROM orders WHERE order_no = ?").get(order.orderNo)).toEqual({ status: "delivered" });
   });
 
   it("fulfills from an authenticated callback when the query temporarily fails", async () => {
@@ -240,6 +240,13 @@ describe("verified callback + active query + transactional fulfillment", () => {
     expect(db.prepare("SELECT status FROM orders WHERE order_no = ?").get(order.orderNo)).toEqual({ status: "delivered" });
     mockQuery(query(order));
     expect(await (await notify.POST(request(notification(order)))).text()).toBe("success");
+  });
+
+  it("fulfills from an authenticated callback when the query response is unsigned", async () => {
+    const order = newOrder("alipay", "epay", "variant-license-7d");
+    mockQuery({ code: 1, msg: "签名错误", status: 0, sign_type: "RSA" });
+    expect(await (await notify.POST(request(notification(order)))).text()).toBe("success");
+    expect(db.prepare("SELECT status FROM orders WHERE order_no = ?").get(order.orderNo)).toEqual({ status: "delivered" });
   });
 
   it("rejects cross-provider callbacks even with valid platform signatures", async () => {

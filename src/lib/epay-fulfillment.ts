@@ -1,6 +1,6 @@
 import { getCheckoutOrder } from "@/lib/checkout";
 import { completePaidOrder } from "@/lib/order-service";
-import { EpayQueryUnavailable, queryEpayTrade, type EpayTrade } from "@/lib/epay";
+import { EpayQueryUnavailable, EpayQueryVerificationFailed, queryEpayTrade, type EpayTrade } from "@/lib/epay";
 
 export async function reconcileEpayOrder(orderNo: string, notification?: EpayTrade) {
   const stored = getCheckoutOrder(orderNo);
@@ -12,10 +12,11 @@ export async function reconcileEpayOrder(orderNo: string, notification?: EpayTra
   try {
     trade = await queryEpayTrade(orderNo, notification?.providerRefs?.[0]);
   } catch (error) {
-    if (!notification || !(error instanceof EpayQueryUnavailable)) throw error;
+    if (!notification || !(error instanceof EpayQueryUnavailable || error instanceof EpayQueryVerificationFailed)) throw error;
     // The callback itself is already authenticated with the platform public
     // key and has passed order, amount, channel and success-state checks.
-    // A temporary query outage must not leave a paid order stuck in pending.
+    // A temporary query outage or an unsigned query error must not leave a
+    // paid order stuck in pending.
     trade = notification;
   }
   if (!trade) return null;
