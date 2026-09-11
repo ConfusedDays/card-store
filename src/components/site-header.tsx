@@ -88,7 +88,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         onClick={refreshPage}
       >
         <span className="brand-mark brand-photo"><Image src="/reii-bear.jpg" alt="" width={34} height={34} priority /></span>
-        <span>{active === "catalog" ? <TextEffect className="brand-title-effect" delay={0.04}>Reii小店</TextEffect> : "Reii小店"}</span>
+        <span>{active === "catalog" ? <TextEffect className="brand-title-effect" delay={0.04} hover>Reii小店</TextEffect> : "Reii小店"}</span>
       </Link>
       <nav className="nav-links" aria-label="主导航">
         <div className="nav-items">
@@ -100,7 +100,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
               aria-current={active === item.id ? "page" : undefined}
               onClick={(event) => navigateTo(item.href, event)}
             >
-              {active === "catalog" ? <TextEffect delay={0.16 + navigationItems.indexOf(item) * 0.07}>{item.label}</TextEffect> : item.label}
+              {active === "catalog" ? <TextEffect delay={0.16 + navigationItems.indexOf(item) * 0.07} hover>{item.label}</TextEffect> : item.label}
             </Link>
           ))}
         </div>
