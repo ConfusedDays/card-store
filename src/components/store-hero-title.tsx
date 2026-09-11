@@ -40,7 +40,7 @@ export function StoreHeroTitle() {
       <span className="store-hero-title-line" aria-hidden="true">
         <span className="store-hero-title-spacer">Potassium 卡密</span>
         <span className="store-hero-title-current">
-          <TextEffect key={index} className="store-hero-name store-hero-name-effect" delay={0.42} hover>{names[index]}</TextEffect>
+          <TextEffect key={names[index]} className="store-hero-name store-hero-name-effect" delay={0.24} hover>{names[index]}</TextEffect>
           卡密
         </span>
       </span>
