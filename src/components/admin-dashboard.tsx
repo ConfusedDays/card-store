@@ -21,6 +21,7 @@ type Overview = {
     amountCents: number;
     status: string;
     createdAt: string;
+    productName: string;
     variantLabel: string;
     emailStatus: "pending" | "sending" | "sent" | "failed" | null;
     emailAttempts: number | null;
@@ -608,13 +609,14 @@ export function AdminDashboard() {
         <section className="admin-section" id="orders">
             <div className="section-heading"><div><span className="section-index">ORDERS</span><h2>最近订单</h2></div><button className="secondary-command order-trash-jump" type="button" onClick={() => document.getElementById("order-recycle-bin")?.scrollIntoView({ behavior: "smooth", block: "center" })}><AnimatedButtonIcon idle={<Trash2 size={16} />} size={16} />回收站{recycledOrders.length ? ` · ${recycledOrders.length}` : ""}</button></div>
           {orderMessage && <p className="success-message order-message"><AnimatedButtonIcon success idle={<MailCheck size={16} />} />{orderMessage}</p>}
-          <div className="table-shell orders-table"><table><thead><tr><th>订单号</th><th>客户</th><th>规格</th><th>金额</th><th>订单状态</th><th>邮件状态</th><th>时间</th><th>操作</th></tr></thead><tbody>
+          <div className="table-shell orders-table"><table><thead><tr><th>订单号</th><th>客户</th><th>商品</th><th>规格</th><th>金额</th><th>订单状态</th><th>邮件状态</th><th>时间</th><th>操作</th></tr></thead><tbody>
             {overview.recentOrders.length ? overview.recentOrders.map((order) => {
               const emailStatus = order.emailStatus ?? (order.status === "delivered" ? "pending" : "inactive");
               const emailLabel = { pending: "待发送", sending: "发送中", sent: "已送达", failed: "发送失败", inactive: "未触发" }[emailStatus];
               return <tr key={order.orderNo}>
                 <td><code>{order.orderNo}</code></td>
                 <td>{order.email}</td>
+                <td>{order.productName}</td>
                 <td>{order.variantLabel}</td>
                 <td>{money(order.amountCents)}</td>
                 <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
@@ -622,7 +624,7 @@ export function AdminDashboard() {
                 <td>{new Date(order.createdAt.replace(" ", "T") + "Z").toLocaleString("zh-CN")}</td>
                 <td className="order-action-cell"><div className="order-action-buttons">{order.status === "pending" && <button className="manual-delivery-button" type="button" disabled={manualDeliveryOrderNo === order.orderNo} onClick={() => void manuallyDeliverOrder(order.orderNo, order.email)} title="确认收款后手动发卡"><AnimatedButtonIcon loading={manualDeliveryOrderNo === order.orderNo} idle={<PackagePlus size={15} />} /><span>{manualDeliveryOrderNo === order.orderNo ? "发卡中" : "手动发卡"}</span></button>}{order.status === "delivered" && <button className="resend-email-button" type="button" disabled={resendingOrderNo === order.orderNo} onClick={() => void resendDeliveryEmail(order.orderNo, order.email)} title="重新发送卡密邮件"><AnimatedButtonIcon loading={resendingOrderNo === order.orderNo} idle={<Send size={15} />} /><span>{resendingOrderNo === order.orderNo ? "发送中" : "重新发送"}</span></button>}<button className="order-recycle-button" type="button" onClick={() => void recycleOrder(order.orderNo)} title="移入回收站"><AnimatedButtonIcon idle={<Trash2 size={15} />} /><span>删除</span></button></div></td>
               </tr>;
-            }) : <tr><td colSpan={8} className="empty-cell">暂无订单</td></tr>}
+            }) : <tr><td colSpan={9} className="empty-cell">暂无订单</td></tr>}
           </tbody></table></div>
           <div className="order-recycle-bin table-shell" id="order-recycle-bin">
             <div className="order-recycle-heading"><div><h3><Trash2 size={18} />订单回收站</h3><p>移入回收站的订单仍会保留支付和发卡记录，可恢复或永久删除。</p></div><button className="icon-action" type="button" onClick={() => void loadRecycledOrders()} title="刷新回收站" aria-label="刷新回收站" disabled={recycleLoading}><AnimatedButtonIcon loading={recycleLoading} idle={<RefreshCw size={17} />} /></button></div>

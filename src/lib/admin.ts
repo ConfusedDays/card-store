@@ -55,10 +55,10 @@ export function getAdminOverview() {
   const inventoryWithStatus = inventory.map((item) => ({ ...item, active: Boolean(item.active) }));
   const recentOrders = db.prepare(`
     SELECT o.order_no as orderNo, o.email, o.amount_cents as amountCents, o.status,
-      o.created_at as createdAt, v.label as variantLabel,
+      o.created_at as createdAt, p.name as productName, v.label as variantLabel,
       de.status as emailStatus, de.attempts as emailAttempts, de.sent_at as emailSentAt,
       de.last_error as emailLastError
-    FROM orders o JOIN variants v ON v.id = o.variant_id
+    FROM orders o JOIN variants v ON v.id = o.variant_id JOIN products p ON p.id = v.product_id
     LEFT JOIN delivery_emails de ON de.order_no = o.order_no
     WHERE o.deleted_at IS NULL
     ORDER BY o.created_at DESC LIMIT 20
@@ -72,6 +72,7 @@ export type AdminOrder = {
   amountCents: number;
   status: string;
   createdAt: string;
+  productName: string;
   variantLabel: string;
   emailStatus: "pending" | "sending" | "sent" | "failed" | null;
   emailAttempts: number | null;
@@ -84,10 +85,10 @@ export type RecycleOrder = AdminOrder & { deletedAt: string };
 export function getRecycledOrders(): RecycleOrder[] {
   return db.prepare(`
     SELECT o.order_no as orderNo, o.email, o.amount_cents as amountCents, o.status,
-      o.created_at as createdAt, o.deleted_at as deletedAt, v.label as variantLabel,
+      o.created_at as createdAt, o.deleted_at as deletedAt, p.name as productName, v.label as variantLabel,
       de.status as emailStatus, de.attempts as emailAttempts, de.sent_at as emailSentAt,
       de.last_error as emailLastError
-    FROM orders o JOIN variants v ON v.id = o.variant_id
+    FROM orders o JOIN variants v ON v.id = o.variant_id JOIN products p ON p.id = v.product_id
     LEFT JOIN delivery_emails de ON de.order_no = o.order_no
     WHERE o.deleted_at IS NOT NULL
     ORDER BY o.deleted_at DESC
