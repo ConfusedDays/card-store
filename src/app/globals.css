@@ -207,12 +207,16 @@ html.dark-mode[data-accent="rose"] { --teal: #ffa1cf; --teal-dark: #ef75ae; --mi
 .account-invoice-form > div:first-child { grid-column: 1 / -1; display: grid; gap: 4px; }.account-invoice-form > div:first-child strong { font-size: 13px; }.account-invoice-form > div:first-child span { color: var(--muted); font-size: 10px; }
 .account-invoice-actions { grid-column: 1 / -1; display: flex; justify-content: end; gap: 8px; }.account-invoice-actions button { min-height: 36px; padding: 0 13px; font-size: 11px; }.account-invoice-actions .secondary-button { border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: transparent; }
 .account-empty { padding: 46px 20px; color: var(--muted); display: grid; justify-items: center; gap: 12px; text-align: center; }.account-empty p { margin: 0; font-size: 12px; }.account-empty .primary-button { min-height: 38px; padding: 0 13px; font-size: 11px; }
+.account-panel-hint { color: var(--muted); font-size: 11px; }
+.account-ticket-form { padding: 17px; border: 1px solid color-mix(in srgb, var(--teal) 24%, var(--line)); border-radius: 11px; background: color-mix(in srgb, var(--mint) 24%, transparent); display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); gap: 13px; }
+.account-field textarea, .account-field select { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--surface); outline: none; font: inherit; transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease; }
+.account-field textarea { min-height: 105px; resize: vertical; line-height: 1.65; }.account-field select { min-height: 44px; }.account-field textarea:focus, .account-field select:focus { border-color: color-mix(in srgb, var(--teal) 66%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 14%, transparent); }.account-ticket-message { grid-column: 1 / -1; }.account-ticket-form .form-error { grid-column: 1 / -1; margin: 0; }.account-ticket-submit { grid-column: 1 / -1; justify-self: end; min-height: 38px; padding: 0 14px; font-size: 11px; }.account-ticket-list { margin-top: 14px; display: grid; gap: 8px; }.account-ticket-row { padding: 15px; border: 1px solid color-mix(in srgb, var(--line) 80%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--surface) 72%, transparent); }.account-ticket-heading, .account-ticket-meta { display: flex; align-items: center; gap: 9px; }.account-ticket-heading { justify-content: space-between; }.account-ticket-heading strong { font-size: 13px; }.account-ticket-meta { margin-top: 7px; color: var(--muted); font-size: 10px; }.account-ticket-meta time { margin-left: auto; }.account-ticket-meta code { color: var(--teal-dark); }.account-ticket-row > p { margin: 13px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; white-space: pre-wrap; }.account-ticket-status { width: max-content; padding: 4px 7px; border-radius: 999px; font-size: 10px; font-weight: 740; white-space: nowrap; }.account-ticket-open { color: #8b641c; background: #f8ecd5; }.account-ticket-processing { color: #176078; background: #ddf1f6; }.account-ticket-resolved { color: #23725b; background: #e0f3eb; }.account-ticket-closed { color: var(--muted); background: color-mix(in srgb, var(--line) 58%, transparent); }.account-ticket-note { margin-top: 13px; padding: 11px 12px; border-left: 2px solid var(--teal); background: color-mix(in srgb, var(--mint) 36%, transparent); display: grid; gap: 4px; font-size: 11px; line-height: 1.6; }.account-ticket-note strong { color: var(--teal-dark); }.account-ticket-empty { padding-bottom: 28px; }
 html.dark-mode .account-login-card, html.dark-mode .account-panel, html.dark-mode .account-metric { border-color: var(--line); background: color-mix(in srgb, var(--surface) 84%, var(--teal)); box-shadow: 0 16px 38px rgba(0,0,0,.22); }
-html.dark-mode .account-field input { color: var(--ink); background: #16211e; border-color: #40524c; }
+html.dark-mode .account-field input, html.dark-mode .account-field textarea, html.dark-mode .account-field select { color: var(--ink); background: #16211e; border-color: #40524c; }
 html.dark-mode .account-code-button, html.dark-mode .account-invoice-button { color: var(--teal); background: color-mix(in srgb, var(--mint) 70%, var(--surface)); }
 html.dark-mode .account-order-row { border-color: var(--line); background: color-mix(in srgb, var(--surface) 74%, transparent); }
 @media (max-width: 920px) { .account-login { min-height: auto; grid-template-columns: 1fr; gap: 34px; padding: 24px 0 50px; }.account-login-copy { max-width: 680px; }.account-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 640px) { .account-page { width: min(100% - 28px, 1180px); padding-top: 34px; }.account-heading { align-items: flex-start; flex-direction: column; margin-bottom: 26px; }.account-heading h1 { font-size: 40px; }.account-heading p { font-size: 12px; }.account-logout { align-self: flex-start; }.account-metrics { gap: 8px; }.account-metric { padding: 13px; }.account-panel { padding: 17px 12px; }.account-panel-heading { align-items: flex-start; flex-direction: column; gap: 12px; }.account-order-row { grid-template-columns: 34px minmax(0, 1fr) auto; gap: 9px; }.account-order-date { grid-column: 2 / -1; }.account-order-amount { grid-column: 2; justify-items: start; }.account-order-actions { grid-column: 3; grid-row: 3; }.account-invoice-form { grid-column: 1 / -1; grid-template-columns: 1fr; padding: 14px 0 0; }.account-invoice-form > div:first-child, .account-invoice-actions { grid-column: 1; } }
+@media (max-width: 640px) { .account-page { width: min(100% - 28px, 1180px); padding-top: 34px; }.account-heading { align-items: flex-start; flex-direction: column; margin-bottom: 26px; }.account-heading h1 { font-size: 40px; }.account-heading p { font-size: 12px; }.account-logout { align-self: flex-start; }.account-metrics { gap: 8px; }.account-metric { padding: 13px; }.account-panel { padding: 17px 12px; }.account-panel-heading { align-items: flex-start; flex-direction: column; gap: 12px; }.account-panel-hint { font-size: 10px; }.account-ticket-form { padding: 13px; grid-template-columns: 1fr; }.account-ticket-message, .account-ticket-form .form-error, .account-ticket-submit { grid-column: 1; }.account-ticket-submit { justify-self: stretch; }.account-ticket-meta { flex-wrap: wrap; }.account-ticket-meta time { margin-left: 0; }.account-order-row { grid-template-columns: 34px minmax(0, 1fr) auto; gap: 9px; }.account-order-date { grid-column: 2 / -1; }.account-order-amount { grid-column: 2; justify-items: start; }.account-order-actions { grid-column: 3; grid-row: 3; }.account-invoice-form { grid-column: 1 / -1; grid-template-columns: 1fr; padding: 14px 0 0; }.account-invoice-form > div:first-child, .account-invoice-actions { grid-column: 1; } }
 .topbar {
   height: 72px;
   padding: 0 max(24px, calc((100vw - 1180px) / 2));
@@ -1817,6 +1821,7 @@ html.dark-mode .remove-variant:hover { color: var(--danger); border-color: var(-
 .admin-sidebar nav[data-active-section="inventory"]::before { transform: translateY(94px); }
 .admin-sidebar nav[data-active-section="backups"]::before { transform: translateY(141px); }
 .admin-sidebar nav[data-active-section="orders"]::before { transform: translateY(188px); }
+.admin-sidebar nav[data-active-section="tickets"]::before { transform: translateY(235px); }
 .admin-sidebar nav a {
   position: relative;
   z-index: 1;
@@ -1905,6 +1910,7 @@ html.dark-mode .product-table tbody tr.dragging { background: #263630; box-shado
 .admin-sidebar nav[data-dragging="true"][data-active-section="inventory"]::before { transform: translateY(94px) scale(1.015); }
 .admin-sidebar nav[data-dragging="true"][data-active-section="backups"]::before { transform: translateY(141px) scale(1.015); }
 .admin-sidebar nav[data-dragging="true"][data-active-section="orders"]::before { transform: translateY(188px) scale(1.015); }
+.admin-sidebar nav[data-dragging="true"][data-active-section="tickets"]::before { transform: translateY(235px) scale(1.015); }
 .admin-sidebar,
 .admin-sidebar nav::before,
 .admin-sidebar nav a,
@@ -2007,3 +2013,29 @@ html.dark-mode .product-table tbody tr.dragging { background: #263630; box-shado
   .ruixen-footer [data-footer-reveal] { opacity: 1; transform: none; transition: none; }
   .ruixen-footer-primary, .ruixen-footer-column a, .ruixen-footer-column button { transition: none; }
 }
+.admin-ticket-toolbar { display: flex; align-items: center; gap: 8px; }
+.admin-ticket-filter { min-height: 36px; padding: 0 9px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--surface); display: inline-flex; align-items: center; gap: 7px; }
+.admin-ticket-filter select { border: 0; color: inherit; background: transparent; outline: none; font: inherit; }
+.admin-ticket-notice { margin-bottom: 14px; }
+.admin-tickets-table { overflow-x: auto; }
+.admin-tickets-table table { min-width: 1120px; }
+.admin-tickets-table tbody tr.is-selected > td { background: color-mix(in srgb, var(--mint) 33%, var(--surface)); }
+.admin-tickets-table td { vertical-align: top; }
+.admin-ticket-email { display: inline-block; max-width: 180px; overflow-wrap: anywhere; }
+.admin-ticket-message-preview { max-width: 230px; margin: 6px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; white-space: pre-wrap; }
+.admin-ticket-order { display: grid; gap: 4px; min-width: 210px; }
+.admin-ticket-order > span { color: var(--muted); font-size: 11px; }
+.admin-ticket-order details { margin-top: 4px; }
+.admin-ticket-order summary { width: max-content; color: var(--teal-dark); cursor: pointer; font-size: 10px; font-weight: 740; }
+.admin-ticket-order dl { margin: 8px 0 0; padding: 9px; border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--surface) 72%, transparent); display: grid; gap: 5px; font-size: 10px; }
+.admin-ticket-order dl div { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 7px; }
+.admin-ticket-order dt { color: var(--muted); }
+.admin-ticket-order dd { margin: 0; overflow-wrap: anywhere; }
+.admin-ticket-edit-button { min-height: 32px; padding: 0 10px; white-space: nowrap; }
+.admin-ticket-editor { width: 225px; margin-top: 9px; padding: 11px; border: 1px solid color-mix(in srgb, var(--teal) 30%, var(--line)); border-radius: 9px; background: color-mix(in srgb, var(--surface) 88%, var(--teal)); display: grid; gap: 9px; text-align: left; }
+.admin-ticket-editor label { display: grid; gap: 5px; color: var(--muted); font-size: 10px; font-weight: 740; }
+.admin-ticket-editor select, .admin-ticket-editor textarea { width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: var(--surface); font: inherit; outline: none; }
+.admin-ticket-editor textarea { resize: vertical; line-height: 1.5; }
+.admin-ticket-editor .primary-button { min-height: 32px; padding: 0 9px; font-size: 10px; }
+html.dark-mode .admin-ticket-filter, html.dark-mode .admin-ticket-editor, html.dark-mode .admin-ticket-order dl { background: color-mix(in srgb, var(--surface) 87%, var(--teal)); }
+.admin-ticket-filter select option, .admin-ticket-editor select option { color: #17201e; background: #f5faf7; }

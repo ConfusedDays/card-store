@@ -147,6 +147,21 @@ db.exec(`
     updated_at INTEGER NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_invoices_email ON invoices(email, created_at DESC);
+  CREATE TABLE IF NOT EXISTS support_tickets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_no TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL,
+    order_no TEXT REFERENCES orders(order_no),
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'processing', 'resolved', 'closed')),
+    admin_note TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    resolved_at INTEGER
+  );
+  CREATE INDEX IF NOT EXISTS idx_support_tickets_email ON support_tickets(email, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status, updated_at DESC);
 `);
 const licenseKeyColumns = db.prepare("PRAGMA table_info(license_keys)").all() as { name: string }[];
 if (!licenseKeyColumns.some((column) => column.name === "key_fingerprint")) {

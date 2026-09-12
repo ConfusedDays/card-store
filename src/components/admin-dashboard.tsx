@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArchiveRestore, ArrowLeft, Boxes, CheckCheck, CheckCircle2, CircleDollarSign, CircleOff, Copy, Download, KeyRound, LogIn, MailCheck, Menu as MenuIcon, PackagePlus, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Tags, Trash2, TriangleAlert, Undo2, Upload } from "lucide-react";
+import { ArchiveRestore, ArrowLeft, Boxes, CheckCheck, CheckCircle2, CircleDollarSign, CircleOff, Copy, Download, KeyRound, LogIn, MailCheck, Menu as MenuIcon, MessageSquareText, PackagePlus, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Tags, Trash2, TriangleAlert, Undo2, Upload } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { DropdownMenu, DropdownSelect } from "@/components/ui/dropdown-menu";
 import { ProductManager } from "@/components/product-manager";
+import { AdminTicketManager } from "@/components/admin-ticket-manager";
 import { AnimatedButtonIcon } from "@/components/ui/animated-state-icons";
 import type { AdminProduct } from "@/lib/product-admin";
 
@@ -72,7 +73,7 @@ export function AdminDashboard() {
 
   useEffect(() => {
     if (!overview) return;
-    const sectionIds = ["overview", "products", "inventory", "backups", "orders"];
+    const sectionIds = ["overview", "products", "inventory", "backups", "orders", "tickets"];
     const updateActiveSection = () => {
       if (navDraggingRef.current) return;
       const atPageBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 24;
@@ -520,6 +521,7 @@ export function AdminDashboard() {
               { label: "导入库存", icon: <PackagePlus size={16} />, onSelect: () => goToAdminSection("inventory") },
               { label: "备份恢复", icon: <ArchiveRestore size={16} />, onSelect: () => goToAdminSection("backups") },
               { label: "最近订单", icon: <ReceiptText size={16} />, onSelect: () => goToAdminSection("orders") },
+              { label: "工单处理", icon: <MessageSquareText size={16} />, onSelect: () => goToAdminSection("tickets") },
             ]}
           />
         </div>
@@ -539,6 +541,7 @@ export function AdminDashboard() {
           <a className={activeSection === "inventory" ? "active" : ""} href="#inventory" data-admin-section="inventory" onClick={(event) => { event.preventDefault(); goToAdminSection("inventory"); }}><PackagePlus size={18} />导入库存</a>
           <a className={activeSection === "backups" ? "active" : ""} href="#backups" data-admin-section="backups" onClick={(event) => { event.preventDefault(); goToAdminSection("backups"); }}><ArchiveRestore size={18} />备份恢复</a>
           <a className={activeSection === "orders" ? "active" : ""} href="#orders" data-admin-section="orders" onClick={(event) => { event.preventDefault(); goToAdminSection("orders"); }}><ReceiptText size={18} />最近订单</a>
+          <a className={activeSection === "tickets" ? "active" : ""} href="#tickets" data-admin-section="tickets" onClick={(event) => { event.preventDefault(); goToAdminSection("tickets"); }}><MessageSquareText size={18} />工单处理</a>
         </nav>
         <Link className="back-store" href="/"><ArrowLeft size={17} />返回商店</Link>
       </aside>
@@ -628,6 +631,7 @@ export function AdminDashboard() {
             </tbody></table></div>
           </div>
         </section>
+        <AdminTicketManager token={token} />
       </div>
       </main>
     </div>

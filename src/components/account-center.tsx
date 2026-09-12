@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock3, FileText, LogOut, Mail, ReceiptText, ShieldCheck, UserRound, WalletCards } from "lucide-react";
+import { Clock3, LogOut, Mail, MessageSquareText, ReceiptText, ShieldCheck, UserRound, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -16,14 +16,29 @@ type CustomerOrder = {
   paymentMethod: string;
   createdAt: string;
   paidAt: string | null;
-  invoiceId: number | null;
-  invoiceStatus: "pending" | "issued" | "rejected" | null;
+};
+
+type CustomerTicket = {
+  id: number;
+  ticketNo: string;
+  orderNo: string | null;
+  subject: string;
+  message: string;
+  status: "open" | "processing" | "resolved" | "closed";
+  adminNote: string | null;
+  createdAt: number;
+  updatedAt: number;
+  productName: string | null;
+  variantLabel: string | null;
+  amountCents: number | null;
+  orderStatus: string | null;
 };
 
 type Dashboard = {
   email: string;
-  totals: { totalSpendCents: number; orderCount: number; deliveredCount: number; invoiceCount: number };
+  totals: { totalSpendCents: number; orderCount: number; deliveredCount: number; ticketCount: number };
   orders: CustomerOrder[];
+  tickets: CustomerTicket[];
 };
 
 const statusLabels: Record<CustomerOrder["status"], string> = {
@@ -32,6 +47,13 @@ const statusLabels: Record<CustomerOrder["status"], string> = {
   delivered: "已发货",
   paid_no_stock: "等待补货",
   cancelled: "已取消",
+};
+
+const ticketStatusLabels: Record<CustomerTicket["status"], string> = {
+  open: "待处理",
+  processing: "处理中",
+  resolved: "已解决",
+  closed: "已关闭",
 };
 
 function money(cents: number) {
@@ -54,11 +76,11 @@ export function AccountCenter() {
   const [verifying, setVerifying] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [invoiceOrderNo, setInvoiceOrderNo] = useState<string | null>(null);
-  const [invoiceTitle, setInvoiceTitle] = useState("");
-  const [invoiceTaxNo, setInvoiceTaxNo] = useState("");
-  const [invoiceSubmitting, setInvoiceSubmitting] = useState(false);
-  const [invoiceError, setInvoiceError] = useState("");
+  const [ticketOrderNo, setTicketOrderNo] = useState("");
+  const [ticketSubject, setTicketSubject] = useState("");
+  const [ticketMessage, setTicketMessage] = useState("");
+  const [ticketSubmitting, setTicketSubmitting] = useState(false);
+  const [ticketError, setTicketError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -131,33 +153,30 @@ export function AccountCenter() {
     setMessage("已退出用户中心");
   }
 
-  function openInvoice(order: CustomerOrder) {
-    if (invoiceOrderNo === order.orderNo) {
-      setInvoiceOrderNo(null);
-      return;
-    }
-    setInvoiceOrderNo(order.orderNo);
-    setInvoiceTitle("");
-    setInvoiceTaxNo("");
-    setInvoiceError("");
+  function openTicket(orderNo = "") {
+    setTicketOrderNo(orderNo);
+    setTicketSubject("");
+    setTicketMessage("");
+    setTicketError("");
+    window.setTimeout(() => document.getElementById("account-tickets")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
   }
 
-  async function submitInvoice(event: React.FormEvent) {
+  async function submitTicket(event: React.FormEvent) {
     event.preventDefault();
-    if (!invoiceOrderNo) return;
-    setInvoiceError("");
-    setInvoiceSubmitting(true);
+    setTicketError("");
+    setTicketSubmitting(true);
     try {
-      const response = await fetch("/api/user/invoices", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orderNo: invoiceOrderNo, title: invoiceTitle, taxNo: invoiceTaxNo }) });
+      const response = await fetch("/api/user/tickets", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orderNo: ticketOrderNo || undefined, subject: ticketSubject, message: ticketMessage }) });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "提交开票申请失败");
-      setInvoiceOrderNo(null);
-      setMessage("开票申请已提交，我们会按订单邮箱联系您");
+      if (!response.ok) throw new Error(data.error ?? "提交工单失败");
+      setTicketSubject("");
+      setTicketMessage("");
+      setMessage(`工单 ${data.ticketNo} 已提交，我们会尽快处理`);
       await loadDashboard();
     } catch (reason) {
-      setInvoiceError(reason instanceof Error ? reason.message : "提交开票申请失败");
+      setTicketError(reason instanceof Error ? reason.message : "提交工单失败");
     } finally {
-      setInvoiceSubmitting(false);
+      setTicketSubmitting(false);
     }
   }
 
@@ -166,7 +185,7 @@ export function AccountCenter() {
       <SiteHeader active="account" />
       <main className="account-page">
         {loading ? <div className="account-loading">正在加载用户中心…</div> : dashboard ? (
-          <DashboardView dashboard={dashboard} onLogout={logout} onInvoice={openInvoice} invoiceOrderNo={invoiceOrderNo} invoiceTitle={invoiceTitle} invoiceTaxNo={invoiceTaxNo} setInvoiceTitle={setInvoiceTitle} setInvoiceTaxNo={setInvoiceTaxNo} onSubmitInvoice={submitInvoice} invoiceSubmitting={invoiceSubmitting} invoiceError={invoiceError} />
+          <DashboardView dashboard={dashboard} onLogout={logout} onOpenTicket={openTicket} ticketOrderNo={ticketOrderNo} ticketSubject={ticketSubject} ticketMessage={ticketMessage} setTicketOrderNo={setTicketOrderNo} setTicketSubject={setTicketSubject} setTicketMessage={setTicketMessage} onSubmitTicket={submitTicket} ticketSubmitting={ticketSubmitting} ticketError={ticketError} />
         ) : (
           <LoginView email={email} code={code} cooldown={cooldown} sendingCode={sendingCode} verifying={verifying} message={message} error={error} setEmail={setEmail} setCode={setCode} onRequestCode={requestCode} onVerifyCode={verifyCode} />
         )}
@@ -185,8 +204,8 @@ function LoginView(props: {
     <section className="account-login" aria-labelledby="account-title">
       <div className="account-login-copy">
         <span className="section-index">CUSTOMER ACCOUNT</span>
-        <h1 id="account-title">订单、消费与开票，都在这里。</h1>
-        <p>使用下单邮箱接收验证码，登录后查看全部订单和累计消费。</p>
+        <h1 id="account-title">订单、消费与工单，都在这里。</h1>
+        <p>使用下单邮箱接收验证码，登录后查看全部订单、消费记录和售后进度。</p>
         <div className="account-trust"><ShieldCheck size={17} /> 不需要密码，验证码 10 分钟内有效</div>
       </div>
       <form className="account-login-card" onSubmit={props.onVerifyCode}>
@@ -204,8 +223,9 @@ function LoginView(props: {
 }
 
 function DashboardView(props: {
-  dashboard: Dashboard; onLogout: () => void; onInvoice: (order: CustomerOrder) => void; invoiceOrderNo: string | null; invoiceTitle: string; invoiceTaxNo: string;
-  setInvoiceTitle: (value: string) => void; setInvoiceTaxNo: (value: string) => void; onSubmitInvoice: (event: React.FormEvent) => void; invoiceSubmitting: boolean; invoiceError: string;
+  dashboard: Dashboard; onLogout: () => void; onOpenTicket: (orderNo?: string) => void; ticketOrderNo: string; ticketSubject: string; ticketMessage: string;
+  setTicketOrderNo: (value: string) => void; setTicketSubject: (value: string) => void; setTicketMessage: (value: string) => void;
+  onSubmitTicket: (event: React.FormEvent) => void; ticketSubmitting: boolean; ticketError: string;
 }) {
   return (
     <>
@@ -214,11 +234,22 @@ function DashboardView(props: {
         <Metric icon={<WalletCards />} label="累计消费" value={money(props.dashboard.totals.totalSpendCents)} />
         <Metric icon={<ReceiptText />} label="订单总数" value={`${props.dashboard.totals.orderCount} 笔`} />
         <Metric icon={<ShieldCheck />} label="已交付" value={`${props.dashboard.totals.deliveredCount} 笔`} />
-        <Metric icon={<FileText />} label="开票申请" value={`${props.dashboard.totals.invoiceCount} 笔`} />
+        <Metric icon={<MessageSquareText />} label="我的工单" value={`${props.dashboard.totals.ticketCount} 笔`} />
       </section>
       <section className="account-panel" aria-labelledby="account-orders-title">
         <div className="account-panel-heading"><div><span className="section-index">ORDER HISTORY</span><h2 id="account-orders-title">订单历史</h2></div><Link href="/orders" className="account-panel-link">查询订单 <span aria-hidden="true">↗</span></Link></div>
-        {props.dashboard.orders.length ? <div className="account-orders">{props.dashboard.orders.map((order) => <OrderRow key={order.orderNo} order={order} {...props} />)}</div> : <div className="account-empty"><ReceiptText size={22} /><p>还没有订单，去挑选一件数字商品吧。</p><Link className="primary-button" href="/">浏览商品</Link></div>}
+        {props.dashboard.orders.length ? <div className="account-orders">{props.dashboard.orders.map((order) => <OrderRow key={order.orderNo} order={order} onOpenTicket={props.onOpenTicket} />)}</div> : <div className="account-empty"><ReceiptText size={22} /><p>还没有订单，去挑选一件数字商品吧。</p><Link className="primary-button" href="/">浏览商品</Link></div>}
+      </section>
+      <section className="account-panel account-tickets-panel" id="account-tickets" aria-labelledby="account-tickets-title">
+        <div className="account-panel-heading"><div><span className="section-index">SUPPORT TICKETS</span><h2 id="account-tickets-title">售后工单</h2></div><span className="account-panel-hint">提交后可在这里查看处理状态</span></div>
+        <form className="account-ticket-form" onSubmit={props.onSubmitTicket}>
+          <label className="account-field"><span>关联订单</span><select value={props.ticketOrderNo} onChange={(event) => props.setTicketOrderNo(event.target.value)}><option value="">不关联订单</option>{props.dashboard.orders.map((order) => <option key={order.orderNo} value={order.orderNo}>{order.orderNo} · {order.productName} · {money(order.amountCents)}</option>)}</select></label>
+          <label className="account-field"><span>工单主题</span><input value={props.ticketSubject} onChange={(event) => props.setTicketSubject(event.target.value)} placeholder="例如：支付后没有收到卡密" maxLength={80} required /></label>
+          <label className="account-field account-ticket-message"><span>问题描述</span><textarea value={props.ticketMessage} onChange={(event) => props.setTicketMessage(event.target.value)} placeholder="请描述订单号、遇到的问题和希望的处理方式" maxLength={3000} rows={4} required /></label>
+          {props.ticketError && <p className="form-error" role="alert">{props.ticketError}</p>}
+          <button type="submit" className="primary-button account-ticket-submit" disabled={props.ticketSubmitting}><MessageSquareText size={16} />{props.ticketSubmitting ? "提交中…" : "提交工单"}</button>
+        </form>
+        {props.dashboard.tickets.length ? <div className="account-ticket-list">{props.dashboard.tickets.map((ticket) => <article className="account-ticket-row" key={ticket.ticketNo}><div className="account-ticket-heading"><strong>{ticket.subject}</strong><span className={`account-ticket-status account-ticket-${ticket.status}`}>{ticketStatusLabels[ticket.status]}</span></div><div className="account-ticket-meta"><code>{ticket.ticketNo}</code><span>{ticket.orderNo ? `订单 ${ticket.orderNo}` : "未关联订单"}</span><time dateTime={new Date(ticket.createdAt).toISOString()}>{dateLabel(new Date(ticket.createdAt).toISOString())}</time></div><p>{ticket.message}</p>{ticket.adminNote && <div className="account-ticket-note"><strong>客服回复</strong><span>{ticket.adminNote}</span></div>}</article>)}</div> : <div className="account-empty account-ticket-empty"><MessageSquareText size={22} /><p>还没有工单，需要帮助时可以从这里提交。</p></div>}
       </section>
     </>
   );
@@ -228,14 +259,6 @@ function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; 
   return <div className="account-metric"><span className="account-metric-icon">{icon}</span><span>{label}</span><strong>{value}</strong></div>;
 }
 
-function OrderRow(props: DashboardViewProps & { order: CustomerOrder }) {
-  const { order } = props;
-  const canInvoice = ["paid", "delivered", "paid_no_stock"].includes(order.status);
-  const invoiceLabel = order.invoiceStatus === "pending" ? "开票处理中" : order.invoiceStatus === "issued" ? "发票已开具" : order.invoiceStatus === "rejected" ? "开票被驳回" : "申请开票";
-  return <article className="account-order-row"><div className="account-order-icon"><ReceiptText size={18} /></div><div className="account-order-main"><strong>{order.productName}</strong><span>{order.variantLabel} · {order.orderNo}</span></div><div className="account-order-date"><Clock3 size={13} />{dateLabel(order.createdAt)}</div><div className="account-order-amount"><strong>{money(order.amountCents)}</strong><span className={`account-status account-status-${order.status}`}>{statusLabels[order.status]}</span></div><div className="account-order-actions">{canInvoice && !order.invoiceId ? <button type="button" className="account-invoice-button" onClick={() => props.onInvoice(order)}><FileText size={14} />{invoiceLabel}</button> : order.invoiceId ? <span className={`account-invoice-status account-invoice-${order.invoiceStatus}`}>{invoiceLabel}</span> : <span className="account-muted">付款后可开票</span>}</div>{props.invoiceOrderNo === order.orderNo && <form className="account-invoice-form" onSubmit={props.onSubmitInvoice}><div><strong>申请电子普通发票</strong><span>发票将按订单邮箱联系处理</span></div><label className="account-field"><span>发票抬头</span><input value={props.invoiceTitle} onChange={(event) => props.setInvoiceTitle(event.target.value)} placeholder="个人姓名或公司名称" required maxLength={120} /></label><label className="account-field"><span>税号（选填）</span><input value={props.invoiceTaxNo} onChange={(event) => props.setInvoiceTaxNo(event.target.value)} placeholder="公司税号" maxLength={40} /></label>{props.invoiceError && <p className="form-error" role="alert">{props.invoiceError}</p>}<div className="account-invoice-actions"><button type="button" className="secondary-button" onClick={() => props.onInvoice(order)}>取消</button><button type="submit" className="primary-button" disabled={props.invoiceSubmitting}>{props.invoiceSubmitting ? "提交中…" : "提交申请"}</button></div></form>}</article>;
+function OrderRow({ order, onOpenTicket }: { order: CustomerOrder; onOpenTicket: (orderNo?: string) => void }) {
+  return <article className="account-order-row"><div className="account-order-icon"><ReceiptText size={18} /></div><div className="account-order-main"><strong>{order.productName}</strong><span>{order.variantLabel} · {order.orderNo}</span></div><div className="account-order-date"><Clock3 size={13} />{dateLabel(order.createdAt)}</div><div className="account-order-amount"><strong>{money(order.amountCents)}</strong><span className={`account-status account-status-${order.status}`}>{statusLabels[order.status]}</span></div><div className="account-order-actions"><button type="button" className="account-invoice-button" onClick={() => onOpenTicket(order.orderNo)}><MessageSquareText size={14} />提交工单</button></div></article>;
 }
-
-type DashboardViewProps = {
-  onInvoice: (order: CustomerOrder) => void; invoiceOrderNo: string | null; invoiceTitle: string; invoiceTaxNo: string;
-  setInvoiceTitle: (value: string) => void; setInvoiceTaxNo: (value: string) => void; onSubmitInvoice: (event: React.FormEvent) => void; invoiceSubmitting: boolean; invoiceError: string;
-};
