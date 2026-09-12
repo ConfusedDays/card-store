@@ -76,10 +76,10 @@ export function normalizeRobloxVersions(payload: unknown): RobloxVersions {
   const windowsResponse = isRecord(source.WindowsResponse) ? source.WindowsResponse : {};
   const macResponse = isRecord(source.MacResponse) ? source.MacResponse : {};
   return {
-    Windows: asString(windowsResponse.version) ?? asString(source.Windows),
+    Windows: asString(source.Windows) ?? asString(windowsResponse.clientVersionUpload) ?? asString(windowsResponse.version),
     WindowsHash: asString(windowsResponse.clientVersionUpload) ?? asString(source.Windows),
     WindowsDate: asString(source.WindowsDate),
-    Mac: asString(macResponse.version) ?? asString(source.Mac),
+    Mac: asString(source.Mac) ?? asString(macResponse.clientVersionUpload) ?? asString(macResponse.version),
     MacHash: asString(macResponse.clientVersionUpload) ?? asString(source.Mac),
     MacDate: asString(source.MacDate),
     Android: asString(source.Android),
