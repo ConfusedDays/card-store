@@ -5,6 +5,7 @@ import { Clock3, LogOut, Mail, MessageSquareText, ReceiptText, ShieldCheck, User
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { DropdownSelect } from "@/components/ui/dropdown-menu";
 
 type CustomerOrder = {
   orderNo: string;
@@ -243,7 +244,7 @@ function DashboardView(props: {
       <section className="account-panel account-tickets-panel" id="account-tickets" aria-labelledby="account-tickets-title">
         <div className="account-panel-heading"><div><span className="section-index">SUPPORT TICKETS</span><h2 id="account-tickets-title">售后工单</h2></div><span className="account-panel-hint">提交后可在这里查看处理状态</span></div>
         <form className="account-ticket-form" onSubmit={props.onSubmitTicket}>
-          <label className="account-field"><span>关联订单</span><select value={props.ticketOrderNo} onChange={(event) => props.setTicketOrderNo(event.target.value)}><option value="">不关联订单</option>{props.dashboard.orders.map((order) => <option key={order.orderNo} value={order.orderNo}>{order.orderNo} · {order.productName} · {money(order.amountCents)}</option>)}</select></label>
+          <label className="account-field"><span>关联订单</span><DropdownSelect className="account-ticket-order-select" value={props.ticketOrderNo} onValueChange={props.setTicketOrderNo} ariaLabel="选择要关联的订单" options={[{ value: "", label: "不关联订单" }, ...props.dashboard.orders.map((order) => ({ value: order.orderNo, label: `${order.orderNo} · ${order.productName} · ${money(order.amountCents)}` }))]} /></label>
           <label className="account-field"><span>工单主题</span><input value={props.ticketSubject} onChange={(event) => props.setTicketSubject(event.target.value)} placeholder="例如：支付后没有收到卡密" maxLength={80} required /></label>
           <label className="account-field account-ticket-message"><span>问题描述</span><textarea value={props.ticketMessage} onChange={(event) => props.setTicketMessage(event.target.value)} placeholder="请描述订单号、遇到的问题和希望的处理方式" maxLength={3000} rows={4} required /></label>
           {props.ticketError && <p className="form-error" role="alert">{props.ticketError}</p>}
