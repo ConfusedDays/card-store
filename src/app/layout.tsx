@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SiteBackground } from "@/components/site-background";
 import { PurchaseNoticeGate } from "@/components/purchase-notice-gate";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TurnstileAccessGate } from "@/components/turnstile-access-gate";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +15,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="zh-CN" className="dark-mode" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <body>
         <SiteBackground />
-        {children}
+        <TurnstileAccessGate siteKey={process.env.TURNSTILE_SITE_KEY}>{children}</TurnstileAccessGate>
         <ThemeToggle />
         <PurchaseNoticeGate />
       </body>

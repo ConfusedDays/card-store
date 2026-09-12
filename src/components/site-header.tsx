@@ -6,7 +6,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Check, Copy, ExternalLink, MessageCircle, Users } from "lucide-react";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
-import { TextEffect } from "@/components/ui/text-effect";
 
 type SiteSection = "catalog" | "orders" | "policies" | "account" | "admin";
 const ROUTE_EXIT_DURATION = 300;
@@ -89,7 +88,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         onClick={refreshPage}
       >
         <span className="brand-mark brand-photo"><Image src="/reii-bear.jpg" alt="" width={34} height={34} priority /></span>
-        <span>{active === "catalog" ? <TextEffect className="brand-title-effect" delay={0.04} hover>Reii小店</TextEffect> : "Reii小店"}</span>
+        <span>Reii小店</span>
       </Link>
       <nav className="nav-links" aria-label="主导航">
         <div className="nav-items">
@@ -101,7 +100,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
               aria-current={active === item.id ? "page" : undefined}
               onClick={(event) => navigateTo(item.href, event)}
             >
-              {active === "catalog" ? <TextEffect delay={0.16 + navigationItems.indexOf(item) * 0.07} hover>{item.label}</TextEffect> : item.label}
+              {item.label}
             </Link>
           ))}
         </div>

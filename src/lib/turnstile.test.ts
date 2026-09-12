@@ -39,4 +39,16 @@ describe("Turnstile verification", () => {
 
     await expect(verifyTurnstileToken("wrong-action")).rejects.toThrow("人机验证失败");
   });
+
+  it("accepts the site access action", async () => {
+    vi.stubEnv("TURNSTILE_SECRET_KEY", "secret");
+    vi.stubEnv("TURNSTILE_ALLOWED_HOSTNAMES", "reiishop.cn");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      success: true,
+      action: "site_access",
+      hostname: "reiishop.cn",
+    }), { status: 200 })));
+
+    await expect(verifyTurnstileToken("valid-token", undefined, "site_access")).resolves.toBeUndefined();
+  });
 });

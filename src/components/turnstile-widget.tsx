@@ -23,7 +23,7 @@ declare global {
   }
 }
 
-export function TurnstileWidget({ siteKey, onVerify }: { siteKey: string; onVerify: (token: string) => void }) {
+export function TurnstileWidget({ siteKey, action = "create_order", onVerify }: { siteKey: string; action?: string; onVerify: (token: string) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [message, setMessage] = useState("正在进行安全验证…");
@@ -34,7 +34,7 @@ export function TurnstileWidget({ siteKey, onVerify }: { siteKey: string; onVeri
       sitekey: siteKey,
       theme: "dark",
       size: "flexible",
-      action: "create_order",
+      action,
       callback: (token) => {
         setMessage("人机验证已通过");
         onVerify(token);
@@ -48,7 +48,7 @@ export function TurnstileWidget({ siteKey, onVerify }: { siteKey: string; onVeri
         onVerify("");
       },
     });
-  }, [onVerify, siteKey]);
+  }, [action, onVerify, siteKey]);
 
   useEffect(() => {
     renderWidget();
@@ -62,7 +62,7 @@ export function TurnstileWidget({ siteKey, onVerify }: { siteKey: string; onVeri
   return (
     <div className="turnstile-field">
       <Script
-        id="cloudflare-turnstile"
+        id={`cloudflare-turnstile-${action}`}
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         strategy="afterInteractive"
         onReady={renderWidget}
