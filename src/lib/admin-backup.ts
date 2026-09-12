@@ -15,6 +15,7 @@ const tables = [
   "variants",
   "license_keys",
   "orders",
+  "invoices",
   "payments",
   "deliveries",
   "delivery_emails",

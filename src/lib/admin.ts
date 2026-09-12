@@ -128,6 +128,7 @@ export function permanentlyDeleteOrders(orderNos: string[]) {
     const existingPlaceholders = orderPlaceholders(existingNos);
     db.prepare(`DELETE FROM order_email_events WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
     db.prepare(`DELETE FROM delivery_emails WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
+    db.prepare(`DELETE FROM invoices WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
     db.prepare(`DELETE FROM payments WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
     db.prepare(`DELETE FROM deliveries WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
     db.prepare(`UPDATE license_keys SET order_no = NULL WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);

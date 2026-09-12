@@ -115,6 +115,38 @@ db.exec(`
     metadata TEXT NOT NULL DEFAULT '{}',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS customer_login_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    code_hash TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    expires_at INTEGER NOT NULL,
+    consumed_at INTEGER,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_customer_login_codes_email ON customer_login_codes(email, created_at DESC);
+  CREATE TABLE IF NOT EXISTS customer_sessions (
+    token_hash TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    last_seen_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_customer_sessions_email ON customer_sessions(email);
+  CREATE TABLE IF NOT EXISTS invoices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_no TEXT NOT NULL UNIQUE REFERENCES orders(order_no),
+    email TEXT NOT NULL,
+    invoice_type TEXT NOT NULL DEFAULT '电子普通发票',
+    title TEXT NOT NULL,
+    tax_no TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','issued','rejected')),
+    invoice_url TEXT,
+    remark TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_invoices_email ON invoices(email, created_at DESC);
 `);
 const licenseKeyColumns = db.prepare("PRAGMA table_info(license_keys)").all() as { name: string }[];
 if (!licenseKeyColumns.some((column) => column.name === "key_fingerprint")) {

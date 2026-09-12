@@ -8,7 +8,7 @@ import { Check, Copy, ExternalLink, MessageCircle, Users } from "lucide-react";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { TextEffect } from "@/components/ui/text-effect";
 
-type SiteSection = "catalog" | "orders" | "policies" | "admin";
+type SiteSection = "catalog" | "orders" | "policies" | "account" | "admin";
 const ROUTE_EXIT_DURATION = 300;
 
 export function SiteHeader({ active }: { active: SiteSection }) {
@@ -63,6 +63,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
   const navigationItems: Array<{ id: SiteSection; label: string; href: string }> = [
     { id: "catalog", label: "商品", href: "/" },
     { id: "orders", label: "订单", href: "/orders" },
+    { id: "account", label: "用户中心", href: "/account" },
     { id: "policies", label: "售后", href: "/policies#contact" },
     ...(active === "admin" ? [{ id: "admin" as const, label: "后台", href: "/admin" }] : []),
   ];
