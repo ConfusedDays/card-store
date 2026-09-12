@@ -2040,3 +2040,9 @@ html.dark-mode .product-table tbody tr.dragging { background: #263630; box-shado
 .admin-ticket-editor .primary-button { min-height: 32px; padding: 0 9px; font-size: 10px; }
 html.dark-mode .admin-ticket-filter, html.dark-mode .admin-ticket-editor, html.dark-mode .admin-ticket-order dl { background: color-mix(in srgb, var(--surface) 87%, var(--teal)); }
 .admin-ticket-filter select option, .admin-ticket-editor select option { color: #17201e; background: #f5faf7; }
+.admin-ticket-filter .dropdown-select { width: 96px; margin: 0; }
+.admin-ticket-filter-select .dropdown-select-trigger { min-height: 34px; padding: 0 2px; border: 0; box-shadow: none; background: transparent; font-size: 11px; }
+.admin-ticket-filter-select .dropdown-select-trigger:hover:not(:disabled), .admin-ticket-filter-select .dropdown-select-trigger[aria-expanded="true"] { border-color: transparent; box-shadow: none; background: transparent; }
+.admin-ticket-filter-select .dropdown-select-surface { min-width: 142px; left: auto; right: 0; }
+.admin-ticket-editor .dropdown-select { margin-top: 0; }
+.admin-ticket-status-select .dropdown-select-trigger { min-height: 35px; font-size: 11px; }
