@@ -347,13 +347,13 @@ export function ProductManager({ products, token, onSaved }: {
               <label className="toggle-field"><input type="checkbox" checked={draft.active} onChange={(event) => setDraft({ ...draft, active: event.target.checked })} /><span><Check size={14} /></span>上架销售</label>
             </div>
 
-            <div className="variant-editor-heading"><strong>价格规格</strong><button type="button" onClick={() => setDraft({ ...draft, variants: [...draft.variants, emptyVariant()] })}><AnimatedButtonIcon idle={<Plus size={15} />} size={15} /> 添加规格</button></div>
+            <div className="variant-editor-heading"><div><strong>价格规格</strong><small>可选赠送规格；赠送会从对应卡密库存再扣 1 张</small></div><button type="button" onClick={() => setDraft({ ...draft, variants: [...draft.variants, emptyVariant()] })}><AnimatedButtonIcon idle={<Plus size={15} />} size={15} /> 添加规格</button></div>
             <div className="variant-editor-list">
               {draft.variants.map((variant, index) => (
                 <div className={`variant-editor-row ${variant.active ? "" : "inactive"}`} key={variant.id ?? `new-${index}`}>
                   <input aria-label="规格名称" value={variant.label} onChange={(event) => editVariant(index, { label: event.target.value })} placeholder="月卡" required />
                   <label className="price-input"><span>¥</span><input aria-label="价格" type="number" min="0.01" step="0.01" value={variant.priceYuan} onChange={(event) => editVariant(index, { priceYuan: event.target.value })} placeholder="89.90" required /></label>
-                  <DropdownSelect className="variant-gift-select" value={variant.giftVariantId} onValueChange={(giftVariantId) => editVariant(index, { giftVariantId })} ariaLabel={`选择 ${variant.label || "此规格"} 的赠送规格`} options={[{ value: "", label: "不赠送" }, ...giftVariantOptions.filter((option) => option.value !== variant.id)]} />
+                  <DropdownSelect className="variant-gift-select" value={variant.giftVariantId} onValueChange={(giftVariantId) => editVariant(index, { giftVariantId })} ariaLabel={`选择 ${variant.label || "此规格"} 的赠送规格`} options={[{ value: "", label: "不赠送" }, ...giftVariantOptions]} />
                   <label className="mini-toggle" title={variant.active ? "停用规格" : "启用规格"}><input type="checkbox" checked={variant.active} onChange={(event) => editVariant(index, { active: event.target.checked })} /><span><Check size={12} /></span></label>
                   <button className="remove-variant" type="button" onClick={() => removeVariant(index)} title={variant.id ? "移除规格（保存后停用）" : "删除规格"}><AnimatedButtonIcon idle={<Trash2 size={15} />} size={15} /></button>
                 </div>

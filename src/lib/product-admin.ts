@@ -90,7 +90,6 @@ export function saveProduct(input: ProductInput) {
           VALUES (?, ?, ?, ?, ?, 'CNY', ?, ?)
         `).run(variantId, productId, variant.label, variant.durationLabel, variant.priceCents, Number(variant.active), variant.giftVariantId);
       }
-      if (variant.giftVariantId === variantId) throw new Error("赠送规格不能与当前规格相同");
       if (variant.giftVariantId && !db.prepare("SELECT id FROM variants WHERE id = ?").get(variant.giftVariantId)) {
         throw new Error("赠送规格不存在");
       }

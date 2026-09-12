@@ -13,6 +13,7 @@ export function getStorefrontProducts(): Product[] {
       gp.name as giftProductName, gv.label as giftVariantLabel,
       CASE WHEN v.gift_variant_id IS NULL THEN
         (SELECT COUNT(*) FROM license_keys k WHERE k.variant_id = v.id AND k.status = 'available')
+      WHEN v.gift_variant_id = v.id THEN CAST((SELECT COUNT(*) FROM license_keys k WHERE k.variant_id = v.id AND k.status = 'available') / 2 AS INTEGER)
       ELSE MIN(
         (SELECT COUNT(*) FROM license_keys k WHERE k.variant_id = v.id AND k.status = 'available'),
         (SELECT COUNT(*) FROM license_keys k WHERE k.variant_id = v.gift_variant_id AND k.status = 'available')

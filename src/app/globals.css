@@ -1734,7 +1734,9 @@ html.dark-mode .checkout-header-actions > span { color: var(--muted); }
 .toggle-field > span, .mini-toggle > span { width: 20px; height: 20px; border: 1px solid #aeb7b4; border-radius: 4px; display: grid; place-items: center; color: transparent; background: var(--surface); }
 .toggle-field input:checked + span, .mini-toggle input:checked + span { color: #fff; border-color: var(--teal); background: var(--teal); }
 .variant-editor-heading { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+.variant-editor-heading > div { display: grid; gap: 4px; }
 .variant-editor-heading strong { font-size: 13px; }
+.variant-editor-heading small { color: var(--muted); font-size: 10px; font-weight: 500; }
 .variant-editor-heading button { padding: 0; border: 0; color: var(--teal); background: transparent; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 720; }
 .variant-editor-list { margin-top: 10px; display: grid; gap: 7px; }
 .variant-editor-row { display: grid; grid-template-columns: minmax(110px, 1fr) 106px minmax(150px, 1.35fr) 24px 32px; align-items: center; gap: 7px; }
