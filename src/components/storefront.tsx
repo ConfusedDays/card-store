@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import {
   PackageCheck, Search, ShieldCheck, ShoppingBag, Sparkles, Zap,
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
+import type { LiveExploitStatus, LiveStatus, RobloxVersions } from "@/lib/weao";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { StoreHeroTitle } from "@/components/store-hero-title";
@@ -39,6 +40,36 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   const [lookup, setLookup] = useState({ orderNo: "", email: "" });
   const [lookupResult, setLookupResult] = useState<OrderResult | null>(null);
   const [lookupError, setLookupError] = useState("");
+  const [liveStatus, setLiveStatus] = useState<LiveStatus | null>(null);
+  const [liveStatusLoading, setLiveStatusLoading] = useState(view === "catalog");
+  const hasLiveStatus = useRef(false);
+
+  useEffect(() => {
+    if (view !== "catalog") return;
+    let active = true;
+    const refresh = async () => {
+      if (!hasLiveStatus.current) setLiveStatusLoading(true);
+      try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        if (!response.ok) throw new Error("status request failed");
+        const data = await response.json() as LiveStatus;
+        if (active) {
+          hasLiveStatus.current = true;
+          setLiveStatus(data);
+        }
+      } catch {
+        if (active && !hasLiveStatus.current) setLiveStatus(null);
+      } finally {
+        if (active) setLiveStatusLoading(false);
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(refresh, 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [view]);
 
   useEffect(() => {
     if (view !== "catalog") return;
@@ -59,6 +90,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   }, [category, product?.id]);
 
   const selected = useMemo(() => product?.variants.find((variant) => variant.id === selectedId), [product, selectedId]);
+  const productStatus = useMemo(() => findLiveExploitStatus(product?.name, liveStatus?.exploits), [product?.name, liveStatus?.exploits]);
 
   function selectProduct(nextProductId: string) {
     if (nextProductId === productId) return;
@@ -161,16 +193,18 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
         {view === "catalog" && product && (
           <section className="catalog-band" id="catalog">          <div className="catalog-wrap scroll-reveal" data-scroll-reveal>
             {categories.length > 1 && <SegmentedControl className="catalog-category-filter segmented-categories" role="tablist" label="按商品分类筛选" value={category} onValueChange={setCategory} options={[{ value: "all", label: "全部", accessibleLabel: "全部" }, ...categories.map((item) => ({ value: item, label: item, accessibleLabel: item }))]} />}
+            <RobloxStatusPanel status={liveStatus} loading={liveStatusLoading} />
             {visibleProducts.length > 1 && (
               <SegmentedControl className="segmented-products" columns={3} role="tablist" label="选择商品" value={product.id} onValueChange={selectProduct} options={visibleProducts.map((item) => {
                   const firstVariant = item.variants[0];
                   const totalStock = item.variants.reduce((sum, variant) => sum + variant.availableCount, 0);
                   const price = firstVariant ? `起价 ${money(firstVariant.priceCents)}` : "暂无规格";
                   const stock = totalStock > 0 ? `${totalStock} 件` : "缺货";
+                  const status = findLiveExploitStatus(item.name, liveStatus?.exploits);
                   return {
                     value: item.id,
                     accessibleLabel: `${item.name} ${price} ${stock}`,
-                    label: <span className="segmented-product-label"><ProductThumbnail src={item.imageUrl} /><span className="segmented-product-copy"><strong>{item.name}</strong><small>{price}</small></span><em>{stock}</em></span>,
+                    label: <span className="segmented-product-label"><ProductThumbnail src={item.imageUrl} /><span className="segmented-product-copy"><strong>{item.name}</strong><small>{price}</small></span><em className="product-stock-meta"><AvailabilityStatus status={status} /><span>{stock}</span></em></span>,
                   };
                 })} />
             )}
@@ -212,7 +246,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
               <fieldset className="variant-list">
                 <legend className="sr-only">商品规格</legend>
                 {product.variants.map((variant) => (
-                  <VariantOption key={variant.id} variant={variant} selected={variant.id === selectedId} onSelect={setSelectedId} />
+                  <VariantOption key={variant.id} variant={variant} status={productStatus} selected={variant.id === selectedId} onSelect={setSelectedId} />
                 ))}
               </fieldset>
               <label className="field-label" htmlFor="email">接收邮箱</label>
@@ -304,15 +338,75 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   );
 }
 
-function VariantOption({ variant, selected, onSelect }: { variant: Variant; selected: boolean; onSelect: (id: string) => void }) {
+function VariantOption({ variant, status, selected, onSelect }: { variant: Variant; status?: LiveExploitStatus; selected: boolean; onSelect: (id: string) => void }) {
   return (
     <label className={`variant-option ${selected ? "selected" : ""} ${variant.availableCount < 1 ? "disabled" : ""}`}>
       <input type="radio" name="variant" checked={selected} disabled={variant.availableCount < 1} onChange={() => onSelect(variant.id)} />
       <span className="radio-check">{selected && <Check size={14} />}</span>
       <span className="variant-name"><strong>{variant.label}</strong>{variant.giftVariantId && <small>赠送 {variant.giftProductName ? `${variant.giftProductName} · ` : ""}{variant.giftVariantLabel ?? "卡密"}</small>}</span>
-      <span className="variant-stock">{variant.availableCount > 0 ? `${variant.availableCount} 件` : "缺货"}</span>
+      <span className="variant-stock"><AvailabilityStatus status={status} /><span>{variant.availableCount > 0 ? `${variant.availableCount} 件` : "缺货"}</span></span>
       <strong className="variant-price">{money(variant.priceCents)}</strong>
     </label>
+  );
+}
+
+function normalizeLiveStatusName(value: string) {
+  return value.toLocaleLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function findLiveExploitStatus(productName: string | undefined, statuses: LiveExploitStatus[] | undefined) {
+  if (!productName || !statuses?.length) return undefined;
+  const name = normalizeLiveStatusName(productName);
+  if (!name) return undefined;
+  return statuses.find((item) => normalizeLiveStatusName(item.title) === name)
+    ?? statuses.find((item) => {
+      const title = normalizeLiveStatusName(item.title);
+      return title.length >= 4 && (name.includes(title) || title.includes(name));
+    });
+}
+
+function AvailabilityStatus({ status }: { status?: LiveExploitStatus }) {
+  if (!status) return null;
+  const label = status.updateStatus ? "已更新" : "未更新";
+  const detail = [status.version, status.updatedDate].filter(Boolean).join(" · ");
+  return <span className={`availability-status ${status.updateStatus ? "availability-status-updated" : "availability-status-notupdated"}`} title={detail || `${status.title} 状态来自 WEAO`}>{label}</span>;
+}
+
+const robloxVersionRows: Array<{ key: keyof RobloxVersions; hashKey?: keyof RobloxVersions; dateKey: keyof RobloxVersions; label: string; binaryType?: string }> = [
+  { key: "Windows", hashKey: "WindowsHash", dateKey: "WindowsDate", label: "Windows", binaryType: "WindowsPlayer" },
+  { key: "Mac", hashKey: "MacHash", dateKey: "MacDate", label: "Mac", binaryType: "MacPlayer" },
+  { key: "Android", dateKey: "AndroidDate", label: "Android" },
+  { key: "iOS", dateKey: "iOSDate", label: "iOS" },
+];
+
+function rddDownloadUrl(version: string | null, binaryType: string) {
+  const params = new URLSearchParams({ channel: "LIVE", binaryType });
+  if (version) params.set("version", version);
+  return `https://rdd.weao.gg/?${params.toString()}`;
+}
+
+function RobloxStatusPanel({ status, loading }: { status: LiveStatus | null; loading: boolean }) {
+  return (
+    <section className="roblox-status-panel" aria-label="Roblox 版本状态">
+      <div className="roblox-status-heading">
+        <div className="roblox-status-title"><span className="live-dot" /><span><small>ROBLOX STATUS</small><strong>当前版本与下载</strong></span></div>
+        <a href="https://rdd.weao.gg/" target="_blank" rel="noreferrer">查看 RDD <ArrowRight size={14} /></a>
+      </div>
+      <div className="roblox-version-grid">
+        {robloxVersionRows.map((row) => {
+          const version = status?.roblox[row.key] ?? null;
+          const versionHash = row.hashKey ? status?.roblox[row.hashKey] ?? null : null;
+          const date = status?.roblox[row.dateKey] ?? null;
+          return (
+            <div className="roblox-version-row" key={row.key}>
+              <div><span>{row.label}</span><strong>{loading && !status ? "读取中…" : version ?? "暂不可用"}</strong>{date && <small>{date}</small>}</div>
+              {row.binaryType && <a href={rddDownloadUrl(versionHash, row.binaryType)} target="_blank" rel="noreferrer">下载地址 <ArrowRight size={13} /></a>}
+            </div>
+          );
+        })}
+      </div>
+      <small className="roblox-status-note">状态每 60 秒自动刷新 · 数据源 WEAO</small>
+    </section>
   );
 }
 

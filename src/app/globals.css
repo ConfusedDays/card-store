@@ -386,6 +386,10 @@ html.dark-mode .segmented-label-active { color: var(--hero-button-ink, #06261f);
 .product-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
 .segmented-product-label strong { overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
 .segmented-product-label small, .segmented-product-label em { font-size: 11px; font-style: normal; }
+.product-stock-meta { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; white-space: nowrap; }
+.availability-status { display: inline-flex; align-items: center; min-height: 19px; padding: 2px 6px; border-radius: 999px; font-size: 10px; font-weight: 760; line-height: 1; white-space: nowrap; }
+.availability-status-updated { color: #146c4d; background: #ddf3e7; }
+.availability-status-notupdated { color: #98601c; background: #fff0d5; }
 .segmented-payment { display: block; width: 100%; }
 .segmented-payment .segmented-cell { padding-block: 9px; }
 .segmented-payment-label { display: flex; justify-content: center; align-items: center; gap: 7px; }
@@ -396,6 +400,7 @@ html.dark-mode .segmented-label-active { color: var(--hero-button-ink, #06261f);
   .segmented-product-copy { width: 100%; }
   .segmented-product-label strong { font-size: 12px; }
   .segmented-product-label small, .segmented-product-label em { font-size: 10px; }
+  .product-stock-meta { justify-content: center; flex-wrap: wrap; gap: 4px; }
   .product-thumbnail { width: 32px; height: 32px; }
 }
 
@@ -500,6 +505,31 @@ html.dark-mode .capsule-tabs-controls > button { background: color-mix(in srgb, 
   gap: 76px;
   align-items: center;
 }
+.roblox-status-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--teal) 35%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--mint));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.roblox-status-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.roblox-status-title { display: inline-flex; align-items: center; gap: 10px; }
+.roblox-status-title > span:last-child { display: grid; gap: 3px; }
+.roblox-status-title small { color: var(--muted); font-size: 9px; font-weight: 780; letter-spacing: .14em; }
+.roblox-status-title strong { color: var(--ink); font-size: 14px; }
+.roblox-status-heading > a, .roblox-version-row > a { display: inline-flex; align-items: center; gap: 5px; color: var(--teal-dark); font-size: 11px; font-weight: 760; white-space: nowrap; }
+.roblox-status-heading > a:hover, .roblox-version-row > a:hover { color: var(--teal); }
+.roblox-version-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.roblox-version-row { min-width: 0; padding: 11px 12px; border: 1px solid color-mix(in srgb, var(--line) 72%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--surface) 74%, transparent); }
+.roblox-version-row > div { display: grid; gap: 3px; min-width: 0; }
+.roblox-version-row > div > span { color: var(--muted); font-size: 10px; font-weight: 700; }
+.roblox-version-row strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.roblox-version-row small { overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.roblox-version-row > a { margin-top: 8px; }
+.roblox-status-note { color: var(--muted); font-size: 10px; }
 .purchase-panel { position: sticky; top: 92px; }
 @media (max-width: 920px) { .purchase-panel { position: static; } }
 .product-summary { min-width: 0; }
@@ -614,7 +644,7 @@ html.dark-mode .capsule-tabs-controls > button { background: color-mix(in srgb, 
 .variant-name { display: flex; flex-direction: column; gap: 2px; }
 .variant-name strong { font-size: 14px; }
 .variant-name small { color: #75807c; font-size: 11px; }
-.variant-stock { color: #63706c; font-size: 11px; }
+.variant-stock { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; color: #63706c; font-size: 11px; white-space: nowrap; }
 .variant-price { min-width: 66px; text-align: right; font-size: 14px; }
 .field-label { display: block; margin: 15px 0 7px; }
 .text-input, .lookup-fields input, .admin-login input, .import-panel select, .import-panel textarea {
@@ -1021,6 +1051,7 @@ tbody tr:last-child td { border-bottom: 0; }
   .admin-login, .admin-page { min-height: calc(100vh - 112px); }
   .admin-sidebar { height: calc(100vh - 112px); top: 112px; }
   #overview, #products, #inventory, #backups, #orders { scroll-margin-top: 132px; }
+  .roblox-version-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
@@ -1035,8 +1066,13 @@ tbody tr:last-child td { border-bottom: 0; }
   .license-tile-front span { margin-bottom: 25px; }
   .license-tile-front strong { font-size: 20px; }
   .purchase-panel { padding: 19px; }
-  .variant-option { grid-template-columns: 20px 1fr auto; }
-  .variant-stock { display: none; }
+  .variant-option { grid-template-columns: 20px minmax(0, 1fr) auto auto; padding-inline: 11px; gap: 7px; }
+  .variant-stock { display: inline-flex; gap: 4px; font-size: 10px; }
+  .availability-status { padding-inline: 5px; font-size: 9px; }
+  .roblox-status-panel { padding: 14px; }
+  .roblox-status-heading { align-items: flex-start; }
+  .roblox-status-heading > a { font-size: 10px; }
+  .roblox-version-grid { grid-template-columns: 1fr; }
   .lookup-fields { grid-template-columns: 1fr; }
   .lookup-fields button { grid-column: 1; }
   .lookup-form { padding: 20px; }
@@ -1308,6 +1344,10 @@ html.dark-mode .delivery-success button { color: var(--success); border-color: #
 html.dark-mode th { color: #a5b3ae; background: #18231f; }
 html.dark-mode th, html.dark-mode td { border-color: #2d3c38; }
 html.dark-mode .status-badge { color: #c7d3ce; background: #2a3632; }
+html.dark-mode .availability-status-updated { color: #8be2c8; background: rgba(36, 115, 91, .52); }
+html.dark-mode .availability-status-notupdated { color: #f1c478; background: rgba(108, 78, 31, .55); }
+html.dark-mode .roblox-status-panel { background: color-mix(in srgb, var(--surface) 84%, var(--teal)); border-color: color-mix(in srgb, var(--line) 72%, var(--teal)); }
+html.dark-mode .roblox-version-row { background: color-mix(in srgb, var(--surface) 76%, transparent); border-color: var(--line); }
 html.dark-mode .status-available { color: #8be2c8; background: rgba(36, 115, 91, .52); border-color: rgba(110, 225, 190, .34); }
 html.dark-mode .status-disabled { color: #f1c478; background: rgba(108, 78, 31, .55); border-color: rgba(241, 196, 120, .3); }
 html.dark-mode .status-sold { color: #c6d0cc; background: rgba(68, 83, 78, .7); border-color: rgba(180, 195, 189, .18); }
