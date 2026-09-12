@@ -9,10 +9,18 @@ export function getStorefrontProducts(): Product[] {
   `).all() as Omit<Product, "variants">[];
   const variants = db.prepare(`
     SELECT v.id, v.product_id as productId, v.label, v.duration_label as durationLabel,
-      v.price_cents as priceCents, v.currency,
-      COALESCE(SUM(CASE WHEN k.status = 'available' THEN 1 ELSE 0 END), 0) as availableCount
-    FROM variants v LEFT JOIN license_keys k ON k.variant_id = v.id
-    WHERE v.active = 1 GROUP BY v.id ORDER BY v.price_cents
+      v.price_cents as priceCents, v.currency, v.gift_variant_id as giftVariantId,
+      gp.name as giftProductName, gv.label as giftVariantLabel,
+      CASE WHEN v.gift_variant_id IS NULL THEN
+        (SELECT COUNT(*) FROM license_keys k WHERE k.variant_id = v.id AND k.status = 'available')
+      ELSE MIN(
+        (SELECT COUNT(*) FROM license_keys k WHERE k.variant_id = v.id AND k.status = 'available'),
+        (SELECT COUNT(*) FROM license_keys k WHERE k.variant_id = v.gift_variant_id AND k.status = 'available')
+      ) END as availableCount
+    FROM variants v
+      LEFT JOIN variants gv ON gv.id = v.gift_variant_id
+      LEFT JOIN products gp ON gp.id = gv.product_id
+    WHERE v.active = 1 ORDER BY v.price_cents
   `).all() as (Variant & { productId: string })[];
   return products.map((product) => ({
     ...product,
@@ -24,8 +32,11 @@ export function getStorefrontProducts(): Product[] {
 export function getVariant(variantId: string) {
   return db.prepare(`
     SELECT v.id, v.product_id as productId, v.label, v.duration_label as durationLabel,
-      v.price_cents as priceCents, v.currency, p.name as productName
+      v.price_cents as priceCents, v.currency, p.name as productName,
+      v.gift_variant_id as giftVariantId, gp.name as giftProductName, gv.label as giftVariantLabel
     FROM variants v JOIN products p ON p.id = v.product_id
+      LEFT JOIN variants gv ON gv.id = v.gift_variant_id
+      LEFT JOIN products gp ON gp.id = gv.product_id
     WHERE v.id = ? AND v.active = 1 AND p.active = 1
   `).get(variantId) as (Variant & { productId: string; productName: string }) | undefined;
 }

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { decryptLicenseKey } from "@/lib/crypto";
+import { getDeliveredLicenseKeys } from "@/lib/order-service";
 
 type DeliveryEmail = {
   orderNo: string;
@@ -8,7 +8,7 @@ type DeliveryEmail = {
   currency: string;
   productName: string;
   variantLabel: string;
-  keyCiphertext: string;
+  licenseKeys: ReturnType<typeof getDeliveredLicenseKeys>;
 };
 
 export type DeliveryEmailResult =
@@ -29,15 +29,17 @@ function money(amountCents: number, currency: string) {
 }
 
 function getDeliveryEmail(orderNo: string) {
-  return db.prepare(`
+  const order = db.prepare(`
     SELECT o.order_no AS orderNo, o.email, o.amount_cents AS amountCents, o.currency,
-      p.name AS productName, v.label AS variantLabel, d.key_ciphertext AS keyCiphertext
+      p.name AS productName, v.label AS variantLabel
     FROM orders o
     JOIN variants v ON v.id = o.variant_id
     JOIN products p ON p.id = v.product_id
-    JOIN deliveries d ON d.order_no = o.order_no
     WHERE o.order_no = ? AND o.status = 'delivered'
-  `).get(orderNo) as DeliveryEmail | undefined;
+  `).get(orderNo) as Omit<DeliveryEmail, "licenseKeys"> | undefined;
+  if (!order) return undefined;
+  const licenseKeys = getDeliveredLicenseKeys(orderNo);
+  return licenseKeys.length ? { ...order, licenseKeys } : undefined;
 }
 
 export async function trySendDeliveryEmail(
@@ -69,23 +71,23 @@ export async function trySendDeliveryEmail(
   const emailAttempt = db.prepare("SELECT attempts FROM delivery_emails WHERE order_no = ?")
     .get(orderNo) as { attempts: number };
 
-  const licenseKey = decryptLicenseKey(delivery.keyCiphertext);
   const safeOrderNo = escapeHtml(delivery.orderNo);
   const safeProduct = escapeHtml(delivery.productName);
   const safeVariant = escapeHtml(delivery.variantLabel);
-  const safeKey = escapeHtml(licenseKey);
   const total = money(delivery.amountCents, delivery.currency);
   const subject = `您的卡密已送达 - ${delivery.orderNo}`;
+  const keyLines = delivery.licenseKeys.map((item) => `${item.isGift ? "附赠卡密" : "卡密"}：${item.key}`);
+  const keyCards = delivery.licenseKeys.map((item) => `<div style="background:#0b0d12;border:1px solid ${item.isGift ? "#7a5a24" : "#2c3850"};border-radius:12px;padding:18px;margin-bottom:12px"><div style="color:${item.isGift ? "#e4b65c" : "#8996aa"};font-size:13px;margin-bottom:8px">${item.isGift ? "附赠卡密" : "您的卡密"}</div><div style="color:#8996aa;font-size:12px;margin-bottom:6px">${escapeHtml(item.productName)} · ${escapeHtml(item.variantLabel)}</div><div style="font-family:Consolas,monospace;font-size:18px;line-height:1.6;word-break:break-all;color:#ffffff">${escapeHtml(item.key)}</div></div>`).join("");
   const text = [
     "支付成功，您的卡密已自动发放。",
     `订单号：${delivery.orderNo}`,
     `商品：${delivery.productName} / ${delivery.variantLabel}`,
     `金额：${total}`,
-    `卡密：${licenseKey}`,
+    ...keyLines,
     "请妥善保管卡密。如需再次查看，可前往 reiishop.cn 使用订单号和下单邮箱查询。",
     "需要帮助？加入 QQ 群：1107140300，或访问 Discord：https://discord.gg/MmXRuWnrQT",
   ].join("\n");
-  const html = `<!doctype html><html lang="zh-CN"><body style="margin:0;background:#0b0d12;color:#e9eef8;font-family:Arial,'Microsoft YaHei',sans-serif"><div style="max-width:620px;margin:0 auto;padding:32px 20px"><div style="background:#141823;border:1px solid #273044;border-radius:16px;padding:28px"><div style="color:#62d8ff;font-size:13px;letter-spacing:.12em">REII SHOP</div><h1 style="font-size:24px;margin:12px 0 8px">支付成功，卡密已送达</h1><p style="color:#9ca9bd;margin:0 0 24px">订单号：${safeOrderNo}</p><div style="background:#0b0d12;border:1px solid #2c3850;border-radius:12px;padding:18px;margin-bottom:18px"><div style="color:#8996aa;font-size:13px;margin-bottom:8px">您的卡密</div><div style="font-family:Consolas,monospace;font-size:18px;line-height:1.6;word-break:break-all;color:#ffffff">${safeKey}</div></div><table style="width:100%;color:#c9d2df;font-size:14px;border-collapse:collapse"><tr><td style="padding:6px 0;color:#8996aa">商品</td><td style="text-align:right">${safeProduct}</td></tr><tr><td style="padding:6px 0;color:#8996aa">规格</td><td style="text-align:right">${safeVariant}</td></tr><tr><td style="padding:6px 0;color:#8996aa">金额</td><td style="text-align:right">${escapeHtml(total)}</td></tr></table><div style="margin-top:22px;padding-top:17px;border-top:1px solid #273044"><div style="color:#d9e7e3;font-size:14px;font-weight:700">需要帮助？</div><p style="color:#8996aa;font-size:13px;line-height:1.8;margin:7px 0 0">加入 QQ 群：<strong style="color:#dfe8e5">1107140300</strong><br>Discord：<a href="https://discord.gg/MmXRuWnrQT" style="color:#62d8ff;text-decoration:underline">discord.gg/MmXRuWnrQT</a></p></div><p style="color:#8996aa;font-size:13px;line-height:1.7;margin:22px 0 0">请妥善保管卡密。如需再次查看，可前往 reiishop.cn 使用订单号和下单邮箱查询。</p></div></div></body></html>`;
+  const html = `<!doctype html><html lang="zh-CN"><body style="margin:0;background:#0b0d12;color:#e9eef8;font-family:Arial,'Microsoft YaHei',sans-serif"><div style="max-width:620px;margin:0 auto;padding:32px 20px"><div style="background:#141823;border:1px solid #273044;border-radius:16px;padding:28px"><div style="color:#62d8ff;font-size:13px;letter-spacing:.12em">REII SHOP</div><h1 style="font-size:24px;margin:12px 0 8px">支付成功，卡密已送达</h1><p style="color:#9ca9bd;margin:0 0 24px">订单号：${safeOrderNo}</p>${keyCards}<table style="width:100%;color:#c9d2df;font-size:14px;border-collapse:collapse"><tr><td style="padding:6px 0;color:#8996aa">商品</td><td style="text-align:right">${safeProduct}</td></tr><tr><td style="padding:6px 0;color:#8996aa">规格</td><td style="text-align:right">${safeVariant}</td></tr><tr><td style="padding:6px 0;color:#8996aa">金额</td><td style="text-align:right">${escapeHtml(total)}</td></tr></table><div style="margin-top:22px;padding-top:17px;border-top:1px solid #273044"><div style="color:#d9e7e3;font-size:14px;font-weight:700">需要帮助？</div><p style="color:#8996aa;font-size:13px;line-height:1.8;margin:7px 0 0">加入 QQ 群：<strong style="color:#dfe8e5">1107140300</strong><br>Discord：<a href="https://discord.gg/MmXRuWnrQT" style="color:#62d8ff;text-decoration:underline">discord.gg/MmXRuWnrQT</a></p></div><p style="color:#8996aa;font-size:13px;line-height:1.7;margin:22px 0 0">请妥善保管卡密。如需再次查看，可前往 reiishop.cn 使用订单号和下单邮箱查询。</p></div></div></body></html>`;
 
   try {
     const response = await fetch("https://api.resend.com/emails", {

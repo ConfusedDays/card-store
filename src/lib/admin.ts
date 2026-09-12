@@ -132,6 +132,7 @@ export function permanentlyDeleteOrders(orderNos: string[]) {
     db.prepare(`DELETE FROM invoices WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
     db.prepare(`DELETE FROM support_tickets WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
     db.prepare(`DELETE FROM payments WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
+    db.prepare(`DELETE FROM delivery_items WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
     db.prepare(`DELETE FROM deliveries WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
     db.prepare(`UPDATE license_keys SET order_no = NULL WHERE order_no IN (${existingPlaceholders})`).run(...existingNos);
     const result = db.prepare(`DELETE FROM orders WHERE order_no IN (${existingPlaceholders}) AND deleted_at IS NOT NULL`).run(...existingNos);
@@ -218,10 +219,11 @@ export function deleteInventoryKeys(ids: number[]) {
   const placeholders = ids.map(() => "?").join(",");
   const remove = db.transaction(() => {
     const detachedDeliveries = db.prepare(`DELETE FROM deliveries WHERE license_key_id IN (${placeholders})`).run(...ids).changes;
+    const detachedGiftDeliveries = db.prepare(`DELETE FROM delivery_items WHERE license_key_id IN (${placeholders})`).run(...ids).changes;
     const deleted = db.prepare(`DELETE FROM license_keys WHERE id IN (${placeholders})`).run(...ids).changes;
     db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
-      .run("inventory.deleted", "license_key", ids.join(","), JSON.stringify({ deleted, detachedDeliveries }));
-    return { deleted, detachedDeliveries };
+      .run("inventory.deleted", "license_key", ids.join(","), JSON.stringify({ deleted, detachedDeliveries: detachedDeliveries + detachedGiftDeliveries }));
+    return { deleted, detachedDeliveries: detachedDeliveries + detachedGiftDeliveries };
   });
   return remove();
 }

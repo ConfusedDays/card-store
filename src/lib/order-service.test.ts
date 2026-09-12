@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createSign, generateKeyPairSync } from "node:crypto";
+import { encryptLicenseKey, keyFingerprint, keyLast4 } from "./crypto";
 
 const testDirectory = mkdtempSync(join(tmpdir(), "card-store-payment-"));
 let database: typeof import("./db").db;
@@ -72,6 +73,55 @@ describe("paid order fulfillment", () => {
     expect(database.prepare("SELECT status FROM orders WHERE order_no = ?").get(order.orderNo))
       .toEqual({ status: "pending" });
   });
+
+  it("delivers a configured gift from the shared inventory pool", () => {
+    const suffix = Date.now().toString(36);
+    const productId = `gift-product-${suffix}`;
+    const purchaseVariantId = `gift-purchase-${suffix}`;
+    const giftVariantId = `gift-bonus-${suffix}`;
+    database.prepare("INSERT INTO products (id, slug, name, description, category, accent) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(productId, `gift-${suffix}`, "赠送测试商品", "测试", "测试", "teal");
+    database.prepare("INSERT INTO variants (id, product_id, label, duration_label, price_cents, gift_variant_id) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(giftVariantId, productId, "赠送卡", "赠送", 1, null);
+    database.prepare("INSERT INTO variants (id, product_id, label, duration_label, price_cents, gift_variant_id) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(purchaseVariantId, productId, "购买卡", "购买", 100, giftVariantId);
+    const insertKey = database.prepare("INSERT INTO license_keys (variant_id, key_ciphertext, key_fingerprint, key_last4) VALUES (?, ?, ?, ?)");
+    for (const [variantId, value] of [[purchaseVariantId, `PURCHASE-${suffix}`], [giftVariantId, `GIFT-${suffix}`] as const]) {
+      insertKey.run(variantId, encryptLicenseKey(value), keyFingerprint(value), keyLast4(value));
+    }
+
+    const order = createPendingOrder({ variantId: purchaseVariantId, email: "gift@example.com", paymentMethod: "alipay" });
+    const delivered = completePaidOrder({ orderNo: order.orderNo, provider: "alipay", providerRef: `gift-payment-${suffix}`, amountCents: order.amountCents });
+    expect(delivered.licenseKeys?.map((item) => ({ key: item.key, isGift: item.isGift }))).toEqual([
+      { key: `PURCHASE-${suffix}`, isGift: false },
+      { key: `GIFT-${suffix}`, isGift: true },
+    ]);
+    expect(database.prepare("SELECT count(*) as count FROM delivery_items WHERE order_no = ?").get(order.orderNo)).toEqual({ count: 1 });
+    expect(database.prepare("SELECT count(*) as count FROM license_keys WHERE order_no = ?").get(order.orderNo)).toEqual({ count: 2 });
+  });
+
+  it("does not consume the purchased key when gift stock is unavailable", () => {
+    const suffix = `${Date.now().toString(36)}-nostock`;
+    const productId = `gift-product-${suffix}`;
+    const purchaseVariantId = `gift-purchase-${suffix}`;
+    const giftVariantId = `gift-bonus-${suffix}`;
+    database.prepare("INSERT INTO products (id, slug, name, description, category, accent) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(productId, `gift-${suffix}`, "赠送缺货测试", "测试", "测试", "teal");
+    database.prepare("INSERT INTO variants (id, product_id, label, duration_label, price_cents, gift_variant_id) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(giftVariantId, productId, "缺货赠送", "赠送", 1, null);
+    database.prepare("INSERT INTO variants (id, product_id, label, duration_label, price_cents, gift_variant_id) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(purchaseVariantId, productId, "主商品", "购买", 100, giftVariantId);
+    const value = `PRIMARY-${suffix}`;
+    database.prepare("INSERT INTO license_keys (variant_id, key_ciphertext, key_fingerprint, key_last4) VALUES (?, ?, ?, ?)")
+      .run(purchaseVariantId, encryptLicenseKey(value), keyFingerprint(value), keyLast4(value));
+
+    const order = createPendingOrder({ variantId: purchaseVariantId, email: "gift-nostock@example.com", paymentMethod: "alipay" });
+    const result = completePaidOrder({ orderNo: order.orderNo, provider: "alipay", providerRef: `gift-payment-${suffix}`, amountCents: order.amountCents });
+    expect(result.status).toBe("paid_no_stock");
+    expect(database.prepare("SELECT status FROM license_keys WHERE variant_id = ?").get(purchaseVariantId)).toEqual({ status: "available" });
+    expect(database.prepare("SELECT count(*) as count FROM delivery_items WHERE order_no = ?").get(order.orderNo)).toEqual({ count: 0 });
+  });
+
   it("accepts a valid RSA2 Alipay notification and delivers the order", async () => {
     const order = createPendingOrder({
       variantId: "variant-license-30d",

@@ -16,6 +16,7 @@ type DraftVariant = {
   durationLabel: string;
   priceYuan: string;
   active: boolean;
+  giftVariantId: string;
 };
 
 type DraftProduct = {
@@ -32,7 +33,7 @@ type DraftProduct = {
   variants: DraftVariant[];
 };
 
-const emptyVariant = (): DraftVariant => ({ label: "", durationLabel: "", priceYuan: "", active: true });
+const emptyVariant = (): DraftVariant => ({ label: "", durationLabel: "", priceYuan: "", active: true, giftVariantId: "" });
 const emptyProduct = (): DraftProduct => ({
   slug: "",
   name: "",
@@ -64,6 +65,7 @@ function toDraft(product: AdminProduct): DraftProduct {
       durationLabel: "",
       priceYuan: (variant.priceCents / 100).toFixed(2),
       active: variant.active,
+      giftVariantId: variant.giftVariantId ?? "",
     })),
   };
 }
@@ -89,6 +91,10 @@ export function ProductManager({ products, token, onSaved }: {
     const knownIds = new Set(orderedProductIds);
     return [...ordered, ...products.filter((product) => !knownIds.has(product.id))];
   }, [orderedProductIds, products]);
+  const giftVariantOptions = useMemo(() => products.flatMap((product) => product.variants.map((variant) => ({
+    value: variant.id,
+    label: `${product.name} · ${variant.label}${variant.active ? "" : "（已停用）"}`,
+  }))), [products]);
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -170,6 +176,7 @@ export function ProductManager({ products, token, onSaved }: {
       durationLabel: variant.durationLabel,
       priceCents: Math.round(Number(variant.priceYuan) * 100),
       active: variant.active,
+      giftVariantId: variant.giftVariantId || null,
     }));
     if (variants.some((variant) => !Number.isFinite(variant.priceCents) || variant.priceCents < 1)) throw new Error("请填写有效的规格价格");
     const response = await fetch("/api/admin/products", {
@@ -346,6 +353,7 @@ export function ProductManager({ products, token, onSaved }: {
                 <div className={`variant-editor-row ${variant.active ? "" : "inactive"}`} key={variant.id ?? `new-${index}`}>
                   <input aria-label="规格名称" value={variant.label} onChange={(event) => editVariant(index, { label: event.target.value })} placeholder="月卡" required />
                   <label className="price-input"><span>¥</span><input aria-label="价格" type="number" min="0.01" step="0.01" value={variant.priceYuan} onChange={(event) => editVariant(index, { priceYuan: event.target.value })} placeholder="89.90" required /></label>
+                  <DropdownSelect className="variant-gift-select" value={variant.giftVariantId} onValueChange={(giftVariantId) => editVariant(index, { giftVariantId })} ariaLabel={`选择 ${variant.label || "此规格"} 的赠送规格`} options={[{ value: "", label: "不赠送" }, ...giftVariantOptions.filter((option) => option.value !== variant.id)]} />
                   <label className="mini-toggle" title={variant.active ? "停用规格" : "启用规格"}><input type="checkbox" checked={variant.active} onChange={(event) => editVariant(index, { active: event.target.checked })} /><span><Check size={12} /></span></label>
                   <button className="remove-variant" type="button" onClick={() => removeVariant(index)} title={variant.id ? "移除规格（保存后停用）" : "删除规格"}><AnimatedButtonIcon idle={<Trash2 size={15} />} size={15} /></button>
                 </div>

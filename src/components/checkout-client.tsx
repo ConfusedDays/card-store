@@ -10,6 +10,7 @@ import { statusText } from "@/components/storefront";
 type CheckoutOrder = {
   orderNo: string; amountCents: number; currency: "CNY"; paymentMethod: string;
   status: OrderResult["status"]; variantLabel: string; productName: string; maskedEmail: string;
+  giftVariantId: string | null; giftProductName: string | null; giftVariantLabel: string | null;
 };
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
@@ -159,8 +160,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
             <div className="delivery-success">
               <CheckCircle2 size={40} />
               <span>Authorized license delivered</span>
-              <code>{result.licenseKey}</code>
-              <button onClick={copyKey}><Copy size={17} /> {copied ? "已复制" : "复制卡密"}</button>
+              {(result.licenseKeys ?? [{ key: result.licenseKey ?? "", isGift: false, productName: order.productName, variantLabel: order.variantLabel }]).map((item, index) => <div className={`delivered-key ${item.isGift ? "delivered-gift" : ""}`} key={`${item.key}-${index}`}><strong>{item.isGift ? "附赠卡密" : "已交付卡密"}</strong><small>{item.productName} · {item.variantLabel}</small><code>{item.key}</code>{!item.isGift && <button onClick={copyKey}><Copy size={17} /> {copied ? "已复制" : "复制卡密"}</button>}</div>)}
               <p>卡密同时可通过订单号和下单邮箱查询。</p>
             </div>
           )}
@@ -168,6 +168,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
         <aside className="checkout-summary">
           <span className="summary-title">订单摘要</span>
           <div className="summary-product"><div className="mini-license"><KeyRound size={22} /></div><div><strong>{order.productName}</strong><span>{order.variantLabel}</span></div></div>
+          {order.giftVariantId && <div className="checkout-gift-note"><span>下单附赠</span><strong>{order.giftProductName} · {order.giftVariantLabel}</strong></div>}
           <dl>
             <div><dt>订单号</dt><dd>{order.orderNo}</dd></div>
             <div><dt>接收邮箱</dt><dd>{customerEmail || order.maskedEmail}</dd></div>

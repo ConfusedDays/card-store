@@ -19,6 +19,7 @@ const tables = [
   "support_tickets",
   "payments",
   "deliveries",
+  "delivery_items",
   "delivery_emails",
   "audit_logs",
 ] as const;
@@ -146,8 +147,13 @@ function validatePayload(value: unknown): BackupPayload {
   if (payload.format !== BACKUP_FORMAT || payload.version !== BACKUP_VERSION) throw new Error("备份版本不兼容");
   if (!payload.tables || typeof payload.tables !== "object") throw new Error("备份缺少数据库内容");
   for (const table of tables) {
-    if (!Array.isArray(payload.tables[table])) throw new Error(`备份缺少数据表：${table}`);
-    for (const row of payload.tables[table]) {
+    const rows = payload.tables[table];
+    // Backups created before gift delivery support do not contain this table.
+    if (!Array.isArray(rows)) {
+      if (table === "delivery_items") continue;
+      throw new Error(`备份缺少数据表：${table}`);
+    }
+    for (const row of rows) {
       if (!row || typeof row !== "object" || Array.isArray(row)) throw new Error(`数据表 ${table} 内容无效`);
     }
   }
@@ -200,7 +206,7 @@ export function restoreEncryptedBackup(bytes: Uint8Array, passphrase: string) {
 
   const restore = db.transaction(() => {
     for (const table of [...tables].reverse()) db.prepare(`DELETE FROM ${table}`).run();
-    for (const table of tables) insertRows(table, payload.tables[table]);
+    for (const table of tables) insertRows(table, payload.tables[table] ?? []);
     db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")
       .run("backup.restored", "system", "database", JSON.stringify({ createdAt: payload.createdAt, emergencyBackup }));
   });

@@ -40,7 +40,8 @@ db.exec(`
     duration_label TEXT NOT NULL,
     price_cents INTEGER NOT NULL,
     currency TEXT NOT NULL DEFAULT 'CNY',
-    active INTEGER NOT NULL DEFAULT 1
+    active INTEGER NOT NULL DEFAULT 1,
+    gift_variant_id TEXT REFERENCES variants(id)
   );
   CREATE TABLE IF NOT EXISTS license_keys (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,6 +88,16 @@ db.exec(`
     key_ciphertext TEXT NOT NULL,
     delivered_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS delivery_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_no TEXT NOT NULL REFERENCES orders(order_no),
+    variant_id TEXT NOT NULL REFERENCES variants(id),
+    license_key_id INTEGER NOT NULL REFERENCES license_keys(id),
+    key_ciphertext TEXT NOT NULL,
+    item_type TEXT NOT NULL DEFAULT 'gift' CHECK(item_type IN ('gift')),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_delivery_items_order ON delivery_items(order_no);
   CREATE TABLE IF NOT EXISTS delivery_emails (
     order_no TEXT PRIMARY KEY REFERENCES orders(order_no),
     status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','sending','sent','failed')),
@@ -176,6 +187,16 @@ if (!productColumns.some((column) => column.name === "image_url")) {
     db.exec("ALTER TABLE products ADD COLUMN image_url TEXT");
   } catch (error) {
     const concurrentlyAdded = error instanceof Error && error.message.includes("duplicate column name: image_url");
+    if (!concurrentlyAdded) throw error;
+  }
+}
+
+const variantColumns = db.prepare("PRAGMA table_info(variants)").all() as { name: string }[];
+if (!variantColumns.some((column) => column.name === "gift_variant_id")) {
+  try {
+    db.exec("ALTER TABLE variants ADD COLUMN gift_variant_id TEXT REFERENCES variants(id)");
+  } catch (error) {
+    const concurrentlyAdded = error instanceof Error && error.message.includes("duplicate column name: gift_variant_id");
     if (!concurrentlyAdded) throw error;
   }
 }

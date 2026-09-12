@@ -41,7 +41,7 @@ describe("admin order recycle bin", () => {
     expect(database.prepare("SELECT status FROM orders WHERE order_no = ?").get(order.orderNo)).toEqual({ status: "delivered" });
     expect(database.prepare("SELECT count(*) as count FROM payments WHERE order_no = ?").get(order.orderNo)).toEqual({ count: 0 });
     expect(database.prepare("SELECT count(*) as count FROM deliveries WHERE order_no = ?").get(order.orderNo)).toEqual({ count: 1 });
-    expect(() => manuallyDeliverPendingOrder(order.orderNo)).toThrow("仅 pending 订单可手动发卡");
+    expect(() => manuallyDeliverPendingOrder(order.orderNo)).toThrow("仅 pending 或等待补货订单可手动发卡");
     recycleOrders([order.orderNo]);
     permanentlyDeleteOrders([order.orderNo]);
   });

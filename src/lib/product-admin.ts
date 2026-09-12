@@ -8,6 +8,7 @@ export type AdminProductVariant = {
   priceCents: number;
   currency: "CNY";
   active: boolean;
+  giftVariantId: string | null;
 };
 
 export type AdminProduct = {
@@ -40,7 +41,7 @@ export function getAdminProducts(): AdminProduct[] {
   `).all() as ProductRow[];
   const variants = db.prepare(`
     SELECT id, product_id as productId, label, duration_label as durationLabel,
-      price_cents as priceCents, currency, active
+      price_cents as priceCents, currency, active, gift_variant_id as giftVariantId
     FROM variants ORDER BY product_id, price_cents
   `).all() as VariantRow[];
 
@@ -50,7 +51,7 @@ export function getAdminProducts(): AdminProduct[] {
     contactEnabled: Boolean(product.contactEnabled),
     variants: variants
       .filter((variant) => variant.productId === product.id)
-      .map((variant) => ({ id: variant.id, label: variant.label, durationLabel: variant.durationLabel, priceCents: variant.priceCents, currency: variant.currency, active: Boolean(variant.active) })),
+      .map((variant) => ({ id: variant.id, label: variant.label, durationLabel: variant.durationLabel, priceCents: variant.priceCents, currency: variant.currency, active: Boolean(variant.active), giftVariantId: variant.giftVariantId })),
   }));
 }
 
@@ -81,13 +82,17 @@ export function saveProduct(input: ProductInput) {
         const existingVariant = db.prepare("SELECT id FROM variants WHERE id = ? AND product_id = ?").get(variant.id, productId);
         if (!existingVariant) throw new Error("商品规格不存在");
         db.prepare(`
-          UPDATE variants SET label = ?, duration_label = ?, price_cents = ?, active = ? WHERE id = ?
-        `).run(variant.label, variant.durationLabel, variant.priceCents, Number(variant.active), variantId);
+          UPDATE variants SET label = ?, duration_label = ?, price_cents = ?, active = ?, gift_variant_id = ? WHERE id = ?
+        `).run(variant.label, variant.durationLabel, variant.priceCents, Number(variant.active), variant.giftVariantId, variantId);
       } else {
         db.prepare(`
-          INSERT INTO variants (id, product_id, label, duration_label, price_cents, currency, active)
-          VALUES (?, ?, ?, ?, ?, 'CNY', ?)
-        `).run(variantId, productId, variant.label, variant.durationLabel, variant.priceCents, Number(variant.active));
+          INSERT INTO variants (id, product_id, label, duration_label, price_cents, currency, active, gift_variant_id)
+          VALUES (?, ?, ?, ?, ?, 'CNY', ?, ?)
+        `).run(variantId, productId, variant.label, variant.durationLabel, variant.priceCents, Number(variant.active), variant.giftVariantId);
+      }
+      if (variant.giftVariantId === variantId) throw new Error("赠送规格不能与当前规格相同");
+      if (variant.giftVariantId && !db.prepare("SELECT id FROM variants WHERE id = ?").get(variant.giftVariantId)) {
+        throw new Error("赠送规格不存在");
       }
       submittedVariantIds.push(variantId);
     }
@@ -119,6 +124,7 @@ export function deleteProduct(productId: string) {
   if (usage.keyCount > 0) throw new Error("该商品仍有关联卡密，不能删除；请先在卡密管理中清空库存");
 
   const transaction = db.transaction(() => {
+    db.prepare("UPDATE variants SET gift_variant_id = NULL WHERE gift_variant_id IN (SELECT id FROM variants WHERE product_id = ?)").run(productId);
     db.prepare("DELETE FROM variants WHERE product_id = ?").run(productId);
     db.prepare("DELETE FROM products WHERE id = ?").run(productId);
     db.prepare("INSERT INTO audit_logs (action, entity_type, entity_id, metadata) VALUES (?, ?, ?, ?)")

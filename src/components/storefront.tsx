@@ -309,7 +309,7 @@ function VariantOption({ variant, selected, onSelect }: { variant: Variant; sele
     <label className={`variant-option ${selected ? "selected" : ""} ${variant.availableCount < 1 ? "disabled" : ""}`}>
       <input type="radio" name="variant" checked={selected} disabled={variant.availableCount < 1} onChange={() => onSelect(variant.id)} />
       <span className="radio-check">{selected && <Check size={14} />}</span>
-      <span className="variant-name"><strong>{variant.label}</strong></span>
+      <span className="variant-name"><strong>{variant.label}</strong>{variant.giftVariantId && <small>赠送 {variant.giftProductName ? `${variant.giftProductName} · ` : ""}{variant.giftVariantLabel ?? "卡密"}</small>}</span>
       <span className="variant-stock">{variant.availableCount > 0 ? `${variant.availableCount} 件` : "缺货"}</span>
       <strong className="variant-price">{money(variant.priceCents)}</strong>
     </label>
@@ -317,20 +317,18 @@ function VariantOption({ variant, selected, onSelect }: { variant: Variant; sele
 }
 
 function OrderResultView({ order }: { order: OrderResult }) {
-  const [copied, setCopied] = useState(false);
-  async function copyKey() {
-    if (!order.licenseKey) return;
-    await navigator.clipboard.writeText(order.licenseKey);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const deliveredKeys = order.licenseKeys ?? (order.licenseKey ? [{ key: order.licenseKey, isGift: false, productName: "", variantLabel: order.variantLabel }] : []);
+  async function copyKey(key: string, index: number) {
+    await navigator.clipboard.writeText(key);
+    setCopiedIndex(index);
+    window.setTimeout(() => setCopiedIndex((current) => current === index ? null : current), 1500);
   }
   return (
     <div className="lookup-result">
       <div><span>订单号</span><strong>{order.orderNo}</strong></div>
       <div><span>状态</span><strong>{statusText(order.status)}</strong></div>
-      {order.licenseKey && (
-        <div className="delivered-key"><span>已交付卡密</span><code>{order.licenseKey}</code><button type="button" onClick={copyKey}><AnimatedButtonIcon success={copied} idle={<Copy size={16} />} /> {copied ? "已复制" : "复制"}</button></div>
-      )}
+      {deliveredKeys.map((item, index) => <div className={`delivered-key ${item.isGift ? "delivered-gift" : ""}`} key={`${item.key}-${index}`}><span>{item.isGift ? "附赠卡密" : "已交付卡密"}</span>{item.productName && <small>{item.productName} · {item.variantLabel}</small>}<code>{item.key}</code><button type="button" onClick={() => void copyKey(item.key, index)}><AnimatedButtonIcon success={copiedIndex === index} idle={<Copy size={16} />} /> {copiedIndex === index ? "已复制" : "复制"}</button></div>)}
     </div>
   );
 }

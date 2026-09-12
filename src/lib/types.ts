@@ -7,6 +7,9 @@ export type Variant = {
   priceCents: number;
   currency: Currency;
   availableCount: number;
+  giftVariantId: string | null;
+  giftProductName?: string | null;
+  giftVariantLabel?: string | null;
 };
 
 export type Product = {
@@ -32,5 +35,13 @@ export type OrderResult = {
   email: string;
   paymentMethod: string;
   licenseKey?: string;
+  licenseKeys?: DeliveredKey[];
   createdAt: string;
+};
+
+export type DeliveredKey = {
+  key: string;
+  isGift: boolean;
+  productName: string;
+  variantLabel: string;
 };

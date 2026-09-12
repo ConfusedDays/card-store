@@ -9,6 +9,7 @@ const variantSchema = z.object({
   durationLabel: z.string().trim().max(120).default(""),
   priceCents: z.number().int().min(1, "价格必须大于 0").max(100_000_000),
   active: z.boolean(),
+  giftVariantId: z.string().min(1).nullable().default(null),
 });
 
 const productSchema = z.object({
