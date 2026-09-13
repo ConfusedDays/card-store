@@ -17,6 +17,7 @@ const tables = [
   "orders",
   "invoices",
   "support_tickets",
+  "announcements",
   "payments",
   "deliveries",
   "delivery_items",

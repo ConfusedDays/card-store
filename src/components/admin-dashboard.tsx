@@ -710,7 +710,7 @@ export function AdminDashboard() {
           <div className="backup-layout">
             <form className="backup-panel" onSubmit={downloadBackup}>
               <span className="backup-panel-icon"><Download size={20} /></span>
-              <div><h3>下载加密备份</h3><p>包含商品、卡密库存、订单、发卡记录和商品图片。</p></div>
+              <div><h3>下载加密备份</h3><p>包含商品、卡密库存、订单、公告、发卡记录和商品图片。</p></div>
               <label>设置备份密码<input type="password" minLength={10} maxLength={200} value={backupPassphrase} onChange={(event) => setBackupPassphrase(event.target.value)} placeholder="至少 10 个字符" autoComplete="new-password" required /></label>
               <button className="primary-button" disabled={backupBusy}><AnimatedButtonIcon loading={backupBusy} idle={<Download size={18} />} />{backupBusy ? "正在加密..." : "创建并下载"}</button>
             </form>
