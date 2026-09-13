@@ -149,9 +149,9 @@ function validatePayload(value: unknown): BackupPayload {
   if (!payload.tables || typeof payload.tables !== "object") throw new Error("备份缺少数据库内容");
   for (const table of tables) {
     const rows = payload.tables[table];
-    // Backups created before gift delivery support do not contain this table.
+    // Backups created before gift delivery or announcement support do not contain these tables.
     if (!Array.isArray(rows)) {
-      if (table === "delivery_items") continue;
+      if (table === "delivery_items" || table === "announcements") continue;
       throw new Error(`备份缺少数据表：${table}`);
     }
     for (const row of rows) {
