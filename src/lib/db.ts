@@ -173,6 +173,16 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_support_tickets_email ON support_tickets(email, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status, updated_at DESC);
+  CREATE TABLE IF NOT EXISTS announcements (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    level TEXT NOT NULL DEFAULT 'info' CHECK(level IN ('info', 'important')),
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(active, updated_at DESC);
 `);
 const licenseKeyColumns = db.prepare("PRAGMA table_info(license_keys)").all() as { name: string }[];
 if (!licenseKeyColumns.some((column) => column.name === "key_fingerprint")) {

@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArchiveRestore, ArrowLeft, Boxes, CheckCheck, CheckCircle2, CircleDollarSign, CircleOff, Copy, Download, KeyRound, LogIn, MailCheck, Menu as MenuIcon, MessageSquareText, PackagePlus, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Tags, Trash2, TriangleAlert, Undo2, Upload } from "lucide-react";
+import { ArchiveRestore, ArrowLeft, Boxes, CheckCheck, CheckCircle2, CircleDollarSign, CircleOff, Copy, Download, KeyRound, LogIn, MailCheck, Megaphone, Menu as MenuIcon, MessageSquareText, PackagePlus, Pencil, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Tags, Trash2, TriangleAlert, Undo2, Upload } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { DropdownMenu, DropdownSelect } from "@/components/ui/dropdown-menu";
 import { ProductManager } from "@/components/product-manager";
 import { AdminTicketManager } from "@/components/admin-ticket-manager";
 import { AnimatedButtonIcon } from "@/components/ui/animated-state-icons";
 import type { AdminProduct } from "@/lib/product-admin";
+import type { Announcement, AnnouncementLevel } from "@/lib/announcements";
 
 type Overview = {
   totals: { orders: number; revenueCents: number; stockIssues: number };
@@ -63,6 +64,14 @@ export function AdminDashboard() {
   const [backupBusy, setBackupBusy] = useState(false);
   const [restoreBusy, setRestoreBusy] = useState(false);
   const [backupMessage, setBackupMessage] = useState("");
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementTitle, setAnnouncementTitle] = useState("");
+  const [announcementContent, setAnnouncementContent] = useState("");
+  const [announcementLevel, setAnnouncementLevel] = useState<AnnouncementLevel>("info");
+  const [announcementActive, setAnnouncementActive] = useState(true);
+  const [announcementEditingId, setAnnouncementEditingId] = useState<string | null>(null);
+  const [announcementBusy, setAnnouncementBusy] = useState(false);
+  const [announcementMessage, setAnnouncementMessage] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
   const [navDragging, setNavDragging] = useState(false);
   const navPressTimer = useRef<number | null>(null);
@@ -74,7 +83,7 @@ export function AdminDashboard() {
 
   useEffect(() => {
     if (!overview) return;
-    const sectionIds = ["overview", "products", "inventory", "backups", "orders", "tickets"];
+    const sectionIds = ["overview", "products", "announcements", "inventory", "backups", "orders", "tickets"];
     const updateActiveSection = () => {
       if (navDraggingRef.current) return;
       const atPageBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 24;
@@ -175,6 +184,17 @@ export function AdminDashboard() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  async function loadAnnouncements(authToken = token) {
+    try {
+      const response = await fetch("/api/admin/announcements", { cache: "no-store", headers: { authorization: `Bearer ${authToken}` } });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "加载公告失败");
+      setAnnouncements(Array.isArray(data.announcements) ? data.announcements : []);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "加载公告失败");
+    }
+  }
+
   async function loadOverview(authToken = token, refreshInventory = true) {
     setLoading(true);
     setError("");
@@ -184,6 +204,7 @@ export function AdminDashboard() {
       if (!response.ok) throw new Error(data.error ?? "加载失败");
       sessionStorage.setItem("card-store-admin-token", authToken);
       setOverview(data);
+      void loadAnnouncements(authToken);
       // Keep the selected variant tied to an actual option after refreshing the
       // overview. Otherwise the select can fall back to the first visual option
       // while the form still submits a stale variant ID.
@@ -247,6 +268,78 @@ export function AdminDashboard() {
       if (requestId === inventoryRequestRef.current) setError(reason instanceof Error ? reason.message : "加载卡密失败");
     } finally {
       if (showProgress) setInventoryRefreshing(false);
+    }
+  }
+
+  function resetAnnouncementForm() {
+    setAnnouncementEditingId(null);
+    setAnnouncementTitle("");
+    setAnnouncementContent("");
+    setAnnouncementLevel("info");
+    setAnnouncementActive(true);
+  }
+
+  async function saveAnnouncement(event: React.FormEvent) {
+    event.preventDefault();
+    setAnnouncementBusy(true);
+    setAnnouncementMessage("");
+    setError("");
+    const editingId = announcementEditingId;
+    try {
+      const response = await fetch("/api/admin/announcements", {
+        method: editingId ? "PATCH" : "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ id: editingId ?? undefined, title: announcementTitle, content: announcementContent, level: announcementLevel, active: announcementActive }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? (editingId ? "更新公告失败" : "发布公告失败"));
+      setAnnouncementMessage(editingId ? "公告已更新" : "公告已发布");
+      resetAnnouncementForm();
+      await loadAnnouncements();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "保存公告失败");
+    } finally {
+      setAnnouncementBusy(false);
+    }
+  }
+
+  function editAnnouncement(announcement: Announcement) {
+    setAnnouncementEditingId(announcement.id);
+    setAnnouncementTitle(announcement.title);
+    setAnnouncementContent(announcement.content);
+    setAnnouncementLevel(announcement.level);
+    setAnnouncementActive(announcement.active);
+    goToAdminSection("announcements");
+  }
+
+  async function toggleAnnouncement(announcement: Announcement) {
+    setError("");
+    try {
+      const response = await fetch("/api/admin/announcements", {
+        method: "PATCH",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ id: announcement.id, active: !announcement.active }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "更新公告失败");
+      await loadAnnouncements();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "更新公告失败");
+    }
+  }
+
+  async function removeAnnouncement(announcement: Announcement) {
+    if (!window.confirm(`确认删除公告“${announcement.title}”吗？`)) return;
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/announcements?id=${encodeURIComponent(announcement.id)}`, { method: "DELETE", headers: { authorization: `Bearer ${token}` } });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "删除公告失败");
+      if (announcementEditingId === announcement.id) resetAnnouncementForm();
+      setAnnouncementMessage("公告已删除");
+      await loadAnnouncements();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "删除公告失败");
     }
   }
 
@@ -519,6 +612,7 @@ export function AdminDashboard() {
             options={[
               { label: "总览", icon: <Boxes size={16} />, onSelect: () => goToAdminSection("overview") },
               { label: "商品管理", icon: <Tags size={16} />, onSelect: () => goToAdminSection("products") },
+              { label: "公告通知", icon: <Megaphone size={16} />, onSelect: () => goToAdminSection("announcements") },
               { label: "导入库存", icon: <PackagePlus size={16} />, onSelect: () => goToAdminSection("inventory") },
               { label: "备份恢复", icon: <ArchiveRestore size={16} />, onSelect: () => goToAdminSection("backups") },
               { label: "最近订单", icon: <ReceiptText size={16} />, onSelect: () => goToAdminSection("orders") },
@@ -539,6 +633,7 @@ export function AdminDashboard() {
         >
           <a className={activeSection === "overview" ? "active" : ""} href="#overview" data-admin-section="overview" onClick={(event) => { event.preventDefault(); goToAdminSection("overview"); }}><Boxes size={18} />总览</a>
           <a className={activeSection === "products" ? "active" : ""} href="#products" data-admin-section="products" onClick={(event) => { event.preventDefault(); goToAdminSection("products"); }}><PackagePlus size={18} />商品管理</a>
+          <a className={activeSection === "announcements" ? "active" : ""} href="#announcements" data-admin-section="announcements" onClick={(event) => { event.preventDefault(); goToAdminSection("announcements"); }}><Megaphone size={18} />公告通知</a>
           <a className={activeSection === "inventory" ? "active" : ""} href="#inventory" data-admin-section="inventory" onClick={(event) => { event.preventDefault(); goToAdminSection("inventory"); }}><PackagePlus size={18} />导入库存</a>
           <a className={activeSection === "backups" ? "active" : ""} href="#backups" data-admin-section="backups" onClick={(event) => { event.preventDefault(); goToAdminSection("backups"); }}><ArchiveRestore size={18} />备份恢复</a>
           <a className={activeSection === "orders" ? "active" : ""} href="#orders" data-admin-section="orders" onClick={(event) => { event.preventDefault(); goToAdminSection("orders"); }}><ReceiptText size={18} />最近订单</a>
@@ -556,6 +651,30 @@ export function AdminDashboard() {
         </section>
 
         <ProductManager products={overview.products} token={token} onSaved={() => loadOverview()} />
+
+        <section className="admin-section" id="announcements">
+          <div className="section-heading"><div><span className="section-index">BROADCAST</span><h2>公告通知</h2></div><button className="icon-action" type="button" onClick={() => void loadAnnouncements()} title="刷新公告" aria-label="刷新公告"><AnimatedButtonIcon idle={<RefreshCw size={17} />} /></button></div>
+          {announcementMessage && <p className="success-message announcement-admin-message"><CheckCircle2 size={16} />{announcementMessage}</p>}
+          <div className="announcement-admin-layout">
+            <form className="announcement-admin-form" onSubmit={saveAnnouncement}>
+              <div className="announcement-admin-form-heading"><span className="announcement-admin-icon"><Megaphone size={19} /></span><div><h3>{announcementEditingId ? "编辑公告" : "发布公告"}</h3><p>启用后会在商店和订单查询页顶部显示最新公告。</p></div></div>
+              <label>公告标题<input value={announcementTitle} onChange={(event) => setAnnouncementTitle(event.target.value)} maxLength={120} placeholder="例如：本周库存与发货安排" required /></label>
+              <label>公告内容<textarea value={announcementContent} onChange={(event) => setAnnouncementContent(event.target.value)} maxLength={5000} placeholder="写下需要通知买家的内容" rows={5} required /></label>
+              <label>公告类型<DropdownSelect value={announcementLevel} onValueChange={(value) => { if (value === "info" || value === "important") setAnnouncementLevel(value); }} ariaLabel="选择公告类型" options={[{ value: "info", label: "普通通知" }, { value: "important", label: "重要通知" }]} /></label>
+              <label className="toggle-field announcement-active-toggle"><input type="checkbox" checked={announcementActive} onChange={(event) => setAnnouncementActive(event.target.checked)} /><span aria-hidden="true" /><b>立即启用</b></label>
+              <div className="announcement-admin-form-actions"><button className="primary-button" disabled={announcementBusy}><AnimatedButtonIcon loading={announcementBusy} idle={<Megaphone size={17} />} />{announcementBusy ? "保存中..." : announcementEditingId ? "保存修改" : "发布公告"}</button>{announcementEditingId && <button className="secondary-command" type="button" onClick={resetAnnouncementForm}>取消编辑</button>}</div>
+            </form>
+            <div className="announcement-admin-list table-shell">
+              {announcements.length ? announcements.map((announcement) => (
+                <article className="announcement-admin-item" key={announcement.id}>
+                  <div className="announcement-admin-item-head"><div><div className="announcement-admin-item-meta"><span className={`announcement-level-badge announcement-level-${announcement.level}`}>{announcement.level === "important" ? "重要" : "普通"}</span><span className={`announcement-active-badge ${announcement.active ? "is-active" : ""}`}>{announcement.active ? "已启用" : "已停用"}</span></div><h3>{announcement.title}</h3></div><time dateTime={new Date(announcement.updatedAt).toISOString()}>{new Date(announcement.updatedAt).toLocaleString("zh-CN")}</time></div>
+                  <p>{announcement.content}</p>
+                  <div className="announcement-admin-item-actions"><button type="button" className="secondary-command" onClick={() => editAnnouncement(announcement)}><Pencil size={14} />编辑</button><button type="button" className="secondary-command" onClick={() => void toggleAnnouncement(announcement)}>{announcement.active ? <CircleOff size={14} /> : <CheckCircle2 size={14} />}{announcement.active ? "停用" : "启用"}</button><button type="button" className="announcement-admin-delete" onClick={() => void removeAnnouncement(announcement)}><Trash2 size={14} />删除</button></div>
+                </article>
+              )) : <div className="announcement-admin-empty"><Megaphone size={20} /><p>还没有公告，发布后会显示在这里。</p></div>}
+            </div>
+          </div>
+        </section>
 
         <section className="admin-section" id="inventory">
           <div className="section-heading"><div><span className="section-index">INVENTORY</span><h2>卡密库存</h2></div></div>
