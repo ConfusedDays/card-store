@@ -5,11 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight, Check, CircleHelp, Clock3, Copy, LockKeyhole, Mail, Megaphone, MessageCircle, Users, X,
+  ArrowRight, Check, CircleHelp, Clock3, Copy, LockKeyhole, Mail, MessageCircle, Users,
   PackageCheck, Search, ShieldCheck, ShoppingBag, Sparkles, Zap,
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
-import type { Announcement } from "@/lib/announcements";
 import type { LiveExploitStatus, LiveStatus, RobloxVersions } from "@/lib/weao";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -44,28 +43,6 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   const [liveStatus, setLiveStatus] = useState<LiveStatus | null>(null);
   const [liveStatusLoading, setLiveStatusLoading] = useState(view === "catalog");
   const hasLiveStatus = useRef(false);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [dismissedAnnouncementId, setDismissedAnnouncementId] = useState<string | null>(() => typeof window === "undefined" ? null : sessionStorage.getItem("reiishop.announcement.dismissed"));
-
-  useEffect(() => {
-    let active = true;
-    const refresh = async () => {
-      try {
-        const response = await fetch("/api/announcements", { cache: "no-store" });
-        if (!response.ok) throw new Error("announcement request failed");
-        const data = await response.json() as { announcements?: Announcement[] };
-        if (active) setAnnouncements(Array.isArray(data.announcements) ? data.announcements : []);
-      } catch {
-        if (active) setAnnouncements([]);
-      }
-    };
-    void refresh();
-    const timer = window.setInterval(refresh, 300_000);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-    };
-  }, []);
 
   useEffect(() => {
     if (view !== "catalog") return;
@@ -184,16 +161,6 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   return (
     <div className="site-shell">
       <SiteHeader active={view} />
-      {announcements[0] && announcements[0].id !== dismissedAnnouncementId && (
-        <AnnouncementBanner
-          announcement={announcements[0]}
-          onDismiss={() => {
-            const id = announcements[0].id;
-            setDismissedAnnouncementId(id);
-            sessionStorage.setItem("reiishop.announcement.dismissed", id);
-          }}
-        />
-      )}
 
       <main className={`storefront-main ${view === "orders" ? "order-page" : "catalog-page"}`}>
         {view === "catalog" && (
@@ -462,19 +429,4 @@ function OrderResultView({ order }: { order: OrderResult }) {
 
 export function statusText(status: OrderResult["status"]) {
   return ({ pending: "待支付", paid: "已支付", delivered: "已发货", paid_no_stock: "已支付，等待补货", cancelled: "已取消" })[status];
-}
-
-function AnnouncementBanner({ announcement, onDismiss }: { announcement: Announcement; onDismiss: () => void }) {
-  const publishedAt = new Date(announcement.updatedAt).toLocaleDateString("zh-CN", { year: "numeric", month: "short", day: "numeric" });
-  return (
-    <aside className={`announcement-banner announcement-${announcement.level}`} aria-label="网站公告">
-      <span className="announcement-icon" aria-hidden="true"><Megaphone size={18} /></span>
-      <div className="announcement-body">
-        <div className="announcement-meta"><span>公告通知</span><time dateTime={new Date(announcement.updatedAt).toISOString()}>{publishedAt}</time></div>
-        <strong>{announcement.title}</strong>
-        <p>{announcement.content}</p>
-      </div>
-      <button type="button" className="announcement-dismiss" onClick={onDismiss} aria-label="关闭公告"><X size={17} /></button>
-    </aside>
-  );
 }

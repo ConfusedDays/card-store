@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, Copy, ExternalLink, MessageCircle, Users } from "lucide-react";
+import { Bell, Check, Copy, ExternalLink, MessageCircle, Users, X } from "lucide-react";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
+import type { Announcement } from "@/lib/announcements";
 
 type SiteSection = "catalog" | "orders" | "policies" | "account" | "admin";
 const ROUTE_EXIT_DURATION = 300;
@@ -15,6 +16,46 @@ export function SiteHeader({ active }: { active: SiteSection }) {
   const pathname = usePathname();
   const [isNavigating, setIsNavigating] = useState(false);
   const [qqCopied, setQqCopied] = useState(false);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementOpen, setAnnouncementOpen] = useState(false);
+  const [seenAnnouncementKey, setSeenAnnouncementKey] = useState<string | null>(() => typeof window === "undefined" ? null : sessionStorage.getItem("reiishop.announcement.seen"));
+  const announcementRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let active = true;
+    const loadAnnouncements = async () => {
+      try {
+        const response = await fetch("/api/announcements", { cache: "no-store" });
+        if (!response.ok) throw new Error("announcement request failed");
+        const data = await response.json() as { announcements?: Announcement[] };
+        if (active) setAnnouncements(Array.isArray(data.announcements) ? data.announcements : []);
+      } catch {
+        if (active) setAnnouncements([]);
+      }
+    };
+    void loadAnnouncements();
+    const timer = window.setInterval(loadAnnouncements, 300_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!announcementOpen) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!announcementRef.current?.contains(event.target as Node)) setAnnouncementOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAnnouncementOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [announcementOpen]);
 
   function navigateTo(href: string, event: React.MouseEvent<HTMLAnchorElement>) {
     if (
@@ -77,6 +118,17 @@ export function SiteHeader({ active }: { active: SiteSection }) {
     }
   }
 
+  function toggleAnnouncements() {
+    const nextOpen = !announcementOpen;
+    setAnnouncementOpen(nextOpen);
+    const latest = announcements[0];
+    const latestKey = latest ? `${latest.id}:${latest.updatedAt}` : null;
+    if (nextOpen && latestKey && latestKey !== seenAnnouncementKey) {
+      setSeenAnnouncementKey(latestKey);
+      sessionStorage.setItem("reiishop.announcement.seen", latestKey);
+    }
+  }
+
   return (
     <header className={`topbar topbar-${active}`}>
       <Link
@@ -106,6 +158,25 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         </div>
       </nav>
       <div className="topbar-actions">
+        <div ref={announcementRef} className="announcement-menu">
+          <button type="button" className="announcement-menu-trigger" aria-label={announcements[0] && `${announcements[0].id}:${announcements[0].updatedAt}` !== seenAnnouncementKey ? "公告通知（有新公告）" : "公告通知"} aria-expanded={announcementOpen} aria-haspopup="dialog" onClick={toggleAnnouncements}>
+            <Bell size={16} />
+            <span>公告</span>
+            {announcements[0] && `${announcements[0].id}:${announcements[0].updatedAt}` !== seenAnnouncementKey && <i className="announcement-unread-dot" aria-label="有新公告" />}
+          </button>
+          {announcementOpen && (
+            <div className="announcement-menu-panel" role="dialog" aria-label="公告通知">
+              <div className="announcement-menu-heading"><div><span>最新消息</span><strong>公告通知</strong></div><button type="button" onClick={() => setAnnouncementOpen(false)} aria-label="关闭公告"><X size={15} /></button></div>
+              {announcements.length ? announcements.map((announcement) => (
+                <article className={`announcement-menu-item announcement-menu-item-${announcement.level}`} key={announcement.id}>
+                  <div className="announcement-menu-item-meta"><span>{announcement.level === "important" ? "重要通知" : "通知"}</span><time dateTime={new Date(announcement.updatedAt).toISOString()}>{new Date(announcement.updatedAt).toLocaleDateString("zh-CN")}</time></div>
+                  <strong>{announcement.title}</strong>
+                  <p>{announcement.content}</p>
+                </article>
+              )) : <p className="announcement-menu-empty">暂无公告</p>}
+            </div>
+          )}
+        </div>
         <DropdownMenu
           label="联系方式"
           icon={<MessageCircle size={16} />}
