@@ -696,7 +696,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--teal); box-shado
 .turnstile-container { width: 100%; min-height: 65px; overflow: hidden; }
 .turnstile-status { color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 10px; }
 .turnstile-status svg { color: var(--teal); }
-.access-gate-shell { position: fixed; inset: 0; z-index: 1200; min-height: 100svh; overflow-y: auto; padding: 24px; display: grid; place-items: center; color: var(--ink); background: var(--canvas); }
+.access-gate-shell { position: fixed; inset: 0; z-index: 1200; min-height: 100svh; overflow-y: auto; padding: 24px; display: grid; place-items: center; color: var(--hero-strong, var(--ink)); background: transparent; }
 body.access-gate-open { overflow: hidden; }
 .access-gate-card { width: min(520px, 100%); padding: clamp(28px, 5vw, 46px); border: 1px solid color-mix(in srgb, var(--teal) 42%, var(--line)); border-radius: 16px; background: color-mix(in srgb, var(--surface) 90%, var(--teal)); box-shadow: 0 24px 70px color-mix(in srgb, var(--teal) 13%, transparent), inset 0 1px 0 color-mix(in srgb, var(--ink) 7%, transparent); text-align: center; }
 .access-gate-icon { width: 52px; height: 52px; margin: 0 auto 18px; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--teal) 45%, var(--line)); border-radius: 50%; color: var(--teal); background: color-mix(in srgb, var(--mint) 62%, var(--surface)); }
@@ -709,7 +709,7 @@ body.access-gate-open { overflow: hidden; }
 .access-gate-loading { color: var(--muted); }
 .access-gate-success { color: var(--success); }
 .access-gate-error { color: var(--danger); }
-html.dark-mode .access-gate-shell { background: var(--canvas); }
+html.dark-mode .access-gate-shell { background: transparent; }
 html.dark-mode .access-gate-card { background: color-mix(in srgb, var(--surface) 84%, var(--teal)); border-color: color-mix(in srgb, var(--line) 72%, var(--teal)); }
 .purchase-note { margin: 12px 0 0; color: #87908d; text-align: center; font-size: 10px; line-height: 1.55; }
 .form-error { color: var(--danger); font-size: 12px; line-height: 1.5; }
