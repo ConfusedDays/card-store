@@ -657,7 +657,7 @@ export function AdminDashboard() {
           {announcementMessage && <p className="success-message announcement-admin-message"><CheckCircle2 size={16} />{announcementMessage}</p>}
           <div className="announcement-admin-layout">
             <form className="announcement-admin-form" onSubmit={saveAnnouncement}>
-              <div className="announcement-admin-form-heading"><span className="announcement-admin-icon"><Megaphone size={19} /></span><div><h3>{announcementEditingId ? "编辑公告" : "发布公告"}</h3><p>启用后会在商店和订单查询页顶部显示最新公告。</p></div></div>
+              <div className="announcement-admin-form-heading"><span className="announcement-admin-icon"><Megaphone size={19} /></span><div><h3>{announcementEditingId ? "编辑公告" : "发布公告"}</h3><p>启用后会在商店和用户中心顶部显示最新公告。</p></div></div>
               <label>公告标题<input value={announcementTitle} onChange={(event) => setAnnouncementTitle(event.target.value)} maxLength={120} placeholder="例如：本周库存与发货安排" required /></label>
               <label>公告内容<textarea value={announcementContent} onChange={(event) => setAnnouncementContent(event.target.value)} maxLength={5000} placeholder="写下需要通知买家的内容" rows={5} required /></label>
               <label>公告类型<DropdownSelect value={announcementLevel} onValueChange={(value) => { if (value === "info" || value === "important") setAnnouncementLevel(value); }} ariaLabel="选择公告类型" options={[{ value: "info", label: "普通通知" }, { value: "important", label: "重要通知" }]} /></label>

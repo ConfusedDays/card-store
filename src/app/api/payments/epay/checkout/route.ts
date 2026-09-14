@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const orderNo = readEpayCheckoutToken(new URL(request.url).searchParams.get("token") ?? "");
     const order = getCheckoutOrder(orderNo);
     if (!order || order.paymentProvider !== "epay" || order.status !== "pending") {
-      return new Response("订单不存在或已不需要付款，请返回订单查询。", { status: 409 });
+      return new Response("订单不存在或已不需要付款，请返回用户中心。", { status: 409 });
     }
     const { action, fields } = createEpayPagePayment({ ...order, subject: `${order.productName} - ${order.variantLabel}` }, publicBaseUrl());
     const nonce = randomBytes(18).toString("base64");

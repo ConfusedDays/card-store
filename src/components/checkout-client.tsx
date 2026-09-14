@@ -37,7 +37,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
       if (paymentUrl) return;
       const missingEmailTimer = window.setTimeout(() => {
         setPolling(false);
-        setError("当前浏览器没有本订单的验证信息，请使用订单查询查看支付结果。");
+        setError("当前浏览器没有本订单的验证信息，请登录用户中心查看支付结果。");
       }, 0);
       return () => window.clearTimeout(missingEmailTimer);
     }
@@ -68,7 +68,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
       if (!cancelled && attempts < 60) timer = window.setTimeout(refreshOrder, 2000);
       else if (!cancelled) {
         setPolling(false);
-        setError("支付结果确认超时，请稍后前往订单查询页面查看。");
+        setError("支付结果确认超时，请稍后登录用户中心查看。");
       }
     }
     void refreshOrder();
@@ -153,7 +153,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
                 </div>
                 <p className="payment-hint">服务器确认支付成功后会自动发卡，请勿重复付款。</p>
                 {error && <p className="form-error">{error}</p>}
-                {!polling && !result?.licenseKey && <Link className="primary-button mock-pay" href="/orders">前往订单查询</Link>}
+                {!polling && !result?.licenseKey && <Link className="primary-button mock-pay" href="/account">前往用户中心</Link>}
               </>
             )
           ) : (
@@ -161,7 +161,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
               <CheckCircle2 size={40} />
               <span>Authorized license delivered</span>
               {(result.licenseKeys ?? [{ key: result.licenseKey ?? "", isGift: false, productName: order.productName, variantLabel: order.variantLabel }]).map((item, index) => <div className={`delivered-key ${item.isGift ? "delivered-gift" : ""}`} key={`${item.key}-${index}`}><strong>{item.isGift ? "附赠卡密" : "已交付卡密"}</strong><small>{item.productName} · {item.variantLabel}</small><code>{item.key}</code>{!item.isGift && <button onClick={copyKey}><Copy size={17} /> {copied ? "已复制" : "复制卡密"}</button>}</div>)}
-              <p>卡密同时可通过订单号和下单邮箱查询。</p>
+              <p>卡密也会保存在用户中心，登录后可查看订单记录。</p>
             </div>
           )}
         </section>

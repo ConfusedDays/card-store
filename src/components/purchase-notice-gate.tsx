@@ -40,7 +40,7 @@ export function PurchaseNoticeGate() {
         <div className="notice-emblem notice-logo" aria-hidden="true"><Image src="/reii-bear.jpg" alt="" width={54} height={54} priority /></div>
         <span className="notice-kicker">REII SHOP · OFFICIAL NOTICE</span>
         <h1 id="purchase-notice-title">购买须知</h1>
-        <p className="notice-intro">请在购买或查询订单前阅读以下内容</p>
+        <p className="notice-intro">请在购买前阅读以下内容</p>
 
         <ul className="notice-rules">
           <li><ShieldCheck size={17} /><span>本站提供的产品皆为代购代付海外虚拟产品。</span></li>

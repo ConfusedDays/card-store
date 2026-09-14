@@ -244,7 +244,6 @@ export function FooterDemo() {
         <div className="footer-demo-content">
           <nav className="footer-demo-nav" aria-label="Footer navigation" data-footer-reveal-line>
             <Link href="/">Shop <span>↗</span></Link>
-            <Link href="/orders">Orders <span>↗</span></Link>
             <Link href="/policies">Policies <span>↗</span></Link>
             <a href="mailto:hello@reiishop.cn">Contact <span>↗</span></a>
           </nav>

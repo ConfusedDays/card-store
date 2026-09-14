@@ -26,7 +26,7 @@ export default function PoliciesPage() {
             <span className="policy-icon"><PackageCheck size={21} /></span>
             <div>
               <h2>商品性质与交付</h2>
-              <p>本站销售的是卡密、授权码等数字化商品，不包含需要物流寄送的实物。支付成功且支付平台确认后，系统会在结算页、订单查询页或下单邮箱中展示或发送卡密。</p>
+              <p>本站销售的是卡密、授权码等数字化商品，不包含需要物流寄送的实物。支付成功且支付平台确认后，系统会在结算页、用户中心或下单邮箱中展示或发送卡密。</p>
               <p>卡密首次成功展示或邮件成功发送时，视为商品已经交付。请确保邮箱准确，并妥善保管订单号和卡密。</p>
             </div>
           </section>
@@ -54,9 +54,9 @@ export default function PoliciesPage() {
             <span className="policy-icon"><CircleHelp size={21} /></span>
             <div>
               <h2>售后处理</h2>
-              <p>需要售后时，请先在订单查询页确认订单状态，并通过购买时约定的客服渠道提交订单号、下单邮箱和问题截图。请勿在公开页面发送完整卡密。</p>
+              <p>需要售后时，请先在用户中心确认订单状态，并通过购买时约定的客服渠道提交订单号、下单邮箱和问题截图。请勿在公开页面发送完整卡密。</p>
               <p>对于卡密无效等问题，我们会核对交付记录、库存记录和激活状态，再提供补发或退款方案。</p>
-              <Link className="policy-action" href="/orders">前往订单查询</Link>
+              <Link className="policy-action" href="/account">进入用户中心</Link>
               <ContactForm />
             </div>
           </section>

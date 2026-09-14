@@ -238,7 +238,7 @@ function DashboardView(props: {
         <Metric icon={<MessageSquareText />} label="我的工单" value={`${props.dashboard.totals.ticketCount} 笔`} />
       </section>
       <section className="account-panel" aria-labelledby="account-orders-title">
-        <div className="account-panel-heading"><div><span className="section-index">ORDER HISTORY</span><h2 id="account-orders-title">订单历史</h2></div><Link href="/orders" className="account-panel-link">查询订单 <span aria-hidden="true">↗</span></Link></div>
+        <div className="account-panel-heading"><div><span className="section-index">ORDER HISTORY</span><h2 id="account-orders-title">订单历史</h2></div></div>
         {props.dashboard.orders.length ? <div className="account-orders">{props.dashboard.orders.map((order) => <OrderRow key={order.orderNo} order={order} onOpenTicket={props.onOpenTicket} />)}</div> : <div className="account-empty"><ReceiptText size={22} /><p>还没有订单，去挑选一件数字商品吧。</p><Link className="primary-button" href="/">浏览商品</Link></div>}
       </section>
       <section className="account-panel account-tickets-panel" id="account-tickets" aria-labelledby="account-tickets-title">

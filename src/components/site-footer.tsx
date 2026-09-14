@@ -43,7 +43,6 @@ export function SiteFooter() {
               <Link href="/policies#refund">退款规则 <ArrowUpRight size={13} aria-hidden="true" /></Link>
               <Link href="/policies#privacy">隐私政策 <ArrowUpRight size={13} aria-hidden="true" /></Link>
               <Link href="/policies#contact">售后说明 <ArrowUpRight size={13} aria-hidden="true" /></Link>
-              <Link href="/orders">查询订单 <ArrowUpRight size={13} aria-hidden="true" /></Link>
             </div>
             <div className="ruixen-footer-column">
               <span className="ruixen-footer-label">联系 / CONTACT</span>

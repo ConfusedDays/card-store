@@ -179,7 +179,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                 </p>
                 <div className="store-hero-actions">
                   <button type="button" className="store-hero-primary" onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })}>立即选购 <AnimatedButtonIcon idle={<ArrowRight size={18} />} /></button>
-                  <Link className="store-hero-secondary" href="/orders"><AnimatedButtonIcon idle={<Search size={17} />} /> 查询订单</Link>
+                  <Link className="store-hero-secondary" href="/account"><AnimatedButtonIcon idle={<Search size={17} />} /> 查看订单</Link>
                 </div>
               </div>
               <div className="store-hero-stats scroll-reveal" data-scroll-reveal>

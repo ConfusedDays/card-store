@@ -1,5 +1,5 @@
-import { Storefront } from "@/components/storefront";
+import { redirect } from "next/navigation";
 
 export default function OrdersPage() {
-  return <Storefront products={[]} view="orders" />;
+  redirect("/account");
 }
