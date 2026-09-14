@@ -50,7 +50,7 @@ export function TurnstileAccessGate({ siteKey, children }: { siteKey?: string; c
         <span className="access-gate-icon" aria-hidden="true"><ShieldCheck size={25} /></span>
         <span className="access-gate-kicker">REII SHOP · SECURITY CHECK</span>
         <h1 id="access-gate-title">进入网站前，请完成安全验证</h1>
-        <p>验证通过后即可访问商品、订单和账户页面。</p>
+        <p>验证通过后即可访问商品和账户页面。</p>
         <TurnstileWidget action="site_access" siteKey={siteKey} onVerify={verifyAccess} />
         {token && !error && <span className="access-gate-success">验证通过，正在进入网站…</span>}
         {error && <span className="access-gate-error" role="alert">{error}</span>}
