@@ -187,7 +187,6 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
     };
     setCart((current) => current.some((entry) => entry.variantId === item.variantId) ? current : [...current, item]);
     setCartNotice(cart.some((entry) => entry.variantId === item.variantId) ? "这个规格已在购物车中" : "已加入购物车");
-    setCartOpen(true);
   }
 
   function removeFromCart(variantId: string) {
@@ -262,6 +261,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   }
 
   if (view === "catalog" && !product) return <main className="empty-state">暂无在售商品</main>;
+  const firstAvailableCartItem = cart.find((item) => products.some((entry) => entry.id === item.productId && entry.variants.some((variant) => variant.id === item.variantId && variant.availableCount > 0)));
 
   return (
     <div className="site-shell">
@@ -283,11 +283,12 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                   const unavailable = !liveVariant || liveVariant.availableCount < 1;
                   return (
                     <li className="cart-item" key={item.variantId}>
-                      <ProductThumbnail src={item.imageUrl} />
-                      <div className="cart-item-copy"><strong>{item.productName}</strong><span>{item.variantLabel} · {item.durationLabel}</span><small>{money(item.priceCents)}{unavailable ? " · 暂时缺货" : ""}</small></div>
+                      <button type="button" className="cart-item-main" disabled={unavailable} onClick={() => chooseCartItem(item)} aria-label={unavailable ? `${item.productName} 暂时缺货` : `选择 ${item.productName} ${item.variantLabel}`}>
+                        <ProductThumbnail src={item.imageUrl} />
+                        <span className="cart-item-copy"><strong>{item.productName}</strong><span>{item.variantLabel} · {item.durationLabel}</span><small>{money(item.priceCents)}{unavailable ? " · 暂时缺货" : ""}</small></span>
+                      </button>
                       <div className="cart-item-actions">
                         <button type="button" className="cart-item-remove" aria-label={`移除 ${item.productName}`} onClick={() => removeFromCart(item.variantId)}><Trash2 size={14} /></button>
-                        <button type="button" className="cart-item-select" disabled={unavailable} onClick={() => chooseCartItem(item)}>{unavailable ? "缺货" : "选择"}</button>
                       </div>
                     </li>
                   );
@@ -297,7 +298,8 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
               <div className="cart-empty"><ShoppingCart size={28} /><p>购物车还是空的</p><span>选择一个商品规格后，可以先保存到这里。</span></div>
             )}
             {cartNotice && <p className="cart-notice" role="status">{cartNotice}</p>}
-            <p className="cart-hint">每次结算仍会重新检查库存与支付状态，选择规格后即可继续付款。</p>
+            {cart.length > 0 && <button type="button" className="cart-checkout" disabled={!firstAvailableCartItem} onClick={() => firstAvailableCartItem && chooseCartItem(firstAvailableCartItem)}><ShoppingCart size={16} /> 去结算 <ArrowRight size={15} /></button>}
+            <p className="cart-hint">点击商品行可回到结算面板，每次结算都会重新检查库存与支付状态。</p>
           </aside>
         </>
       )}
@@ -435,6 +437,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                   <AnimatedButtonIcon loading={submitting} idle={<ShoppingBag size={18} />} /> {submitting ? "正在创建订单..." : "提交订单"} <AnimatedButtonIcon className="button-trailing-icon" idle={<ArrowRight size={18} />} />
                 </button>
               </div>
+              {cartNotice && <p className="cart-notice purchase-cart-notice" role="status">{cartNotice}</p>}
               <p className="purchase-note">支付成功并通过平台确认后自动发卡，请确认接收邮箱填写正确。</p>
             </form>
           </div>
@@ -520,8 +523,6 @@ function AvailabilityStatus({ status }: { status?: LiveExploitStatus }) {
 const robloxVersionRows: Array<{ key: keyof RobloxVersions; hashKey?: keyof RobloxVersions; dateKey: keyof RobloxVersions; label: string; binaryType?: string }> = [
   { key: "Windows", hashKey: "WindowsHash", dateKey: "WindowsDate", label: "Windows", binaryType: "WindowsPlayer" },
   { key: "Mac", hashKey: "MacHash", dateKey: "MacDate", label: "Mac", binaryType: "MacPlayer" },
-  { key: "Android", dateKey: "AndroidDate", label: "Android" },
-  { key: "iOS", dateKey: "iOSDate", label: "iOS" },
 ];
 
 function rddDownloadUrl(version: string | null, binaryType: string) {
