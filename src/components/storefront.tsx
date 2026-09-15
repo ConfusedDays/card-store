@@ -30,6 +30,7 @@ type CartItem = {
   durationLabel: string;
   priceCents: number;
   imageUrl: string | null;
+  quantity: number;
 };
 
 export function Storefront({ products, view = "catalog", turnstileSiteKey, wechatEnabled = false }: { products: Product[]; view?: "catalog" | "orders"; turnstileSiteKey?: string; wechatEnabled?: boolean }) {
@@ -81,9 +82,15 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
             durationLabel: match.variant.durationLabel,
             priceCents: match.variant.priceCents,
             imageUrl: match.item.imageUrl,
+            quantity: Math.max(1, Math.min(Number(value.quantity) || 1, match.variant.availableCount || 1)),
           }];
         });
-        setCart(restored.filter((item, index, list) => list.findIndex((candidate) => candidate.variantId === item.variantId) === index));
+        setCart(restored.reduce<CartItem[]>((items, item) => {
+          const existing = items.find((candidate) => candidate.variantId === item.variantId);
+          if (existing) existing.quantity += item.quantity;
+          else items.push(item);
+          return items;
+        }, []));
       } catch {
         setCart([]);
       } finally {
@@ -184,9 +191,23 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
       durationLabel: selected.durationLabel,
       priceCents: selected.priceCents,
       imageUrl: product.imageUrl,
+      quantity: 1,
     };
-    setCart((current) => current.some((entry) => entry.variantId === item.variantId) ? current : [...current, item]);
-    setCartNotice(cart.some((entry) => entry.variantId === item.variantId) ? "这个规格已在购物车中" : "已加入购物车");
+    const existing = cart.find((entry) => entry.variantId === item.variantId);
+    const nextQuantity = Math.min((existing?.quantity ?? 0) + 1, selected.availableCount);
+    setCart((current) => existing
+      ? current.map((entry) => entry.variantId === item.variantId ? { ...entry, quantity: nextQuantity } : entry)
+      : [...current, item]);
+    setCartNotice(existing && nextQuantity === existing.quantity ? `已达到库存上限（${existing.quantity} 件）` : existing ? `数量已增加至 ${nextQuantity} 件` : "已加入购物车");
+  }
+
+  function updateCartQuantity(variantId: string, delta: number) {
+    setCart((current) => current.map((item) => {
+      if (item.variantId !== variantId) return item;
+      const liveVariant = products.find((entry) => entry.id === item.productId)?.variants.find((variant) => variant.id === item.variantId);
+      const max = Math.max(1, liveVariant?.availableCount ?? item.quantity);
+      return { ...item, quantity: Math.max(1, Math.min(item.quantity + delta, max)) };
+    }));
   }
 
   function removeFromCart(variantId: string) {
@@ -265,7 +286,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
 
   return (
     <div className="site-shell">
-      <SiteHeader active={view} cartCount={view === "catalog" ? cart.length : undefined} onCartClick={view === "catalog" ? () => setCartOpen(true) : undefined} />
+      <SiteHeader active={view} cartCount={view === "catalog" ? cart.reduce((total, item) => total + item.quantity, 0) : undefined} onCartClick={view === "catalog" ? () => setCartOpen(true) : undefined} />
 
       {view === "catalog" && cartOpen && (
         <>
@@ -285,9 +306,14 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                     <li className="cart-item" key={item.variantId}>
                       <button type="button" className="cart-item-main" disabled={unavailable} onClick={() => chooseCartItem(item)} aria-label={unavailable ? `${item.productName} 暂时缺货` : `选择 ${item.productName} ${item.variantLabel}`}>
                         <ProductThumbnail src={item.imageUrl} />
-                        <span className="cart-item-copy"><strong>{item.productName}</strong><span>{item.variantLabel} · {item.durationLabel}</span><small>{money(item.priceCents)}{unavailable ? " · 暂时缺货" : ""}</small></span>
+                        <span className="cart-item-copy"><strong>{item.productName}</strong><span>{item.variantLabel} · {item.durationLabel}</span><small>{money(item.priceCents)} · {item.quantity} 件{unavailable ? " · 暂时缺货" : ""}</small></span>
                       </button>
                       <div className="cart-item-actions">
+                        <div className="cart-quantity-control" aria-label={`${item.productName} 数量`}>
+                          <button type="button" aria-label={`减少 ${item.productName} 数量`} onClick={() => updateCartQuantity(item.variantId, -1)} disabled={item.quantity <= 1}>−</button>
+                          <span>{item.quantity}</span>
+                          <button type="button" aria-label={`增加 ${item.productName} 数量`} onClick={() => updateCartQuantity(item.variantId, 1)} disabled={unavailable || item.quantity >= (liveVariant?.availableCount ?? item.quantity)}>+</button>
+                        </div>
                         <button type="button" className="cart-item-remove" aria-label={`移除 ${item.productName}`} onClick={() => removeFromCart(item.variantId)}><Trash2 size={14} /></button>
                       </div>
                     </li>

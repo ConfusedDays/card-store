@@ -2080,6 +2080,12 @@ body.cart-open { overflow: hidden; }
 .cart-item-copy span, .cart-item-copy small { overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .cart-item-copy small { color: var(--teal); }
 .cart-item-actions { display: flex; align-items: center; }
+.cart-quantity-control { display: inline-flex; align-items: center; gap: 5px; margin-right: 7px; padding: 3px; border: 1px solid var(--line); border-radius: 7px; background: color-mix(in srgb, var(--surface) 72%, transparent); }
+.cart-quantity-control button { width: 22px; height: 22px; padding: 0; border: 0; border-radius: 4px; color: var(--teal); background: transparent; display: grid; place-items: center; font-size: 15px; line-height: 1; }
+.cart-quantity-control button:hover:not(:disabled), .cart-quantity-control button:focus-visible { background: color-mix(in srgb, var(--teal) 12%, transparent); }
+.cart-quantity-control button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+.cart-quantity-control button:disabled { cursor: not-allowed; color: var(--muted); opacity: .45; }
+.cart-quantity-control span { min-width: 18px; color: var(--ink); font-size: 11px; font-weight: 760; text-align: center; }
 .cart-item-remove { width: 28px; min-height: 28px; padding: 0; border: 1px solid color-mix(in srgb, var(--danger) 42%, var(--line)); border-radius: 6px; color: var(--danger); background: transparent; display: grid; place-items: center; }
 .cart-item-remove:hover, .cart-item-remove:focus-visible { color: #fff; border-color: var(--danger); background: var(--danger); }
 .cart-empty { padding: 32px 12px 24px; color: var(--muted); display: grid; justify-items: center; gap: 8px; text-align: center; }
