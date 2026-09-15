@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Mail, Minus, Plus, ShieldCheck, ShoppingBag, Trash2 } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ProductThumbnail } from "@/components/product-thumbnail";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -174,7 +173,6 @@ export function CartPage({ products, turnstileSiteKey, wechatEnabled = false }: 
           </div>
         )}
       </main>
-      <SiteFooter />
     </div>
   );
 }

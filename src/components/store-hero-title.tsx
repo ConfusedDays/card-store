@@ -38,9 +38,11 @@ export function StoreHeroTitle() {
     <h1 id="store-hero-title" ref={headingRef} aria-label={`更简单地购买 ${names.join("、")} 卡密`}>
       <TextEffect className="store-hero-heading-effect" delay={0.08} hover>更简单地购买</TextEffect><br />
       <span className="store-hero-title-line" aria-hidden="true">
-        <span className="store-hero-title-spacer">Potassium 卡密</span>
         <span className="store-hero-title-current">
-          <TextEffect key={names[index]} className="store-hero-name store-hero-name-effect" delay={0.34} hover forceMotion>{names[index]}</TextEffect>
+          <span className="store-hero-name-slot">
+            <span className="store-hero-name-measure">Potassium</span>
+            <TextEffect key={names[index]} className="store-hero-name store-hero-name-effect" delay={0.34} hover forceMotion>{names[index]}</TextEffect>
+          </span>
           <span className="store-hero-title-suffix">卡密</span>
         </span>
       </span>

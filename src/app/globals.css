@@ -354,10 +354,12 @@ html.dark-mode .account-order-row { border-color: var(--line); background: color
 .store-hero-copy { max-width: 880px; }
 .store-hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; border: 1px solid rgb(var(--hero-glow, 101 220 190) / .25); border-radius: 999px; color: var(--hero-soft, #8ee7d0); background: rgb(var(--hero-glow, 44 139 116) / .09); box-shadow: inset 0 1px 0 rgba(255,255,255,.04); font-size: 12px; font-weight: 760; }
 .store-hero h1 { margin: 34px 0 30px; color: #fff; font-size: clamp(48px, 7.2vw, 92px); line-height: 1.18; letter-spacing: -.045em; font-weight: 790; }
-.store-hero-title-line { display: inline-grid; white-space: nowrap; }
-.store-hero-title-spacer, .store-hero-title-current { grid-area: 1 / 1; }
-.store-hero-title-spacer { visibility: hidden; }
+.store-hero-title-line { display: inline-block; white-space: nowrap; }
 .store-hero-title-current { display: inline-flex; align-items: baseline; justify-content: center; gap: .28em; }
+.store-hero-name-slot { display: inline-grid; align-items: baseline; }
+.store-hero-name-slot > * { grid-area: 1 / 1; }
+.store-hero-name-measure { visibility: hidden; white-space: nowrap; }
+.store-hero-name-slot > .store-hero-name { justify-self: start; }
 .store-hero-title-suffix { position: relative; z-index: 2; display: inline-block; color: var(--hero-strong, #fff); opacity: 1; visibility: visible; }
 .store-hero-name { color: inherit; }
 .store-hero-name-effect .text-effect-char { color: transparent; background: linear-gradient(100deg, var(--hero-gradient-start, #56d7b7) 5%, var(--hero-gradient-mid, #9de8d5) 48%, var(--hero-gradient-end, #31ae91) 100%); background-size: 220% 100%; background-position: 0% 50%; animation: store-hero-name-sheen 5.4s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; }
