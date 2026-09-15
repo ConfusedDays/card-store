@@ -359,7 +359,7 @@ html.dark-mode .account-order-row { border-color: var(--line); background: color
 .store-hero-name-slot { display: inline-grid; align-items: baseline; }
 .store-hero-name-slot > * { grid-area: 1 / 1; }
 .store-hero-name-measure { visibility: hidden; white-space: nowrap; }
-.store-hero-name-slot > .store-hero-name { justify-self: start; }
+.store-hero-name-slot > .store-hero-name { justify-self: center; }
 .store-hero-title-suffix { position: relative; z-index: 2; display: inline-block; color: var(--hero-strong, #fff); opacity: 1; visibility: visible; }
 .store-hero-name { color: inherit; }
 .store-hero-name-effect .text-effect-char { color: transparent; background: linear-gradient(100deg, var(--hero-gradient-start, #56d7b7) 5%, var(--hero-gradient-mid, #9de8d5) 48%, var(--hero-gradient-end, #31ae91) 100%); background-size: 220% 100%; background-position: 0% 50%; animation: store-hero-name-sheen 5.4s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; }
