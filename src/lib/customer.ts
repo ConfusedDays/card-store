@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 import { getCustomerTickets, type CustomerTicket } from "@/lib/support-tickets";
+import { getDeliveredLicenseKeys } from "@/lib/order-service";
+import type { DeliveredKey } from "@/lib/types";
 
 export type CustomerOrder = {
   orderNo: string;
@@ -11,6 +13,7 @@ export type CustomerOrder = {
   paymentMethod: string;
   createdAt: string;
   paidAt: string | null;
+  licenseKeys: DeliveredKey[];
 };
 
 export type CustomerDashboard = {
@@ -42,5 +45,8 @@ export function getCustomerDashboard(email: string): CustomerDashboard {
     ORDER BY o.created_at DESC
     LIMIT 100
   `).all(normalized) as CustomerOrder[];
-  return { email: normalized, totals, orders, tickets: getCustomerTickets(normalized) };
+  return { email: normalized, totals, orders: orders.map((order) => ({
+    ...order,
+    licenseKeys: order.status === "delivered" ? getDeliveredLicenseKeys(order.orderNo) : [],
+  })), tickets: getCustomerTickets(normalized) };
 }

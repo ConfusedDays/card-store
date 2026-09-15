@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, Check, CircleHelp, Clock3, Copy, LockKeyhole, Mail, MessageCircle, Users,
-  PackageCheck, Search, ShieldCheck, ShoppingBag, Sparkles, Zap,
+  PackageCheck, Search, ShieldCheck, ShoppingBag, ShoppingCart, Sparkles, Trash2, X, Zap,
 } from "lucide-react";
 import type { OrderResult, Product, Variant } from "@/lib/types";
 import type { LiveExploitStatus, LiveStatus, RobloxVersions } from "@/lib/weao";
@@ -20,6 +20,17 @@ import { AnimatedButtonIcon } from "@/components/ui/animated-state-icons";
 import { TextEffect } from "@/components/ui/text-effect";
 
 const money = (value: number) => new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY" }).format(value / 100);
+const CART_STORAGE_KEY = "reiishop.cart";
+
+type CartItem = {
+  variantId: string;
+  productId: string;
+  productName: string;
+  variantLabel: string;
+  durationLabel: string;
+  priceCents: number;
+  imageUrl: string | null;
+};
 
 export function Storefront({ products, view = "catalog", turnstileSiteKey, wechatEnabled = false }: { products: Product[]; view?: "catalog" | "orders"; turnstileSiteKey?: string; wechatEnabled?: boolean }) {
   const router = useRouter();
@@ -43,6 +54,63 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   const [liveStatus, setLiveStatus] = useState<LiveStatus | null>(null);
   const [liveStatusLoading, setLiveStatusLoading] = useState(view === "catalog");
   const hasLiveStatus = useRef(false);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartHydrated, setCartHydrated] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartNotice, setCartNotice] = useState("");
+
+  useEffect(() => {
+    if (view !== "catalog") return;
+    const timer = window.setTimeout(() => {
+      try {
+        const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw) as unknown;
+        if (!Array.isArray(parsed)) return;
+        const known = new Map(products.flatMap((item) => item.variants.map((variant) => [`${item.id}:${variant.id}`, { item, variant }] as const)));
+        const restored = parsed.flatMap((entry): CartItem[] => {
+          if (!entry || typeof entry !== "object") return [];
+          const value = entry as Partial<CartItem>;
+          const match = known.get(`${value.productId}:${value.variantId}`);
+          if (!match) return [];
+          return [{
+            variantId: match.variant.id,
+            productId: match.item.id,
+            productName: match.item.name,
+            variantLabel: match.variant.label,
+            durationLabel: match.variant.durationLabel,
+            priceCents: match.variant.priceCents,
+            imageUrl: match.item.imageUrl,
+          }];
+        });
+        setCart(restored.filter((item, index, list) => list.findIndex((candidate) => candidate.variantId === item.variantId) === index));
+      } catch {
+        setCart([]);
+      } finally {
+        setCartHydrated(true);
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [products, view]);
+
+  useEffect(() => {
+    if (!cartHydrated || view !== "catalog") return;
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  }, [cart, cartHydrated, view]);
+
+  useEffect(() => {
+    if (view !== "catalog") return;
+    document.body.classList.toggle("cart-open", cartOpen);
+    if (!cartOpen) return () => document.body.classList.remove("cart-open");
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setCartOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.body.classList.remove("cart-open");
+    };
+  }, [cartOpen, view]);
 
   useEffect(() => {
     if (view !== "catalog") return;
@@ -105,6 +173,43 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
     setTurnstileAttempt((attempt) => attempt + 1);
     setError("");
   }
+
+  function addSelectedToCart() {
+    if (!product || !selected || selected.availableCount < 1) return;
+    const item: CartItem = {
+      variantId: selected.id,
+      productId: product.id,
+      productName: product.name,
+      variantLabel: selected.label,
+      durationLabel: selected.durationLabel,
+      priceCents: selected.priceCents,
+      imageUrl: product.imageUrl,
+    };
+    setCart((current) => current.some((entry) => entry.variantId === item.variantId) ? current : [...current, item]);
+    setCartNotice(cart.some((entry) => entry.variantId === item.variantId) ? "这个规格已在购物车中" : "已加入购物车");
+    setCartOpen(true);
+  }
+
+  function removeFromCart(variantId: string) {
+    setCart((current) => current.filter((item) => item.variantId !== variantId));
+    setCartNotice("已从购物车移除");
+  }
+
+  function chooseCartItem(item: CartItem) {
+    const nextIndex = products.findIndex((entry) => entry.id === item.productId);
+    if (nextIndex < 0) return;
+    const currentIndex = products.findIndex((entry) => entry.id === productId);
+    setCategory("all");
+    setSwitchDirection(nextIndex >= currentIndex ? "forward" : "backward");
+    setProductId(item.productId);
+    setSelectedId(item.variantId);
+    setAcceptedDigitalTerms(false);
+    setTurnstileToken("");
+    setTurnstileAttempt((attempt) => attempt + 1);
+    setError("");
+    setCartOpen(false);
+    window.setTimeout(() => document.querySelector<HTMLElement>(".purchase-panel")?.scrollIntoView({ behavior: "smooth", block: "center" }), 30);
+  }
   async function createOrder(event: React.FormEvent) {
     event.preventDefault();
     if (!acceptedDigitalTerms) {
@@ -160,7 +265,42 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
 
   return (
     <div className="site-shell">
-      <SiteHeader active={view} />
+      <SiteHeader active={view} cartCount={view === "catalog" ? cart.length : undefined} onCartClick={view === "catalog" ? () => setCartOpen(true) : undefined} />
+
+      {view === "catalog" && cartOpen && (
+        <>
+          <button type="button" className="cart-panel-backdrop" aria-label="关闭购物车" onClick={() => setCartOpen(false)} />
+          <aside className="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+            <div className="cart-panel-heading">
+              <div><span className="eyebrow">SAVED ITEMS</span><h2 id="cart-title">购物车</h2></div>
+              <button type="button" className="cart-close" aria-label="关闭购物车" onClick={() => setCartOpen(false)}><X size={17} /></button>
+            </div>
+            {cart.length ? (
+              <ul className="cart-list">
+                {cart.map((item) => {
+                  const liveProduct = products.find((entry) => entry.id === item.productId);
+                  const liveVariant = liveProduct?.variants.find((variant) => variant.id === item.variantId);
+                  const unavailable = !liveVariant || liveVariant.availableCount < 1;
+                  return (
+                    <li className="cart-item" key={item.variantId}>
+                      <ProductThumbnail src={item.imageUrl} />
+                      <div className="cart-item-copy"><strong>{item.productName}</strong><span>{item.variantLabel} · {item.durationLabel}</span><small>{money(item.priceCents)}{unavailable ? " · 暂时缺货" : ""}</small></div>
+                      <div className="cart-item-actions">
+                        <button type="button" className="cart-item-remove" aria-label={`移除 ${item.productName}`} onClick={() => removeFromCart(item.variantId)}><Trash2 size={14} /></button>
+                        <button type="button" className="cart-item-select" disabled={unavailable} onClick={() => chooseCartItem(item)}>{unavailable ? "缺货" : "选择"}</button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <div className="cart-empty"><ShoppingCart size={28} /><p>购物车还是空的</p><span>选择一个商品规格后，可以先保存到这里。</span></div>
+            )}
+            {cartNotice && <p className="cart-notice" role="status">{cartNotice}</p>}
+            <p className="cart-hint">每次结算仍会重新检查库存与支付状态，选择规格后即可继续付款。</p>
+          </aside>
+        </>
+      )}
 
       <main className={`storefront-main ${view === "orders" ? "order-page" : "catalog-page"}`}>
         {view === "catalog" && (
@@ -287,9 +427,14 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
                 />
               )}
               {error && <p className="form-error">{error}</p>}
-              <button className="primary-button" disabled={submitting || !selected || selected.availableCount < 1 || !acceptedDigitalTerms || Boolean(turnstileSiteKey && !turnstileToken)}>
-                <AnimatedButtonIcon loading={submitting} idle={<ShoppingBag size={18} />} /> {submitting ? "正在创建订单..." : "提交订单"} <AnimatedButtonIcon className="button-trailing-icon" idle={<ArrowRight size={18} />} />
-              </button>
+              <div className="purchase-actions">
+                <button type="button" className="secondary-command cart-add-button" disabled={submitting || !selected || selected.availableCount < 1} onClick={addSelectedToCart}>
+                  <AnimatedButtonIcon idle={<ShoppingCart size={18} />} /> 加入购物车
+                </button>
+                <button className="primary-button" disabled={submitting || !selected || selected.availableCount < 1 || !acceptedDigitalTerms || Boolean(turnstileSiteKey && !turnstileToken)}>
+                  <AnimatedButtonIcon loading={submitting} idle={<ShoppingBag size={18} />} /> {submitting ? "正在创建订单..." : "提交订单"} <AnimatedButtonIcon className="button-trailing-icon" idle={<ArrowRight size={18} />} />
+                </button>
+              </div>
               <p className="purchase-note">支付成功并通过平台确认后自动发卡，请确认接收邮箱填写正确。</p>
             </form>
           </div>

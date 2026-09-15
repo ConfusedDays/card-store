@@ -20,7 +20,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
   const [loading, setLoading] = useState(false);
   const [polling, setPolling] = useState(!mockMode);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [customerEmail, setCustomerEmail] = useState("");
 
   useEffect(() => {
@@ -100,11 +100,10 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
     }
   }
 
-  async function copyKey() {
-    if (!result?.licenseKey) return;
-    await navigator.clipboard.writeText(result.licenseKey);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
+  async function copyKey(key: string) {
+    await navigator.clipboard.writeText(key);
+    setCopiedKey(key);
+    window.setTimeout(() => setCopiedKey((current) => current === key ? null : current), 1500);
   }
 
   const currentStatus = result?.status ?? order.status;
@@ -160,7 +159,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
             <div className="delivery-success">
               <CheckCircle2 size={40} />
               <span>Authorized license delivered</span>
-              {(result.licenseKeys ?? [{ key: result.licenseKey ?? "", isGift: false, productName: order.productName, variantLabel: order.variantLabel }]).map((item, index) => <div className={`delivered-key ${item.isGift ? "delivered-gift" : ""}`} key={`${item.key}-${index}`}><strong>{item.isGift ? "附赠卡密" : "已交付卡密"}</strong><small>{item.productName} · {item.variantLabel}</small><code>{item.key}</code>{!item.isGift && <button onClick={copyKey}><Copy size={17} /> {copied ? "已复制" : "复制卡密"}</button>}</div>)}
+              {(result.licenseKeys ?? [{ key: result.licenseKey ?? "", isGift: false, productName: order.productName, variantLabel: order.variantLabel }]).map((item, index) => <div className={`delivered-key ${item.isGift ? "delivered-gift" : ""}`} key={`${item.key}-${index}`}><strong>{item.isGift ? "附赠卡密" : "已交付卡密"}</strong><small>{item.productName} · {item.variantLabel}</small><code>{item.key}</code><button type="button" onClick={() => void copyKey(item.key)}><Copy size={17} /> {copiedKey === item.key ? "已复制" : "复制卡密"}</button></div>)}
               <p>卡密也会保存在用户中心，登录后可查看订单记录。</p>
             </div>
           )}

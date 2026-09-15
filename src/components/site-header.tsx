@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Check, Copy, ExternalLink, MessageCircle, Users, X } from "lucide-react";
+import { Bell, Check, Copy, ExternalLink, MessageCircle, ShoppingCart, Users, X } from "lucide-react";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import type { Announcement } from "@/lib/announcements";
 
@@ -18,7 +18,7 @@ function getSeenAnnouncementKey() {
     ?? window.sessionStorage.getItem(ANNOUNCEMENT_SEEN_STORAGE_KEY);
 }
 
-export function SiteHeader({ active }: { active: SiteSection }) {
+export function SiteHeader({ active, cartCount = 0, onCartClick }: { active: SiteSection; cartCount?: number; onCartClick?: () => void }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isNavigating, setIsNavigating] = useState(false);
@@ -165,6 +165,13 @@ export function SiteHeader({ active }: { active: SiteSection }) {
         </div>
       </nav>
       <div className="topbar-actions">
+        {onCartClick && (
+          <button type="button" className="cart-trigger" aria-label={`购物车${cartCount ? `，${cartCount} 项商品` : "，暂无商品"}`} onClick={onCartClick}>
+            <ShoppingCart size={16} aria-hidden="true" />
+            <span>购物车</span>
+            <strong className="cart-count" aria-hidden="true">{cartCount > 99 ? "99+" : cartCount}</strong>
+          </button>
+        )}
         <div ref={announcementRef} className="announcement-menu">
           <button type="button" className="announcement-menu-trigger" aria-label={announcements[0] && `${announcements[0].id}:${announcements[0].updatedAt}` !== seenAnnouncementKey ? "公告通知（有新公告）" : "公告通知"} aria-expanded={announcementOpen} aria-haspopup="dialog" onClick={toggleAnnouncements}>
             <Bell size={16} />

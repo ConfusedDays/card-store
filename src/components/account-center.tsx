@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock3, LogOut, Mail, MessageSquareText, ReceiptText, ShieldCheck, UserRound, WalletCards } from "lucide-react";
+import { Check, Clock3, Copy, LogOut, Mail, MessageSquareText, ReceiptText, ShieldCheck, UserRound, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -17,6 +17,7 @@ type CustomerOrder = {
   paymentMethod: string;
   createdAt: string;
   paidAt: string | null;
+  licenseKeys: Array<{ key: string; isGift: boolean; productName: string; variantLabel: string }>;
 };
 
 type CustomerTicket = {
@@ -261,5 +262,28 @@ function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; 
 }
 
 function OrderRow({ order, onOpenTicket }: { order: CustomerOrder; onOpenTicket: (orderNo?: string) => void }) {
-  return <article className="account-order-row"><div className="account-order-icon"><ReceiptText size={18} /></div><div className="account-order-main"><strong>{order.productName}</strong><span>{order.variantLabel} · {order.orderNo}</span></div><div className="account-order-date"><Clock3 size={13} />{dateLabel(order.createdAt)}</div><div className="account-order-amount"><strong>{money(order.amountCents)}</strong><span className={`account-status account-status-${order.status}`}>{statusLabels[order.status]}</span></div><div className="account-order-actions"><button type="button" className="account-invoice-button" onClick={() => onOpenTicket(order.orderNo)}><MessageSquareText size={14} />提交工单</button></div></article>;
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  async function copyKey(key: string) {
+    try {
+      await navigator.clipboard.writeText(key);
+      setCopiedKey(key);
+      window.setTimeout(() => setCopiedKey((current) => current === key ? null : current), 1500);
+    } catch {
+      setCopiedKey(null);
+    }
+  }
+
+  return <article className="account-order-row">
+    <div className="account-order-icon"><ReceiptText size={18} /></div>
+    <div className="account-order-main"><strong>{order.productName}</strong><span>{order.variantLabel} · {order.orderNo}</span></div>
+    <div className="account-order-date"><Clock3 size={13} />{dateLabel(order.createdAt)}</div>
+    <div className="account-order-amount"><strong>{money(order.amountCents)}</strong><span className={`account-status account-status-${order.status}`}>{statusLabels[order.status]}</span></div>
+    <div className="account-order-actions"><button type="button" className="account-invoice-button" onClick={() => onOpenTicket(order.orderNo)}><MessageSquareText size={14} />提交工单</button></div>
+    <details className="account-order-details">
+      <summary>查看订单详情{order.licenseKeys.length ? ` · ${order.licenseKeys.length} 张卡密` : ""}</summary>
+      <div className="account-order-detail-grid"><div><span>支付方式</span><strong>{order.paymentMethod === "wechat" ? "微信支付" : "支付宝"}</strong></div><div><span>创建时间</span><strong>{dateLabel(order.createdAt)}</strong></div><div><span>支付时间</span><strong>{order.paidAt ? dateLabel(order.paidAt) : "尚未支付"}</strong></div><div><span>订单状态</span><strong>{statusLabels[order.status]}</strong></div></div>
+      {order.licenseKeys.length ? <div className="account-order-keys">{order.licenseKeys.map((item) => <div className={`account-order-key ${item.isGift ? "is-gift" : ""}`} key={`${item.key}-${item.variantLabel}`}><div><span>{item.isGift ? "附赠卡密" : "已交付卡密"}</span><small>{item.productName} · {item.variantLabel}</small></div><code>{item.key}</code><button type="button" onClick={() => void copyKey(item.key)}>{copiedKey === item.key ? <Check size={14} /> : <Copy size={14} />}{copiedKey === item.key ? "已复制" : "复制"}</button></div>)}</div> : <p className="account-order-no-key">支付完成并发货后，卡密会显示在这里。</p>}
+    </details>
+  </article>;
 }
