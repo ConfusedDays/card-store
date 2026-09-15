@@ -230,6 +230,11 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
     setCartOpen(false);
     window.setTimeout(() => document.querySelector<HTMLElement>(".purchase-panel")?.scrollIntoView({ behavior: "smooth", block: "center" }), 30);
   }
+
+  function openCartCheckout() {
+    setCartOpen(false);
+    router.push("/cart");
+  }
   async function createOrder(event: React.FormEvent) {
     event.preventDefault();
     if (!acceptedDigitalTerms) {
@@ -324,7 +329,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
               <div className="cart-empty"><ShoppingCart size={28} /><p>购物车还是空的</p><span>选择一个商品规格后，可以先保存到这里。</span></div>
             )}
             {cartNotice && <p className="cart-notice" role="status">{cartNotice}</p>}
-            {cart.length > 0 && <button type="button" className="cart-checkout" disabled={!firstAvailableCartItem} onClick={() => firstAvailableCartItem && chooseCartItem(firstAvailableCartItem)}><ShoppingCart size={16} /> 去结算 <ArrowRight size={15} /></button>}
+            {cart.length > 0 && <button type="button" className="cart-checkout" disabled={!firstAvailableCartItem} onClick={openCartCheckout}><ShoppingCart size={16} /> 去结算 <ArrowRight size={15} /></button>}
             <p className="cart-hint">点击商品行可回到结算面板，每次结算都会重新检查库存与支付状态。</p>
           </aside>
         </>
