@@ -10,6 +10,13 @@ import type { Announcement } from "@/lib/announcements";
 
 type SiteSection = "catalog" | "orders" | "policies" | "account" | "admin";
 const ROUTE_EXIT_DURATION = 300;
+const ANNOUNCEMENT_SEEN_STORAGE_KEY = "reiishop.announcement.seen";
+
+function getSeenAnnouncementKey() {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(ANNOUNCEMENT_SEEN_STORAGE_KEY)
+    ?? window.sessionStorage.getItem(ANNOUNCEMENT_SEEN_STORAGE_KEY);
+}
 
 export function SiteHeader({ active }: { active: SiteSection }) {
   const router = useRouter();
@@ -18,7 +25,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
   const [qqCopied, setQqCopied] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [announcementOpen, setAnnouncementOpen] = useState(false);
-  const [seenAnnouncementKey, setSeenAnnouncementKey] = useState<string | null>(() => typeof window === "undefined" ? null : sessionStorage.getItem("reiishop.announcement.seen"));
+  const [seenAnnouncementKey, setSeenAnnouncementKey] = useState<string | null>(getSeenAnnouncementKey);
   const announcementRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +41,7 @@ export function SiteHeader({ active }: { active: SiteSection }) {
       }
     };
     void loadAnnouncements();
-    const timer = window.setInterval(loadAnnouncements, 300_000);
+    const timer = window.setInterval(loadAnnouncements, 60_000);
     return () => {
       active = false;
       window.clearInterval(timer);
@@ -124,7 +131,8 @@ export function SiteHeader({ active }: { active: SiteSection }) {
     const latestKey = latest ? `${latest.id}:${latest.updatedAt}` : null;
     if (nextOpen && latestKey && latestKey !== seenAnnouncementKey) {
       setSeenAnnouncementKey(latestKey);
-      sessionStorage.setItem("reiishop.announcement.seen", latestKey);
+      window.localStorage.setItem(ANNOUNCEMENT_SEEN_STORAGE_KEY, latestKey);
+      window.sessionStorage.setItem(ANNOUNCEMENT_SEEN_STORAGE_KEY, latestKey);
     }
   }
 
