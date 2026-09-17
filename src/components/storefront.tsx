@@ -33,7 +33,7 @@ type CartItem = {
   quantity: number;
 };
 
-export function Storefront({ products, view = "catalog", turnstileSiteKey, wechatEnabled = false }: { products: Product[]; view?: "catalog" | "orders"; turnstileSiteKey?: string; wechatEnabled?: boolean }) {
+export function Storefront({ products, view = "catalog", turnstileSiteKey, wechatEnabled = false, bepusdtEnabled = false }: { products: Product[]; view?: "catalog" | "orders"; turnstileSiteKey?: string; wechatEnabled?: boolean; bepusdtEnabled?: boolean }) {
   const router = useRouter();
   const [productId, setProductId] = useState(products[0]?.id ?? "");
   const [category, setCategory] = useState("all");
@@ -43,7 +43,7 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   const product = useMemo(() => visibleProducts.find((item) => item.id === productId) ?? visibleProducts[0], [visibleProducts, productId]);
   const [selectedId, setSelectedId] = useState(products[0]?.variants[0]?.id ?? "");
   const [email, setEmail] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay">("alipay");
+  const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay" | "bepusdt">(bepusdtEnabled ? "bepusdt" : "alipay");
   const [acceptedDigitalTerms, setAcceptedDigitalTerms] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileAttempt, setTurnstileAttempt] = useState(0);
@@ -425,9 +425,10 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
               <label className="field-label" htmlFor="email">接收邮箱</label>
               <input id="email" className="text-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" required />
               <span className="field-label">支付方式</span>
-              <SegmentedControl className="segmented-payment" label="支付方式" value={paymentMethod} onValueChange={(method) => { if (method === "wechat" || method === "alipay") setPaymentMethod(method); }} options={[
-                { value: "wechat", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/wechat-pay.png" alt="" width={22} height={22} />微信支付</span>, accessibleLabel: "微信支付", disabled: !wechatEnabled },
-                { value: "alipay", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/alipay.png" alt="" width={22} height={22} />支付宝</span>, accessibleLabel: "支付宝" },
+              <SegmentedControl className="segmented-payment" label="支付方式" value={paymentMethod} onValueChange={(method) => { if (method === "wechat" || method === "alipay" || method === "bepusdt") setPaymentMethod(method); }} options={[
+                { value: "wechat", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/wechat-pay.png" alt="" width={22} height={22} />微信支付</span>, accessibleLabel: "微信支付", disabled: bepusdtEnabled || !wechatEnabled },
+                { value: "alipay", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/alipay.png" alt="" width={22} height={22} />支付宝</span>, accessibleLabel: "支付宝", disabled: bepusdtEnabled },
+                { value: "bepusdt", label: <span className="segmented-payment-label">USDT / 加密货币</span>, accessibleLabel: "USDT / 加密货币", disabled: !bepusdtEnabled },
               ]} />
               {product.contactEnabled && (
                 <div className="product-contact product-contact-payment" aria-label="商品联系方式">

@@ -172,7 +172,7 @@ export function CheckoutClient({ order, mockMode, paymentUrl }: { order: Checkou
             <div><dt>订单号</dt><dd>{order.orderNo}</dd></div>
             <div><dt>接收邮箱</dt><dd>{customerEmail || order.maskedEmail}</dd></div>
             <div><dt>订单状态</dt><dd>{statusText(currentStatus)}</dd></div>
-            <div><dt>支付方式</dt><dd>{order.paymentMethod === "wechat" ? "微信支付" : "支付宝"}</dd></div>
+            <div><dt>支付方式</dt><dd>{order.paymentMethod === "wechat" ? "微信支付" : order.paymentMethod === "bepusdt" ? "USDT / 加密货币" : "支付宝"}</dd></div>
           </dl>
           <div className="summary-total"><span>应付</span><strong>{money(order.amountCents)}</strong></div>
           <p className="checkout-policy-note">

@@ -25,13 +25,13 @@ type CartItem = {
   quantity: number;
 };
 
-export function CartPage({ products, turnstileSiteKey, wechatEnabled = false }: { products: Product[]; turnstileSiteKey?: string; wechatEnabled?: boolean }) {
+export function CartPage({ products, turnstileSiteKey, wechatEnabled = false, bepusdtEnabled = false }: { products: Product[]; turnstileSiteKey?: string; wechatEnabled?: boolean; bepusdtEnabled?: boolean }) {
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [activeVariantId, setActiveVariantId] = useState("");
   const [email, setEmail] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay">("alipay");
+  const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay" | "bepusdt">(bepusdtEnabled ? "bepusdt" : "alipay");
   const [acceptedDigitalTerms, setAcceptedDigitalTerms] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileAttempt, setTurnstileAttempt] = useState(0);
@@ -162,7 +162,7 @@ export function CartPage({ products, turnstileSiteKey, wechatEnabled = false }: 
               <label className="field-label" htmlFor="cart-email">接收邮箱</label>
               <div className="cart-page-email"><Mail size={16} /><input id="cart-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" autoComplete="email" required /></div>
               <span className="field-label">支付方式</span>
-              <SegmentedControl className="segmented-payment" label="支付方式" value={paymentMethod} onValueChange={(method) => { if (method === "wechat" || method === "alipay") setPaymentMethod(method); }} options={[{ value: "wechat", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/wechat-pay.png" alt="" width={22} height={22} />微信支付</span>, accessibleLabel: "微信支付", disabled: !wechatEnabled }, { value: "alipay", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/alipay.png" alt="" width={22} height={22} />支付宝</span>, accessibleLabel: "支付宝" }]} />
+              <SegmentedControl className="segmented-payment" label="支付方式" value={paymentMethod} onValueChange={(method) => { if (method === "wechat" || method === "alipay" || method === "bepusdt") setPaymentMethod(method); }} options={[{ value: "wechat", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/wechat-pay.png" alt="" width={22} height={22} />微信支付</span>, accessibleLabel: "微信支付", disabled: bepusdtEnabled || !wechatEnabled }, { value: "alipay", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/alipay.png" alt="" width={22} height={22} />支付宝</span>, accessibleLabel: "支付宝", disabled: bepusdtEnabled }, { value: "bepusdt", label: <span className="segmented-payment-label">USDT / 加密货币</span>, accessibleLabel: "USDT / 加密货币", disabled: !bepusdtEnabled }]} />
               <div className="cart-page-payable"><span>本次应付</span><strong>{selectedItem ? money(selectedItem.priceCents) : "--"}</strong></div>
               <label className="digital-terms-confirmation"><input type="checkbox" checked={acceptedDigitalTerms} onChange={(event) => setAcceptedDigitalTerms(event.target.checked)} required /><span>我已阅读并确认：卡密等数字商品交付后，原则上不支持七日无理由退款。<Link href="/policies#refund" target="_blank">查看完整规则</Link></span></label>
               {turnstileSiteKey && <TurnstileWidget key={`cart-${turnstileAttempt}`} siteKey={turnstileSiteKey} onVerify={setTurnstileToken} />}

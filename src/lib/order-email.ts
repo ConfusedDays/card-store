@@ -24,7 +24,7 @@ function money(amountCents: number, currency: string) {
 }
 
 function paymentMethodLabel(method: string) {
-  return method === "alipay" ? "支付宝" : method === "wechat" ? "微信支付" : method;
+  return method === "alipay" ? "支付宝" : method === "wechat" ? "微信支付" : method === "bepusdt" ? "USDT / 加密货币" : method;
 }
 
 function getOrderEmailData(orderNo: string) {

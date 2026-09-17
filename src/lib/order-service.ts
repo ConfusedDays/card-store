@@ -62,7 +62,7 @@ export function completeMockPayment(orderNo: string): OrderResult {
 
 export function completePaidOrder(input: {
   orderNo: string;
-  provider: "mock" | "alipay" | "wechat" | "epay";
+  provider: "mock" | "alipay" | "wechat" | "epay" | "bepusdt";
   paymentMethod?: string;
   providerRef: string;
   amountCents: number;

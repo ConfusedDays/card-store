@@ -17,11 +17,13 @@ npm run dev
 - `LICENSE_KEY_SECRET`：卡密 AES-256-GCM 加密密钥，生产环境必须更换。
 - `ADMIN_TOKEN`：管理后台 API 访问令牌，生产环境必须使用高强度随机值。
 - `PAYMENT_MODE`：本地开发设为 `mock`；生产环境不得启用模拟支付。
+- `PAYMENT_MODE=bepusdt`：启用 BEpusdt 加密货币支付；同时配置 `BEPUSDT_URL`、`BEPUSDT_TOKEN`，并将 `APP_URL` 设为公网 HTTPS 域名。
 - `NEXT_PUBLIC_STORE_NAME`：预留的店铺名称配置。
 - `DATABASE_PATH`：SQLite 文件路径；Railway 建议设为 `/app/data/card-store.sqlite`。
 - `TURNSTILE_SITE_KEY`：Cloudflare Turnstile 公开站点密钥，用于购买页人机验证。
 - `TURNSTILE_SECRET_KEY`：Turnstile 私密服务器密钥；配置后订单接口会强制验签。
 - `TURNSTILE_ALLOWED_HOSTNAMES`：允许的验证域名，生产环境建议设为 `reiishop.cn,www.reiishop.cn`。
+- `BEPUSDT_CURRENCIES`：BEpusdt 收银台允许的币种，默认 `USDT`；`BEPUSDT_TIMEOUT` 默认 600 秒，最小 180 秒。
 - `SEED_DEMO_CATALOG`：仅本地开发设为 `true`；生产环境不要设置。
 
 ## Railway 部署

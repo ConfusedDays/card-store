@@ -1,12 +1,13 @@
 import { AlipaySdk } from "alipay-sdk";
 import { centsToCny, cnyToCents } from "@/lib/payment-money";
 import { createEpayCheckoutToken, epayType, getEpayConfig } from "@/lib/epay";
+import { createBepusdtCheckoutToken, getBepusdtConfig } from "@/lib/bepusdt";
 
-export type PaymentMethod = "wechat" | "alipay" | "mock";
+export type PaymentMethod = "wechat" | "alipay" | "bepusdt" | "mock";
 
 export type PaymentCheckout = {
   checkoutUrl: string;
-  provider: "mock" | "wechat" | "alipay" | "epay";
+  provider: "mock" | "wechat" | "alipay" | "epay" | "bepusdt";
 };
 
 export type VerifiedAlipayTrade = {
@@ -81,6 +82,12 @@ export async function queryAlipayTrade(orderNo: string): Promise<VerifiedAlipayT
 }
 
 export function assertPaymentConfigured(paymentMethod: PaymentMethod) {
+  if (process.env.PAYMENT_MODE === "bepusdt") {
+    if (paymentMethod !== "bepusdt") throw new Error("当前仅支持 BEpusdt 加密货币支付");
+    getBepusdtConfig();
+    publicBaseUrl();
+    return;
+  }
   if (process.env.PAYMENT_MODE === "epay") {
     epayType(paymentMethod);
     getEpayConfig();
@@ -100,6 +107,10 @@ export function createPaymentCheckout(input: {
   amountCents: number;
   subject: string;
 }): PaymentCheckout {
+  if (process.env.PAYMENT_MODE === "bepusdt") {
+    assertPaymentConfigured(input.paymentMethod);
+    return { checkoutUrl: `/api/payments/bepusdt/checkout?token=${encodeURIComponent(createBepusdtCheckoutToken(input.orderNo))}`, provider: "bepusdt" };
+  }
   if (process.env.PAYMENT_MODE === "epay") {
     assertPaymentConfigured(input.paymentMethod);
     return { checkoutUrl: `/api/payments/epay/checkout?token=${createEpayCheckoutToken(input.orderNo)}`, provider: "epay" };
