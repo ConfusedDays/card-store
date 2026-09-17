@@ -426,8 +426,8 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
               <input id="email" className="text-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" required />
               <span className="field-label">支付方式</span>
               <SegmentedControl className="segmented-payment" label="支付方式" value={paymentMethod} onValueChange={(method) => { if (method === "wechat" || method === "alipay") setPaymentMethod(method); }} options={[
-                { value: "wechat", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/wechat-pay.svg" alt="" width={22} height={22} />微信支付</span>, accessibleLabel: "微信支付", disabled: !wechatEnabled },
-                { value: "alipay", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/alipay.svg" alt="" width={22} height={22} />支付宝</span>, accessibleLabel: "支付宝" },
+                { value: "wechat", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/wechat-pay.png" alt="" width={22} height={22} />微信支付</span>, accessibleLabel: "微信支付", disabled: !wechatEnabled },
+                { value: "alipay", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/alipay.png" alt="" width={22} height={22} />支付宝</span>, accessibleLabel: "支付宝" },
               ]} />
               {product.contactEnabled && (
                 <div className="product-contact product-contact-payment" aria-label="商品联系方式">

@@ -413,7 +413,7 @@ html.dark-mode .segmented-label-active { color: var(--hero-button-ink, #06261f);
 .segmented-payment { display: block; width: 100%; }
 .segmented-payment .segmented-cell { padding-block: 9px; }
 .segmented-payment-label { display: flex; justify-content: center; align-items: center; gap: 7px; }
-.payment-brand-icon { flex: 0 0 22px; width: 22px; height: 22px; padding: 2px; border-radius: 5px; background: #fff; }
+.payment-brand-icon { flex: 0 0 22px; width: 22px; height: 22px; padding: 2px; border-radius: 5px; background: #fff; object-fit: contain; }
 @media (max-width: 720px) {
   .segmented-products .segmented-cell { padding: 10px 6px; }
   .segmented-product-label { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 5px; text-align: center; }
