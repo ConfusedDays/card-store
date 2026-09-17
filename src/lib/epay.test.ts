@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { canonicalEpayParameters, createEpayCheckoutToken, createEpayPagePayment, getEpayConfig, parseEpayNotification, parseEpayQuery, readEpayCheckoutToken, signEpayParameters, verifyEpayParameters } from "./epay";
-import { createPaymentCheckout } from "./payment-provider";
+import { createPaymentCheckout, paymentProviderForMethod } from "./payment-provider";
 
 const merchant = generateKeyPairSync("rsa", { modulusLength: 2048 });
 const platform = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -146,6 +146,17 @@ describe("V2 RSA protocol", () => {
 });
 
 describe("checkout handoff", () => {
+  it("routes crypto to BEpusdt and fiat methods to Epay in hybrid mode", () => {
+    vi.stubEnv("PAYMENT_MODE", "hybrid");
+    vi.stubEnv("BEPUSDT_URL", "https://gateway.example/");
+    vi.stubEnv("BEPUSDT_TOKEN", "hybrid-bepusdt-token");
+    expect(paymentProviderForMethod("bepusdt")).toBe("bepusdt");
+    expect(paymentProviderForMethod("alipay")).toBe("epay");
+    expect(createPaymentCheckout({ ...newOrder("bepusdt", "bepusdt"), paymentMethod: "bepusdt", subject: "测试" }).provider).toBe("bepusdt");
+    expect(createPaymentCheckout({ ...newOrder("wechat"), paymentMethod: "wechat", subject: "测试" }).provider).toBe("epay");
+    vi.stubEnv("PAYMENT_MODE", "epay");
+  });
+
   it("uses the configured HTTPS POST gateway and server order amount", async () => {
     const order = newOrder();
     const checkout = createPaymentCheckout({ ...order, paymentMethod: "alipay", subject: "测试" });

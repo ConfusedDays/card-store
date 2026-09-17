@@ -18,6 +18,7 @@ npm run dev
 - `ADMIN_TOKEN`：管理后台 API 访问令牌，生产环境必须使用高强度随机值。
 - `PAYMENT_MODE`：本地开发设为 `mock`；生产环境不得启用模拟支付。
 - `PAYMENT_MODE=bepusdt`：启用 BEpusdt 加密货币支付；同时配置 `BEPUSDT_URL`、`BEPUSDT_TOKEN`，并将 `APP_URL` 设为公网 HTTPS 域名。
+- `PAYMENT_MODE=hybrid`：同时提供 BEpusdt USDT 和原易支付的微信/支付宝；需要同时配置两套支付参数。
 - `NEXT_PUBLIC_STORE_NAME`：预留的店铺名称配置。
 - `DATABASE_PATH`：SQLite 文件路径；Railway 建议设为 `/app/data/card-store.sqlite`。
 - `TURNSTILE_SITE_KEY`：Cloudflare Turnstile 公开站点密钥，用于购买页人机验证。

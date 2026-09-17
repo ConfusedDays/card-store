@@ -43,7 +43,8 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
   const product = useMemo(() => visibleProducts.find((item) => item.id === productId) ?? visibleProducts[0], [visibleProducts, productId]);
   const [selectedId, setSelectedId] = useState(products[0]?.variants[0]?.id ?? "");
   const [email, setEmail] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay" | "bepusdt">(bepusdtEnabled ? "bepusdt" : "alipay");
+  const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay" | "bepusdt">(bepusdtEnabled && !wechatEnabled ? "bepusdt" : "alipay");
+  const alipayEnabled = !bepusdtEnabled || wechatEnabled;
   const [acceptedDigitalTerms, setAcceptedDigitalTerms] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileAttempt, setTurnstileAttempt] = useState(0);
@@ -426,8 +427,8 @@ export function Storefront({ products, view = "catalog", turnstileSiteKey, wecha
               <input id="email" className="text-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" required />
               <span className="field-label">支付方式</span>
               <SegmentedControl className="segmented-payment" label="支付方式" value={paymentMethod} onValueChange={(method) => { if (method === "wechat" || method === "alipay" || method === "bepusdt") setPaymentMethod(method); }} options={[
-                { value: "wechat", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/wechat-pay.png" alt="" width={22} height={22} />微信支付</span>, accessibleLabel: "微信支付", disabled: bepusdtEnabled || !wechatEnabled },
-                { value: "alipay", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/alipay.png" alt="" width={22} height={22} />支付宝</span>, accessibleLabel: "支付宝", disabled: bepusdtEnabled },
+                { value: "wechat", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/wechat-pay.png" alt="" width={22} height={22} />微信支付</span>, accessibleLabel: "微信支付", disabled: !wechatEnabled },
+                { value: "alipay", label: <span className="segmented-payment-label"><Image className="payment-brand-icon" src="/icons/alipay.png" alt="" width={22} height={22} />支付宝</span>, accessibleLabel: "支付宝", disabled: !alipayEnabled },
                 { value: "bepusdt", label: <span className="segmented-payment-label">USDT / 加密货币</span>, accessibleLabel: "USDT / 加密货币", disabled: !bepusdtEnabled },
               ]} />
               {product.contactEnabled && (

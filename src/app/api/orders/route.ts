@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createPendingOrder } from "@/lib/order-service";
 import { trySendOrderEmail } from "@/lib/order-email";
-import { assertPaymentConfigured, createPaymentCheckout } from "@/lib/payment-provider";
+import { assertPaymentConfigured, createPaymentCheckout, paymentProviderForMethod } from "@/lib/payment-provider";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 
 const orderSchema = z.object({
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
     const remoteIp = request.headers.get("cf-connecting-ip") ?? forwardedFor;
     await verifyTurnstileToken(input.turnstileToken, remoteIp);
-    const order = createPendingOrder({ ...input, paymentProvider: process.env.PAYMENT_MODE === "epay" ? "epay" : input.paymentMethod });
+    const order = createPendingOrder({ ...input, paymentProvider: paymentProviderForMethod(input.paymentMethod) });
     await trySendOrderEmail(order.orderNo, "order_created");
     const checkout = createPaymentCheckout({
       orderNo: order.orderNo,

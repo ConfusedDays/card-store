@@ -88,7 +88,19 @@ export function assertPaymentConfigured(paymentMethod: PaymentMethod) {
     publicBaseUrl();
     return;
   }
+  if (paymentMethod === "bepusdt") {
+    if (process.env.PAYMENT_MODE !== "hybrid") throw new Error("当前未启用 BEpusdt 加密货币支付");
+    getBepusdtConfig();
+    publicBaseUrl();
+    return;
+  }
   if (process.env.PAYMENT_MODE === "epay") {
+    epayType(paymentMethod);
+    getEpayConfig();
+    publicBaseUrl();
+    return;
+  }
+  if (process.env.PAYMENT_MODE === "hybrid") {
     epayType(paymentMethod);
     getEpayConfig();
     publicBaseUrl();
@@ -107,11 +119,11 @@ export function createPaymentCheckout(input: {
   amountCents: number;
   subject: string;
 }): PaymentCheckout {
-  if (process.env.PAYMENT_MODE === "bepusdt") {
+  if (process.env.PAYMENT_MODE === "bepusdt" || (process.env.PAYMENT_MODE === "hybrid" && input.paymentMethod === "bepusdt")) {
     assertPaymentConfigured(input.paymentMethod);
     return { checkoutUrl: `/api/payments/bepusdt/checkout?token=${encodeURIComponent(createBepusdtCheckoutToken(input.orderNo))}`, provider: "bepusdt" };
   }
-  if (process.env.PAYMENT_MODE === "epay") {
+  if (process.env.PAYMENT_MODE === "epay" || process.env.PAYMENT_MODE === "hybrid") {
     assertPaymentConfigured(input.paymentMethod);
     return { checkoutUrl: `/api/payments/epay/checkout?token=${createEpayCheckoutToken(input.orderNo)}`, provider: "epay" };
   }
@@ -133,4 +145,10 @@ export function createPaymentCheckout(input: {
     returnUrl: `${baseUrl}/checkout/${encodeURIComponent(input.orderNo)}?payment=returned`,
   });
   return { checkoutUrl, provider: "alipay" };
+}
+
+export function paymentProviderForMethod(paymentMethod: PaymentMethod) {
+  if (paymentMethod === "bepusdt") return "bepusdt";
+  if (process.env.PAYMENT_MODE === "epay" || process.env.PAYMENT_MODE === "hybrid") return "epay";
+  return paymentMethod;
 }
